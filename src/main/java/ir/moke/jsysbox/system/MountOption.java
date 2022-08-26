@@ -76,7 +76,7 @@ public enum MountOption {
         return Arrays.asList(MountOption.class.getEnumConstants());
     }
 
-    public static MountOption getBit(int bit) {
+    private static MountOption getBit(int bit) {
         return getMountOptions().stream()
                 .filter(item -> item.getBit() == bit)
                 .findFirst().orElse(null);
