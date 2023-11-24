@@ -39,6 +39,15 @@ JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_system_JSystem_umount
 
 /*
  * Class:     ir_moke_jsysbox_system_JSystem
+ * Method:    umount
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_system_JSystem_chroot
+  (JNIEnv *, jclass, jstring);
+
+
+/*
+ * Class:     ir_moke_jsysbox_system_JSystem
  * Method:    setEnv
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
