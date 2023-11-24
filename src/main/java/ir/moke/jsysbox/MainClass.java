@@ -14,17 +14,19 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.network.JNetwork;
+import ir.moke.jsysbox.system.JSystem;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 
 public class MainClass {
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static void main(String[] args) throws Exception {
-        String ip = "10.0.2.12";
-        String netmask = "255.255.255.0";
-        String iface = "eth0";
-        JNetwork.setIp(iface, ip, netmask);
+        boolean changed = JSystem.chroot("/data2/Docker/Dockerfiles/Debian/testing-chroot");
+        if (changed) {
+            Files.list(Path.of("/")).forEach(item -> System.out.println(item.getFileName()));
+        }
     }
 }
