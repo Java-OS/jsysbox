@@ -15,6 +15,7 @@
 package ir.moke.jsysbox;
 
 import ir.moke.jsysbox.system.JSystem;
+import ir.moke.jsysbox.time.JDateTime;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,9 +25,11 @@ public class MainClass {
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static void main(String[] args) throws Exception {
-        boolean changed = JSystem.chroot("/data2/Docker/Dockerfiles/Debian/testing-chroot");
-        if (changed) {
-            Files.list(Path.of("/")).forEach(item -> System.out.println(item.getFileName()));
-        }
+//        boolean changed = JSystem.chroot("/data2/Docker/Dockerfiles/Debian/testing-chroot");
+//        if (changed) {
+//            Files.list(Path.of("/")).forEach(item -> System.out.println(item.getFileName()));
+//        }
+
+        System.out.println(JDateTime.getZonedDateTime());
     }
 }
