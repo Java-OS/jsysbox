@@ -183,11 +183,11 @@ public class JNetwork {
 
     public static void deleteRoute(int id) throws JSysboxException {
         Optional<Route> optionalRoute = route().stream()
-                .filter(item -> item.id() == id)
+                .filter(item -> item.getId() == id)
                 .findFirst();
         if (optionalRoute.isPresent()) {
             Route route = optionalRoute.get();
-            updateRoute(route.destination(), route.netmask(), route.gateway(), route.iface(), route.metrics(), false, true);
+            updateRoute(route.getDestination(), route.getNetmask(), route.getGateway(), route.getIface(), route.getMetrics(), false, true);
         }
     }
 
@@ -206,9 +206,9 @@ public class JNetwork {
 
     public static String upGatewayInterface() {
         return route().stream()
-                .filter(item -> item.gateway().equals("0.0.0.0"))
-                .filter(item -> item.destination().equals("0.0.0.0"))
-                .map(Route::iface).findFirst().orElse(null);
+                .filter(item -> item.getGateway().equals("0.0.0.0"))
+                .filter(item -> item.getDestination().equals("0.0.0.0"))
+                .map(Route::getIface).findFirst().orElse(null);
     }
 
     public static void ping(String destination, String iface, Integer ttl, Integer count, Integer timeout, Integer interval) {
