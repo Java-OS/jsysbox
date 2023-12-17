@@ -14,20 +14,22 @@
 
 package ir.moke.jsysbox.network;
 
+import java.util.Objects;
+
 public class Route {
-        private final int id;
-        private final String destination;
-        private final String netmask;
-        private final String gateway;
-        private final String iface;
-        private final int flags;
-        private final int use;
-        private final int metrics;
-        private final int mtu;
-        private final int window;
-        private final int irtt;
-        private final int refcnt;
-        private boolean locked = false;
+    private final int id;
+    private final String destination;
+    private final String netmask;
+    private final String gateway;
+    private final String iface;
+    private final int flags;
+    private final int use;
+    private final int metrics;
+    private final int mtu;
+    private final int window;
+    private final int irtt;
+    private final int refcnt;
+    private boolean locked = false;
 
     public Route(int id, String destination, String netmask, String gateway, String iface, int flags, int use, int metrics, int mtu, int window, int irtt, int refcnt) {
         this.id = id;
@@ -102,5 +104,22 @@ public class Route {
 
     public String getFlagStr() {
         return RouteFlag.getFlagStr(flags);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Route route = (Route) o;
+        return metrics == route.metrics &&
+                Objects.equals(destination, route.destination) &&
+                Objects.equals(netmask, route.netmask) &&
+                Objects.equals(gateway, route.gateway) &&
+                Objects.equals(iface, route.iface);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(destination, netmask, gateway, iface, metrics);
     }
 }
