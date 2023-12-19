@@ -204,6 +204,18 @@ public class JNetwork {
         return routeList;
     }
 
+    public static boolean isRouteExists(String destination, String netmask, String gateway, String iface, Integer metrics) {
+        Optional<Route> optionalRoute = route()
+                .stream()
+                .filter(item -> item.getIface().equals(iface))
+                .filter(item -> item.getDestination().equals(destination))
+                .filter(item -> item.getNetmask().equals(netmask))
+                .filter(item -> item.getGateway().equals(gateway))
+                .filter(item -> item.getMetrics() == metrics)
+                .findFirst();
+        return optionalRoute.isPresent();
+    }
+
     public static String upGatewayInterface() {
         return route().stream()
                 .filter(item -> item.getGateway().equals("0.0.0.0"))
