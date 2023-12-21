@@ -373,11 +373,9 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_networkInte
     jclass stringClass = env->FindClass("java/lang/String");
     jobjectArray result = env->NewObjectArray(interfaces.size(), stringClass, nullptr);
 
-    jsize index = 0;
     for (const string &interface : interfaces) {
         jstring element = env->NewStringUTF(interface.c_str());
         env->SetObjectArrayElement(result, index, element);
-        index++;
     }
 
     return result;
