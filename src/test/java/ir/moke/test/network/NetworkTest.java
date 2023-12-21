@@ -91,7 +91,7 @@ public class NetworkTest {
 
 
     @Test
-    @Order(3)
+    @Order(4)
     public void checkListInterfacesWithUpDown() {
         try {
             String ethernet = "eth0";
@@ -118,7 +118,7 @@ public class NetworkTest {
 
 
     @Test
-    @Order(3)
+    @Order(5)
     public void checkDownAfterDown() {
         try {
             String ethernet = "eth0";
@@ -131,6 +131,30 @@ public class NetworkTest {
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    @Order(6)
+    public void checkCIDR() {
+        String n1 = JNetwork.cidrToNetmask(32);
+        String n2 = JNetwork.cidrToNetmask(31);
+        String n3 = JNetwork.cidrToNetmask(30);
+        String n4 = JNetwork.cidrToNetmask(29);
+        String n5 = JNetwork.cidrToNetmask(28);
+        String n6 = JNetwork.cidrToNetmask(27);
+        String n7 = JNetwork.cidrToNetmask(26);
+        String n8 = JNetwork.cidrToNetmask(25);
+        String n9 = JNetwork.cidrToNetmask(24);
+        Assertions.assertEquals(n1,"255.255.255.255");
+        Assertions.assertEquals(n2,"255.255.255.254");
+        Assertions.assertEquals(n3,"255.255.255.252");
+        Assertions.assertEquals(n4,"255.255.255.248");
+        Assertions.assertEquals(n5,"255.255.255.240");
+        Assertions.assertEquals(n6,"255.255.255.224");
+        Assertions.assertEquals(n7,"255.255.255.192");
+        Assertions.assertEquals(n8,"255.255.255.128");
+        Assertions.assertEquals(n9,"255.255.255.0");
+    }
+
 
     private static void sleep() {
         try {
