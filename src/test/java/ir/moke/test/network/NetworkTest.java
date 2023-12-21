@@ -116,6 +116,22 @@ public class NetworkTest {
         }
     }
 
+
+    @Test
+    @Order(3)
+    public void checkDownAfterDown() {
+        try {
+            String ethernet = "eth0";
+            JNetwork.ifUp(ethernet);
+            JNetwork.setIp(ethernet, "10.10.10.1", "255.255.255.0");
+
+            JNetwork.ifDown(ethernet);
+            Assertions.assertDoesNotThrow(() -> JNetwork.ifDown(ethernet));
+        } catch (JSysboxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static void sleep() {
         try {
             Thread.sleep(3000);
