@@ -21,6 +21,7 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -86,6 +87,33 @@ public class NetworkTest {
         String[] list = JNetwork.networkInterfaces();
         Assertions.assertNotNull(list);
         Assertions.assertTrue(list.length > 1);
+    }
+
+
+    @Test
+    @Order(3)
+    public void checkListInterfacesWithUpDown() {
+        try {
+            String ethernet = "eth0";
+            JNetwork.ifUp(ethernet);
+            JNetwork.setIp(ethernet, "10.10.10.1", "255.255.255.0");
+            String[] before = JNetwork.networkInterfaces();
+            System.out.println("List interfaces (Before)");
+            for (String s : before) {
+                System.out.println("> " + s);
+            }
+            Assertions.assertTrue(Arrays.stream(before).anyMatch(item -> item.contains(ethernet)));
+
+            JNetwork.ifDown(ethernet);
+            String[] after = JNetwork.networkInterfaces();
+            System.out.println("List interfaces (After)");
+            for (String s : after) {
+                System.out.println("> " + s);
+            }
+            Assertions.assertTrue(Arrays.stream(after).noneMatch(item -> item.contains(ethernet)));
+        } catch (JSysboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void sleep() {

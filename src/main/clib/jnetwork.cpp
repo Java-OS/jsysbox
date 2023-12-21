@@ -322,6 +322,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_setIp(JNIEnv *env, 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_ifUp(JNIEnv *env, jclass clazz, jstring jiface) {
     Network network;
     string iface = env->GetStringUTFChars(jiface, 0);
+    if (network.is_iface_up(iface)) return;
     int r = network.set_if_up(iface);
     if (r < 0) throwException(env, "No such device");
 }
@@ -329,8 +330,10 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_ifUp(JNIEnv *env, j
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_ifDown(JNIEnv *env, jclass clazz, jstring jiface) {
     Network network;
     string iface = env->GetStringUTFChars(jiface, 0);
-    int r = network.set_if_down(iface);
-    if (r < 0) throwException(env, "No such device");
+    if (network.is_iface_up(iface)) {
+        int r = network.set_if_down(iface);
+        if (r < 0) throwException(env, "No such device");
+    }
 }
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_updateRoute
