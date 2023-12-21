@@ -29,6 +29,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class JNetwork {
@@ -86,20 +87,20 @@ public class JNetwork {
         return cidrToNetmask(cidr);
     }
 
-    public static List<Ethernet> ethernetList() {
-        List<Ethernet> list = new ArrayList<>();
-        List<String> availableInterfaces = availableInterfaces();
-        for (String iface : availableInterfaces) {
-            String mac = getMacAddress(iface);
-            String ip = getIpAddress(iface);
-            Short cidr = getCidr(iface);
-            String netmask = getNetmask(iface);
-            EthernetStatistic ethernetStatistic = getEthernetStatistic(iface);
-            Ethernet ethernet = new Ethernet(iface, mac, ip, netmask, cidr, ethernetStatistic);
-            list.add(ethernet);
-        }
-        return list;
-    }
+//    public static List<Ethernet> ethernetList() {
+//        List<Ethernet> list = new ArrayList<>();
+//        List<String> availableInterfaces = availableInterfaces();
+//        for (String iface : availableInterfaces) {
+//            String mac = getMacAddress(iface);
+//            String ip = getIpAddress(iface);
+//            Short cidr = getCidr(iface);
+//            String netmask = getNetmask(iface);
+//            EthernetStatistic ethernetStatistic = getEthernetStatistic(iface);
+//            Ethernet ethernet = new Ethernet(iface, mac, ip, netmask, cidr, ethernetStatistic);
+//            list.add(ethernet);
+//        }
+//        return list;
+//    }
 
     private static EthernetStatistic getEthernetStatistic(String iface) {
         try {
@@ -127,11 +128,13 @@ public class JNetwork {
      * @return {@link Ethernet}
      */
     public static Ethernet ethernet(String iface) {
-        return ethernetList().stream().filter(item -> item.iface().equals(iface)).findFirst().orElse(null);
+        return null;
+//        return ethernetList().stream().filter(item -> item.iface().equals(iface)).findFirst().orElse(null);
     }
 
     public static boolean isEthernetExists(String iface) {
-        return ethernetList().stream().anyMatch(item -> item.iface().equals(iface));
+        return false;
+//        return ethernetList().stream().anyMatch(item -> item.iface().equals(iface));
     }
 
     /**
@@ -165,6 +168,8 @@ public class JNetwork {
      * @param delete      add or delete
      */
     public native static int updateRoute(String destination, String netmask, String gateway, String iface, int metrics, boolean isHost, boolean delete) throws JSysboxException;
+
+    public native static String[] ethernetList();
 
     public static void addHostToRoute(String destination, String gateway, String iface, Integer metrics) throws JSysboxException {
         updateRoute(destination, null, gateway, iface, metrics, true, false);

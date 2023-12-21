@@ -80,6 +80,14 @@ public class NetworkTest {
         }
     }
 
+    @Test
+    @Order(3)
+    public void checkListInterfaces() {
+        String[] list = JNetwork.ethernetList();
+        Assertions.assertNotNull(list);
+        Assertions.assertTrue(list.length > 1);
+    }
+
     private static void sleep() {
         try {
             Thread.sleep(3000);

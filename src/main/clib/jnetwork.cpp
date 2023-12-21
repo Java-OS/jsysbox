@@ -48,115 +48,135 @@ limitations under the License.
 
 #include <bits/ioctls.h>
 #include <string>
+#include <set>
 
-using namespace std ;
+using namespace std;
 
 class Network {
 private:
     // char host[NI_MAXHOST];
-    bool is_ipv4_address(const string& str,struct sockaddr_in& sa)
-    {
-        return inet_pton(AF_INET, str.c_str(), &(sa.sin_addr))!=0;
+    bool is_ipv4_address(const string &str, struct sockaddr_in &sa) {
+        return inet_pton(AF_INET, str.c_str(), &(sa.sin_addr)) != 0;
     }
 
-    bool is_ipv6_address(const string& str,struct sockaddr_in6& sa)
-    {
-        return inet_pton(AF_INET6, str.c_str(), &(sa.sin6_addr))!=0;
+    bool is_ipv6_address(const string &str, struct sockaddr_in6 &sa) {
+        return inet_pton(AF_INET6, str.c_str(), &(sa.sin6_addr)) != 0;
     }
 
 public:
 
-    int validate_ip(const string& ipstr,int af) {
+    int validate_ip(const string &ipstr, int af) {
         struct sockaddr_in sa;
         struct sockaddr_in6 sa6;
 
-        if (af == AF_INET && is_ipv4_address(ipstr,sa)) return 0 ;
-        if (af == AF_INET6 && is_ipv6_address(ipstr,sa6)) return 0;
+        if (af == AF_INET && is_ipv4_address(ipstr, sa)) return 0;
+        if (af == AF_INET6 && is_ipv6_address(ipstr, sa6)) return 0;
 
-        fprintf(stderr,"Invalid ip address.\n");
+        fprintf(stderr, "Invalid ip address.\n");
         return 1;
+    }
+
+    struct set<string> listInterfaces() {
+        struct ifaddrs *ifaddr, *ifa;
+        std::set<std::string> interfaceList;
+
+        if (getifaddrs(&ifaddr) == -1) {
+            perror("getifaddrs");
+            exit(EXIT_FAILURE);
+        }
+
+        for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr == nullptr)
+                continue;
+
+            std::string interfaceName(ifa->ifa_name);
+
+            if ((ifa->ifa_flags & IFF_UP) && interfaceList.count(interfaceName) == 0) {
+                interfaceList.insert(interfaceName);
+            }
+        }
+        freeifaddrs(ifaddr);
+        return interfaceList;
     }
 
     struct in_addr calc_network_addr(struct in_addr ip_addr, struct in_addr netmask_addr) {
         struct in_addr network_addr;
         memset(&network_addr, 0, sizeof(network_addr));
-        network_addr.s_addr  = ip_addr.s_addr & netmask_addr.s_addr ;
+        network_addr.s_addr = ip_addr.s_addr & netmask_addr.s_addr;
         return network_addr;
     }
 
-    bool is_iface_up(string& interface) {
+    bool is_iface_up(string &interface) {
         struct ifreq ifr;
         int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
         memset(&ifr, 0, sizeof(ifr));
         strcpy(ifr.ifr_name, interface.c_str());
         if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
-                perror("SIOCGIFFLAGS");
+            perror("SIOCGIFFLAGS");
         }
         close(sock);
         return !!(ifr.ifr_flags & IFF_UP);
     }
 
 
-    int set_if_up(string& iface) {
-        int sockfd,r;
-        struct ifreq ifr ;
-        sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_IP) ;
+    int set_if_up(string &iface) {
+        int sockfd, r;
+        struct ifreq ifr;
+        sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
         if (sockfd < 0) {
             perror("SOCKET");
             return -1;
         }
 
-        memset(&ifr,0,sizeof(ifr)) ;
+        memset(&ifr, 0, sizeof(ifr));
         strncpy(ifr.ifr_name, iface.data(), IFNAMSIZ);
         ifr.ifr_flags |= IFF_UP;
         r = ioctl(sockfd, SIOCSIFFLAGS, &ifr);
 
         if (r < 0) {
-            return -1 ;
+            return -1;
         }
 
-        return 0 ;
+        return 0;
     }
 
-    int set_if_down(string& iface) {
-        int sockfd,r;
-        struct ifreq ifr ;
-        sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_IP) ;
+    int set_if_down(string &iface) {
+        int sockfd, r;
+        struct ifreq ifr;
+        sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
         if (sockfd < 0) {
             perror("SOCKET");
             return -1;
         }
 
-        memset(&ifr,0,sizeof(ifr)) ;
+        memset(&ifr, 0, sizeof(ifr));
         strncpy(ifr.ifr_name, iface.data(), IFNAMSIZ);
         ifr.ifr_flags &= ~IFF_UP;
         r = ioctl(sockfd, SIOCSIFFLAGS, &ifr);
 
         if (r < 0) {
-            return -1 ;
+            return -1;
         }
 
-        return 0 ;
+        return 0;
     }
-
 
 
     /**
     * Set ip
     */
-    int set_ip(string& iface, string& ip_addr, string& netmask_addr)
-    {
-        int r ;
+    int set_ip(string &iface, string &ip_addr, string &netmask_addr) {
+        int r;
         int sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-        if(sockfd == -1) {
-            perror("IOCTL: ") ;
+        if (sockfd == -1) {
+            perror("IOCTL: ");
             // fprintf(stderr, "Could not get socket.\n");
             return -1;
         }
-        if(!iface.data()) return -1;
+        if (!iface.data()) return -1;
 
         struct ifreq ifr;
-        struct sockaddr_in* addr = (struct sockaddr_in*)&ifr.ifr_addr;
+        struct sockaddr_in *addr = (struct sockaddr_in *) &ifr.ifr_addr;
 
         ifr.ifr_addr.sa_family = AF_INET;
 
@@ -174,32 +194,32 @@ public:
             r = ioctl(sockfd, SIOCSIFNETMASK, &ifr);
         }
 
-        close(sockfd) ;
+        close(sockfd);
         if (r < 0) {
             perror("IOCTL");
-            return -1 ;
+            return -1;
         }
         return 0;
     }
 
-    int update_route(string& ip_addr,string& netmask_addr, string& gateway_addr, string& iface,int metrics,bool isHost,bool del) {
-        struct in_addr addr  ;
-        struct in_addr netmask  ;
-        struct in_addr gateway  ;
-        struct in_addr network  ;
+    int update_route(string &ip_addr, string &netmask_addr, string &gateway_addr, string &iface, int metrics, bool isHost, bool del) {
+        struct in_addr addr;
+        struct in_addr netmask;
+        struct in_addr gateway;
+        struct in_addr network;
 
-        if (!netmask_addr.empty() && inet_aton((char*) netmask_addr.c_str(), &netmask) == 1) {
+        if (!netmask_addr.empty() && inet_aton((char *) netmask_addr.c_str(), &netmask) == 1) {
             if (isHost) {
-                inet_aton("255.255.255.255",&netmask) ;
+                inet_aton("255.255.255.255", &netmask);
             }
         } else {
             fprintf(stderr, "Invalid address\n");
             return 1;
         }
 
-        if (!ip_addr.empty() && inet_aton((char*) ip_addr.c_str(), &addr) == 1) {
+        if (!ip_addr.empty() && inet_aton((char *) ip_addr.c_str(), &addr) == 1) {
             if (!isHost) {
-                network = calc_network_addr(addr,netmask) ;
+                network = calc_network_addr(addr, netmask);
             }
         } else {
             fprintf(stderr, "Invalid address\n");
@@ -207,14 +227,14 @@ public:
         }
 
         if (gateway_addr.empty()) {
-            inet_aton("0.0.0.0", &gateway) ;
-        } else  if (inet_aton((char*) gateway_addr.c_str(), &gateway) != 1) {
+            inet_aton("0.0.0.0", &gateway);
+        } else if (inet_aton((char *) gateway_addr.c_str(), &gateway) != 1) {
             fprintf(stderr, "Invalid gateway\n");
             return 1;
         }
 
         struct ifreq ifr;
-        struct sockaddr_in* saddr = (struct sockaddr_in*)&ifr.ifr_addr;
+        struct sockaddr_in *saddr = (struct sockaddr_in *) &ifr.ifr_addr;
 
         struct rtentry route;
         int err = 0;
@@ -223,21 +243,21 @@ public:
         /*
         set gateway
         */
-        saddr = (struct sockaddr_in*) &route.rt_gateway;
+        saddr = (struct sockaddr_in *) &route.rt_gateway;
         saddr->sin_family = AF_INET;
         saddr->sin_addr.s_addr = gateway.s_addr;
 
         /*
         set netmask
         */
-        saddr = (struct sockaddr_in*) &route.rt_genmask;
+        saddr = (struct sockaddr_in *) &route.rt_genmask;
         saddr->sin_family = AF_INET;
-        saddr->sin_addr.s_addr = netmask.s_addr ;
+        saddr->sin_addr.s_addr = netmask.s_addr;
 
         /*
         set target
         */
-        saddr = (struct sockaddr_in*) &route.rt_dst;
+        saddr = (struct sockaddr_in *) &route.rt_dst;
         saddr->sin_family = AF_INET;
         if (isHost) {
             saddr->sin_addr.s_addr = addr.s_addr;
@@ -245,27 +265,27 @@ public:
             saddr->sin_addr.s_addr = network.s_addr;
         }
 
-        int flag = RTF_UP ;
+        int flag = RTF_UP;
         if (isHost) {
             flag = flag | RTF_HOST;
         }
         if (!gateway_addr.empty()) {
-            flag = flag | RTF_GATEWAY ;
+            flag = flag | RTF_GATEWAY;
         }
         if (del) {
-            flag = flag & RTF_REJECT ;
+            flag = flag & RTF_REJECT;
             route.rt_metric = 0;
         }
 
         route.rt_flags = flag;
         if (!iface.empty()) {
-            route.rt_dev = (char*) iface.c_str();
+            route.rt_dev = (char *) iface.c_str();
         }
 
         route.rt_metric = metrics + 1;
-        int sockfd = socket( PF_INET, SOCK_DGRAM, IPPROTO_IP );
+        int sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
         if (del) {
-            err = ioctl(sockfd, SIOCDELRT, &route )  ;
+            err = ioctl(sockfd, SIOCDELRT, &route);
         } else {
             err = ioctl(sockfd, SIOCADDRT, &route);
         }
@@ -275,70 +295,88 @@ public:
             return -1;
         }
 
-        close(sockfd) ;
+        close(sockfd);
         return 1;
     }
-} ;
+};
 
 void throwException(JNIEnv *env, string err) {
-	jclass jexception = env->FindClass("ir/moke/jsysbox/JSysboxException");
-	env->ThrowNew(jexception,err.data());
+    jclass jexception = env->FindClass("ir/moke/jsysbox/JSysboxException");
+    env->ThrowNew(jexception, err.data());
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_setIp (JNIEnv *env, jclass clazz, jstring jiface, jstring jaddr, jstring jnetmask) {
-    Network network ;
-    string iface = env->GetStringUTFChars(jiface,0);
-    string addr = env->GetStringUTFChars(jaddr,0);
-    string netmask = env->GetStringUTFChars(jnetmask,0);
-    int r = network.set_ip(iface,addr,netmask) ;
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_setIp(JNIEnv *env, jclass clazz, jstring jiface, jstring jaddr, jstring jnetmask) {
+    Network network;
+    string iface = env->GetStringUTFChars(jiface, 0);
+    string addr = env->GetStringUTFChars(jaddr, 0);
+    string netmask = env->GetStringUTFChars(jnetmask, 0);
+    int r = network.set_ip(iface, addr, netmask);
     if (r != 0) {
-        const char *err = "Failed to set ip address" ;
-        throwException(env,err);
+        const char *err = "Failed to set ip address";
+        throwException(env, err);
     } else {
-	    network.set_if_up(iface);
+        network.set_if_up(iface);
     }
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_ifUp (JNIEnv *env, jclass clazz, jstring jiface) {
-    Network network ;
-    string iface = env->GetStringUTFChars(jiface,0);
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_ifUp(JNIEnv *env, jclass clazz, jstring jiface) {
+    Network network;
+    string iface = env->GetStringUTFChars(jiface, 0);
     int r = network.set_if_up(iface);
-    if (r < 0) throwException(env,"No such device");
+    if (r < 0) throwException(env, "No such device");
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_ifDown (JNIEnv *env, jclass clazz, jstring jiface) {
-    Network network ;
-    string iface = env->GetStringUTFChars(jiface,0);
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_ifDown(JNIEnv *env, jclass clazz, jstring jiface) {
+    Network network;
+    string iface = env->GetStringUTFChars(jiface, 0);
     int r = network.set_if_down(iface);
-    if (r < 0) throwException(env,"No such device");
+    if (r < 0) throwException(env, "No such device");
 }
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_updateRoute
-(JNIEnv *env, jclass, jstring jdestination, jstring jnetmask, jstring jgateway, jstring jiface, jint jmetrics, jboolean jIsHost,jboolean jdel) {
+        (JNIEnv *env, jclass, jstring jdestination, jstring jnetmask, jstring jgateway, jstring jiface, jint jmetrics, jboolean jIsHost, jboolean jdel) {
 
-    string iface = "";
-    string gateway = "";
-    if (jiface != NULL) iface = env->GetStringUTFChars(jiface,0) ;
-    if (jgateway != NULL) gateway = env->GetStringUTFChars(jgateway,0) ;
+    string iface;
+    string gateway;
+    if (jiface != nullptr) iface = env->GetStringUTFChars(jiface, 0);
+    if (jgateway != nullptr) gateway = env->GetStringUTFChars(jgateway, 0);
 
-    bool isHost = bool(jIsHost) ;
-    bool del = bool(jdel) ;
+    bool isHost = bool(jIsHost);
+    bool del = bool(jdel);
     int metrics = (int) jmetrics;
 
-    string destination = env->GetStringUTFChars(jdestination,0) ;
-    string netmask = isHost ? "255.255.255.255" : env->GetStringUTFChars(jnetmask,0) ;
+    string destination = env->GetStringUTFChars(jdestination, 0);
+    string netmask = isHost ? "255.255.255.255" : env->GetStringUTFChars(jnetmask, 0);
 
-    Network network ;
+    Network network;
     int r = network.update_route(destination,
-                         netmask,
-                         gateway,
-                         iface,
-                         metrics,
-                         isHost,
-                         del) ;
-    if (r < 0) throwException(env,"Failed to update route table");
+                                 netmask,
+                                 gateway,
+                                 iface,
+                                 metrics,
+                                 isHost,
+                                 del);
+    if (r < 0) throwException(env, "Failed to update route table");
 }
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_initResolve() {
     res_init();
 }
+
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_ethernetList(JNIEnv *env, jclass) {
+    Network network;
+    set<string> interfaces = network.listInterfaces();
+
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray result = env->NewObjectArray(interfaces.size(), stringClass, nullptr);
+
+    jsize index = 0;
+    for (const string &interface : interfaces) {
+        jstring element = env->NewStringUTF(interface.c_str());
+        env->SetObjectArrayElement(result, index, element);
+        index++;
+    }
+
+    return result;
+}
+
