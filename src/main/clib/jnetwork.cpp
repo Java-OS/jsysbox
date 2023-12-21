@@ -112,7 +112,6 @@ public:
         r = ioctl(sockfd, SIOCSIFFLAGS, &ifr);
 
         if (r < 0) {
-            perror("SIOCSIFFLAGS") ;
             return -1 ;
         }
 
@@ -134,7 +133,6 @@ public:
         r = ioctl(sockfd, SIOCSIFFLAGS, &ifr);
 
         if (r < 0) {
-            perror("SIOCSIFFLAGS") ;
             return -1 ;
         }
 
