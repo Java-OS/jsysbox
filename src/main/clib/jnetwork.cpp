@@ -363,7 +363,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_initResolve() {
     res_init();
 }
 
-JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_ethernetList(JNIEnv *env, jclass) {
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_networkInterfaces(JNIEnv *env, jclass) {
     Network network;
     set<string> interfaces = network.listInterfaces();
 

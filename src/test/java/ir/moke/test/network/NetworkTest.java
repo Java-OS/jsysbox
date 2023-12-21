@@ -83,7 +83,7 @@ public class NetworkTest {
     @Test
     @Order(3)
     public void checkListInterfaces() {
-        String[] list = JNetwork.ethernetList();
+        String[] list = JNetwork.networkInterfaces();
         Assertions.assertNotNull(list);
         Assertions.assertTrue(list.length > 1);
     }

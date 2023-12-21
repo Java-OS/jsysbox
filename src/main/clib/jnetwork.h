@@ -52,7 +52,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_initResolve();
  * Method:    ethernetList
  * Signature: ()Ljava/util/Set;
  */
-JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_ethernetList
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_networkInterfaces
         (JNIEnv *, jclass);
 
 #ifdef __cplusplus
