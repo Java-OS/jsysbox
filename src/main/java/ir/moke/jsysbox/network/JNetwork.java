@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -136,7 +137,7 @@ public class JNetwork {
             Short cidr = getCidr(iface);
             String netmask = getNetmask(iface);
             EthernetStatistic ethernetStatistic = getEthernetStatistic(iface);
-            Ethernet ethernet = new Ethernet(iface, mac, ip, netmask, cidr, ethernetStatistic);
+            Ethernet ethernet = new Ethernet(iface, mac, ip, netmask, cidr, ethernetStatistic, ethernetIsUp(iface));
             list.add(ethernet);
         }
         return list;
@@ -173,6 +174,10 @@ public class JNetwork {
 
     public static boolean isEthernetExists(String iface) {
         return ethernetList(false).stream().anyMatch(item -> item.iface().equals(iface));
+    }
+
+    public static boolean ethernetIsUp(String iface) {
+        return Arrays.asList(activeEthernetList()).contains(iface);
     }
 
     public static void addHostToRoute(String destination, String gateway, String iface, Integer metrics) throws JSysboxException {

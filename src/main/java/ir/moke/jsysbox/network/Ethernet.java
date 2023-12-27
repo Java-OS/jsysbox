@@ -19,5 +19,6 @@ public record Ethernet(String iface,
                        String ip,
                        String netmask,
                        Short cidr,
-                       EthernetStatistic statistic) {
+                       EthernetStatistic statistic,
+                       boolean isUp) {
 }
