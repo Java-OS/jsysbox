@@ -16,14 +16,14 @@ limitations under the License.
 #include "jnetwork.h"
 
 #include <iostream>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include <unistd.h>
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <list>
-#include <errno.h>
+#include <cerrno>
 #include <resolv.h>
 
 #include <net/if.h>
@@ -76,7 +76,43 @@ public:
         return 1;
     }
 
-    struct set<string> listInterfaces() {
+    std::set<std::string> listAvailableEthernet() {
+        std::set<std::string> interfaceList;
+
+        struct if_nameindex *ifList, *ifnp;
+        ifList = if_nameindex();
+        if (ifList == nullptr) {
+            perror("if_nameindex");
+            exit(EXIT_FAILURE);
+        }
+
+        for (ifnp = ifList; ifnp->if_name != nullptr; ++ifnp) {
+            struct ifaddrs *ifaddr, *ifa;
+
+            if (getifaddrs(&ifaddr) == -1) {
+                perror("getifaddrs");
+                exit(EXIT_FAILURE);
+            }
+
+            for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+                if (ifa->ifa_addr == nullptr)
+                    continue;
+
+                std::string interfaceName(ifa->ifa_name);
+
+                if (interfaceName == ifnp->if_name && interfaceList.count(interfaceName) == 0) {
+                    interfaceList.insert(interfaceName);
+                }
+            }
+
+            freeifaddrs(ifaddr);
+        }
+
+        if_freenameindex(ifList);
+        return interfaceList;
+    }
+
+    struct set<string> listActiveEthernet() {
         struct ifaddrs *ifaddr, *ifa;
         std::set<std::string> interfaceList;
 
@@ -366,18 +402,38 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_initResolve() {
     res_init();
 }
 
-JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_networkInterfaces(JNIEnv *env, jclass) {
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_availableEthernetList(JNIEnv *env, jclass) {
     Network network;
-    set<string> interfaces = network.listInterfaces();
+    set<string> interfaces = network.listAvailableEthernet();
 
+    auto size = static_cast<jsize>(interfaces.size());
     jclass stringClass = env->FindClass("java/lang/String");
-    jobjectArray result = env->NewObjectArray(interfaces.size(), stringClass, nullptr);
+    jobjectArray result = env->NewObjectArray(size, stringClass, nullptr);
 
+    jsize index = 0;
     for (const string &interface : interfaces) {
         jstring element = env->NewStringUTF(interface.c_str());
         env->SetObjectArrayElement(result, index, element);
+        index++;
     }
 
     return result;
 }
 
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_activeEthernetList(JNIEnv *env, jclass) {
+    Network network;
+    set<string> interfaces = network.listActiveEthernet();
+
+    auto size = static_cast<jsize>(interfaces.size());
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray result = env->NewObjectArray(size, stringClass, nullptr);
+
+    jsize index = 0;
+    for (const string &interface : interfaces) {
+        jstring element = env->NewStringUTF(interface.c_str());
+        env->SetObjectArrayElement(result, index, element);
+        index++;
+    }
+
+    return result;
+}

@@ -42,6 +42,41 @@ public class JNetwork {
         JniNativeLoader.load("jnetwork.so");
     }
 
+    /**
+     * @param iface     interface iface
+     * @param ipAddress ip address
+     * @param netmask   netmask
+     */
+    public native static void setIp(String iface, String ipAddress, String netmask) throws JSysboxException;
+
+    /**
+     * @param iface Interface name
+     */
+    public native static void ifUp(String iface) throws JSysboxException;
+
+    /**
+     * @param iface Interface name
+     */
+    public native static void ifDown(String iface) throws JSysboxException;
+
+    /**
+     * @param destination target ip address
+     * @param netmask     netmask
+     * @param gateway     gateway
+     * @param iface       interface iface
+     * @param metrics     route metrics
+     * @param isHost      route type host or network
+     * @param delete      add or delete
+     */
+    public native static int updateRoute(String destination, String netmask, String gateway, String iface, int metrics, boolean isHost, boolean delete) throws JSysboxException;
+
+    public native static String[] availableEthernetList();
+    public native static String[] activeEthernetList();
+
+    public static void flush(String iface) throws JSysboxException {
+        setIp(iface, "0.0.0.0", "");
+    }
+
     public static List<String> availableInterfaces() {
         try (Stream<Path> list = Files.list(SYS_NET_PATH)) {
             return list.map(Path::toFile)
@@ -88,7 +123,7 @@ public class JNetwork {
 
     public static List<Ethernet> ethernetList() {
         List<Ethernet> list = new ArrayList<>();
-        String[] networkInterfaces = networkInterfaces();
+        String[] networkInterfaces = activeEthernetList();
         for (String iface : networkInterfaces) {
             String mac = getMacAddress(iface);
             String ip = getIpAddress(iface);
@@ -133,40 +168,6 @@ public class JNetwork {
     public static boolean isEthernetExists(String iface) {
         return ethernetList().stream().anyMatch(item -> item.iface().equals(iface));
     }
-
-    /**
-     * @param iface     interface iface
-     * @param ipAddress ip address
-     * @param netmask   netmask
-     */
-    public native static void setIp(String iface, String ipAddress, String netmask) throws JSysboxException;
-
-    /**
-     * @param iface Interface name
-     */
-    public native static void ifUp(String iface) throws JSysboxException;
-
-    /**
-     * @param iface Interface name
-     */
-    public native static void ifDown(String iface) throws JSysboxException;
-
-    public static void flush(String iface) throws JSysboxException {
-        setIp(iface, "0.0.0.0", "");
-    }
-
-    /**
-     * @param destination target ip address
-     * @param netmask     netmask
-     * @param gateway     gateway
-     * @param iface       interface iface
-     * @param metrics     route metrics
-     * @param isHost      route type host or network
-     * @param delete      add or delete
-     */
-    public native static int updateRoute(String destination, String netmask, String gateway, String iface, int metrics, boolean isHost, boolean delete) throws JSysboxException;
-
-    public native static String[] networkInterfaces();
 
     public static void addHostToRoute(String destination, String gateway, String iface, Integer metrics) throws JSysboxException {
         updateRoute(destination, null, gateway, iface, metrics, true, false);

@@ -84,7 +84,7 @@ public class NetworkTest {
     @Test
     @Order(3)
     public void checkListInterfaces() {
-        String[] list = JNetwork.networkInterfaces();
+        String[] list = JNetwork.availableEthernetList();
         Assertions.assertNotNull(list);
         Assertions.assertTrue(list.length > 1);
     }
@@ -97,20 +97,34 @@ public class NetworkTest {
             String ethernet = "eth0";
             JNetwork.ifUp(ethernet);
             JNetwork.setIp(ethernet, "10.10.10.1", "255.255.255.0");
-            String[] before = JNetwork.networkInterfaces();
-            System.out.println("List interfaces (Before)");
-            for (String s : before) {
+            String[] beforeAvailable = JNetwork.availableEthernetList();
+            System.out.println("List beforeAvailable interfaces (Before)");
+            for (String s : beforeAvailable) {
                 System.out.println("> " + s);
             }
-            Assertions.assertTrue(Arrays.stream(before).anyMatch(item -> item.contains(ethernet)));
 
-            JNetwork.ifDown(ethernet);
-            String[] after = JNetwork.networkInterfaces();
-            System.out.println("List interfaces (After)");
-            for (String s : after) {
+            String[] beforeActive = JNetwork.activeEthernetList();
+            System.out.println("List beforeActive interfaces (Before)");
+            for (String s : beforeActive) {
                 System.out.println("> " + s);
             }
-            Assertions.assertTrue(Arrays.stream(after).noneMatch(item -> item.contains(ethernet)));
+
+            Assertions.assertTrue(Arrays.stream(beforeAvailable).anyMatch(item -> item.contains(ethernet)));
+            Assertions.assertEquals(beforeAvailable.length, beforeActive.length);
+
+            System.out.println("----------------------------------------------------------------------------");
+            JNetwork.ifDown(ethernet);
+            String[] afterAvailable = JNetwork.availableEthernetList();
+            System.out.println("List afterAvailable interfaces (After)");
+            for (String s : afterAvailable) {
+                System.out.println("> " + s);
+            }
+            String[] afterActive = JNetwork.activeEthernetList();
+            System.out.println("List afterActive interfaces (After)");
+            for (String s : afterActive) {
+                System.out.println("> " + s);
+            }
+            Assertions.assertEquals(afterAvailable.length - 1, afterActive.length);
         } catch (JSysboxException e) {
             throw new RuntimeException(e);
         }
@@ -144,15 +158,15 @@ public class NetworkTest {
         String n7 = JNetwork.cidrToNetmask(26);
         String n8 = JNetwork.cidrToNetmask(25);
         String n9 = JNetwork.cidrToNetmask(24);
-        Assertions.assertEquals(n1,"255.255.255.255");
-        Assertions.assertEquals(n2,"255.255.255.254");
-        Assertions.assertEquals(n3,"255.255.255.252");
-        Assertions.assertEquals(n4,"255.255.255.248");
-        Assertions.assertEquals(n5,"255.255.255.240");
-        Assertions.assertEquals(n6,"255.255.255.224");
-        Assertions.assertEquals(n7,"255.255.255.192");
-        Assertions.assertEquals(n8,"255.255.255.128");
-        Assertions.assertEquals(n9,"255.255.255.0");
+        Assertions.assertEquals(n1, "255.255.255.255");
+        Assertions.assertEquals(n2, "255.255.255.254");
+        Assertions.assertEquals(n3, "255.255.255.252");
+        Assertions.assertEquals(n4, "255.255.255.248");
+        Assertions.assertEquals(n5, "255.255.255.240");
+        Assertions.assertEquals(n6, "255.255.255.224");
+        Assertions.assertEquals(n7, "255.255.255.192");
+        Assertions.assertEquals(n8, "255.255.255.128");
+        Assertions.assertEquals(n9, "255.255.255.0");
     }
 
 
