@@ -71,12 +71,18 @@ public class JNetwork {
     public native static int updateRoute(String destination, String netmask, String gateway, String iface, int metrics, boolean isHost, boolean delete) throws JSysboxException;
 
     public native static String[] availableEthernetList();
+
     public native static String[] activeEthernetList();
 
     public static void flush(String iface) throws JSysboxException {
         setIp(iface, "0.0.0.0", "");
     }
 
+    /**
+     * @return list of available interfaces
+     * @deprecated please use ethernetList method
+     */
+    @Deprecated
     public static List<String> availableInterfaces() {
         try (Stream<Path> list = Files.list(SYS_NET_PATH)) {
             return list.map(Path::toFile)
@@ -121,9 +127,9 @@ public class JNetwork {
         return cidrToNetmask(cidr);
     }
 
-    public static List<Ethernet> ethernetList() {
+    public static List<Ethernet> ethernetList(boolean active) {
         List<Ethernet> list = new ArrayList<>();
-        String[] networkInterfaces = activeEthernetList();
+        String[] networkInterfaces = active ? activeEthernetList() : availableEthernetList();
         for (String iface : networkInterfaces) {
             String mac = getMacAddress(iface);
             String ip = getIpAddress(iface);
