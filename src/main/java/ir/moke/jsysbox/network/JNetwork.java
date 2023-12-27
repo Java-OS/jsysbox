@@ -168,11 +168,11 @@ public class JNetwork {
      * @return {@link Ethernet}
      */
     public static Ethernet ethernet(String iface) {
-        return ethernetList().stream().filter(item -> item.iface().equals(iface)).findFirst().orElse(null);
+        return ethernetList(false).stream().filter(item -> item.iface().equals(iface)).findFirst().orElse(null);
     }
 
     public static boolean isEthernetExists(String iface) {
-        return ethernetList().stream().anyMatch(item -> item.iface().equals(iface));
+        return ethernetList(false).stream().anyMatch(item -> item.iface().equals(iface));
     }
 
     public static void addHostToRoute(String destination, String gateway, String iface, Integer metrics) throws JSysboxException {
