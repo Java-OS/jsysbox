@@ -100,7 +100,7 @@ public:
 
                 std::string interfaceName(ifa->ifa_name);
 
-                if (interfaceName == ifnp->if_name && interfaceList.count(interfaceName) == 0 && interfaceName != "lo") {
+                if (interfaceName == ifnp->if_name && interfaceList.count(interfaceName) == 0) {
                     interfaceList.insert(interfaceName);
                 }
             }
@@ -127,7 +127,7 @@ public:
 
             std::string interfaceName(ifa->ifa_name);
 
-            if ((ifa->ifa_flags & IFF_UP) && interfaceList.count(interfaceName) == 0 && interfaceName != "lo") {
+            if ((ifa->ifa_flags & IFF_UP) && interfaceList.count(interfaceName) == 0) {
                 interfaceList.insert(interfaceName);
             }
         }
