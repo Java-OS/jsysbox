@@ -75,6 +75,8 @@ public class JNetwork {
 
     public native static String[] activeEthernetList();
 
+    private native static void initResolve();
+
     public static void flush(String iface) throws JSysboxException {
         setIp(iface, "0.0.0.0", "");
     }
@@ -326,6 +328,4 @@ public class JNetwork {
 
         initResolve();
     }
-
-    private native static void initResolve();
 }
