@@ -4,7 +4,7 @@ CFLAGS=-Wall -fPIC -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux -lstdc++
 BUILD_DIR=build
 
 
-ifeq ($(ARCH),aarch64) 
+ifeq ($(ARCH),arm64) 
 	CXX=aarch64-linux-gnu-g++-11
 	CSTRIP=aarch64-linux-gnu-strip
 endif
