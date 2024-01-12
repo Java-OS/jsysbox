@@ -41,7 +41,12 @@ public class JniNativeLoader {
     }
 
     public static synchronized void load(String name) {
-        extractLibrary(name).ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+        String arch = System.getProperty("os.arch");
+        if (arch.equals("amd64")) {
+            extractLibrary(name + "_x86_64.so").ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+        } else {
+            extractLibrary(name+ "_arm4.so").ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+        }
     }
 
     private static Optional<Path> extractLibrary(String name) {

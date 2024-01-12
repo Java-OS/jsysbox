@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 public class JDateTime {
     static {
-        JniNativeLoader.load("jdatetime.so");
+        JniNativeLoader.load("jdatetime");
     }
 
     public native static void setTimezone(String timezone) throws JSysboxException;

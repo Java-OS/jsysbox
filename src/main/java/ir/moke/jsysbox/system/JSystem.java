@@ -25,7 +25,7 @@ import java.util.List;
 public class JSystem {
 
     static {
-        JniNativeLoader.load("jsystem.so");
+        JniNativeLoader.load("jsystem");
     }
 
     public native static void reboot();

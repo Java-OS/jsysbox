@@ -40,7 +40,7 @@ public class JNetwork {
     private static final int DEFAULT_TTL = 96;
 
     static {
-        JniNativeLoader.load("jnetwork.so");
+        JniNativeLoader.load("jnetwork");
     }
 
     /**
