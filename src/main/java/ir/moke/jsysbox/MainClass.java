@@ -14,9 +14,14 @@
 
 package ir.moke.jsysbox;
 
+import ir.moke.jsysbox.network.JNetwork;
+
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-
+        String[] strings = JNetwork.activeEthernetList();
+        for (String string : strings) {
+            System.out.println(string);
+        }
     }
 }

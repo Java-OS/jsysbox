@@ -1,11 +1,11 @@
-X86_64_CXX=cc
-ARM64_CXX=aarch64-linux-gnu-g++-11
+X86_64_CXX=g++
+ARM64_CXX=aarch64-linux-gnu-g++-12
 X86_64_STRIP=strip
 ARM64_STRIP=aarch64-linux-gnu-strip
 CFLAGS=-Wall -fPIC -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux -lstdc++
 BUILD_DIR=build
 
-.PHONY: all clean 
+.PHONY: all clean
 
 all: jsystem jnetwork jdatetime
 
