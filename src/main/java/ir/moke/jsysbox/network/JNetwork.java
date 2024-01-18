@@ -130,6 +130,10 @@ public class JNetwork {
         return cidrToNetmask(cidr);
     }
 
+    /**
+     * @param active if true, display only active network interfaces
+     * @return list of @{@link Ethernet}
+     */
     public static List<Ethernet> ethernetList(boolean active) {
         List<Ethernet> list = new ArrayList<>();
         String[] networkInterfaces = active ? activeEthernetList() : availableEthernetList();
