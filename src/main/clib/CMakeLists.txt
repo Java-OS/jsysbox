@@ -8,18 +8,20 @@ if (JNI_FOUND)
     message (STATUS "JNI_LIBRARIES=${JNI_LIBRARIES}")
 endif() 
 
-SET(ARCH $ENV{ARCH} )
-
-if ("aarch64" STREQUAL "${ARCH}") 
-   message (STATUS "ENV ${ARCH}")
-   set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++-12)
+if ("aarch64" STREQUAL "$ENV{ARCH}") 
+   message (STATUS "ENV aarch64")
+   SET(ARCH "arm64")
+   set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
+else() 
+   message (STATUS "ENV x86_64")
+   SET(ARCH "x86_64")
 endif() 
 
 include_directories(${JNI_INCLUDE_DIRS})
 
-add_library(jsystem SHARED jsystem.cpp)
-add_library(jnetwork SHARED jnetwork.cpp)
-add_library(jdatetime SHARED jdatetime.cpp) 
+add_library(jsystem_${ARCH} SHARED jsystem.cpp)
+add_library(jnetwork_${ARCH} SHARED jnetwork.cpp)
+add_library(jdatetime_${ARCH} SHARED jdatetime.cpp) 
 
 
 
