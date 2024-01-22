@@ -14,7 +14,7 @@
 
 package ir.moke.jsysbox;
 
-public class JSysboxException extends Exception{
+public class JSysboxException extends Exception {
     public JSysboxException(String message) {
         super(message);
     }

@@ -29,7 +29,7 @@ public enum RouteFlag {
     A(64),
     C(128),
     Z(256);
-    private final int bit ;
+    private final int bit;
 
     RouteFlag(int bit) {
         this.bit = bit;

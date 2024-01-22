@@ -33,7 +33,7 @@
     <build>
         <resources>
             <resource>
-                <directory>src/main/clib/build</directory>
+                <directory>src/main/clib/lib</directory>
                 <targetPath>META-INF/native</targetPath>
             </resource>
         </resources>
@@ -58,7 +58,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>make</executable>
+                            <executable>./run_cmake.sh</executable>
                             <workingDirectory>src/main/clib</workingDirectory>
                         </configuration>
                     </execution>

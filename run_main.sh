@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-(cd src/main/clib ; make)
+# (cd src/main/clib ; ./run_cmake.sh)
 sudo rm -rf /tmp/jni/
 mvn clean compile package -DskipTests
 PACKAGE_VERSION=$(cat pom.xml  | grep version | head -n1  | sed 's/<version>//' | sed 's/<\/version>//' | xargs) 

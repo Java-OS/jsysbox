@@ -42,7 +42,7 @@ public class JDateTime {
     public static void setDateTime(LocalDateTime dateTime) throws JSysboxException {
         dateTime = dateTime.truncatedTo(ChronoUnit.SECONDS);
         Timestamp timestamp = Timestamp.valueOf(dateTime.truncatedTo(ChronoUnit.SECONDS));
-        setDateTime(TimeUnit.SECONDS.convert(timestamp.getTime(),TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS.convert(timestamp.getNanos(), TimeUnit.NANOSECONDS));
+        setDateTime(TimeUnit.SECONDS.convert(timestamp.getTime(), TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS.convert(timestamp.getNanos(), TimeUnit.NANOSECONDS));
     }
 
     public static void setTimezone(ZoneId zone) throws JSysboxException {
