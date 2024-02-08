@@ -12,22 +12,28 @@
  * limitations under the License.
  */
 
-package ir.moke.jsysbox;
+package ir.moke.test.network;
 
-import ir.moke.jsysbox.network.JNetwork;
 import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 
-public class MainClass {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class SystemTest {
 
-    public static void main(String[] args) throws Exception {
+    @Test
+    @Order(0)
+    public void checkPartitions() {
         List<HDDPartition> partitions = JSystem.partitions();
-        System.out.println(partitions);
+        Assertions.assertNotNull(partitions);
+    }
 
-        System.out.println("-----------------");
+    @Test
+    @Order(0)
+    public void checkFileSystemStatistics() {
         HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("/data1");
-        System.out.println(filesystemStatistics);
+        Assertions.assertNotNull(filesystemStatistics);
     }
 }

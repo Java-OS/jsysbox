@@ -12,22 +12,7 @@
  * limitations under the License.
  */
 
-package ir.moke.jsysbox;
+package ir.moke.jsysbox.system;
 
-import ir.moke.jsysbox.network.JNetwork;
-import ir.moke.jsysbox.system.HDDPartition;
-import ir.moke.jsysbox.system.JSystem;
-
-import java.util.List;
-
-public class MainClass {
-
-    public static void main(String[] args) throws Exception {
-        List<HDDPartition> partitions = JSystem.partitions();
-        System.out.println(partitions);
-
-        System.out.println("-----------------");
-        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("/data1");
-        System.out.println(filesystemStatistics);
-    }
+public record HDDPartition(String partition, String mountPoint, Long total, Long free) {
 }

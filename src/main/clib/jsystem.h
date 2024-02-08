@@ -94,7 +94,13 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setHostname
 JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_system_JSystem_getHostname
     (JNIEnv *, jclass);
 
-
+/*
+ *  * Class:     ir_moke_jsysbox_system_JSystem
+ *   * Method:    getFilesystemStatistics
+ *    * Signature: (Ljava/lang/String;)Lir/moke/jsysbox/system/HDDPartition;
+ *     */
+JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStatistics
+    (JNIEnv *, jclass, jstring);
 
 #ifdef __cplusplus
 }

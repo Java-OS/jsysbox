@@ -49,6 +49,7 @@ limitations under the License.
 #include <bits/ioctls.h>
 #include <string>
 #include <set>
+#include "jexception.h"
 
 using namespace std;
 
@@ -335,11 +336,6 @@ public:
         return 1;
     }
 };
-
-void throwException(JNIEnv *env, string err) {
-    jclass jexception = env->FindClass("ir/moke/jsysbox/JSysboxException");
-    env->ThrowNew(jexception, err.data());
-}
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_setIp(JNIEnv *env, jclass clazz, jstring jiface, jstring jaddr, jstring jnetmask) {
     Network network;

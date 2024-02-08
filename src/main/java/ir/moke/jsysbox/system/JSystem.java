@@ -19,7 +19,9 @@ import ir.moke.jsysbox.JniNativeLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 public class JSystem {
@@ -47,6 +49,8 @@ public class JSystem {
     public native static void setHostname(String hostname) throws JSysboxException;
 
     public native static String getHostname();
+    public native static HDDPartition getFilesystemStatistics(String mountPoint);
+
     /*
      * Do not activate this methods . Too buggy
      * */
@@ -71,5 +75,19 @@ public class JSystem {
         List<String> mounts = JSystem.mounts();
         if (mounts == null) return false;
         return mounts.stream().anyMatch(item -> item.contains(mountpoint));
+    }
+
+    public static List<HDDPartition> partitions() {
+        List<HDDPartition> partitions = new ArrayList<>();
+        try {
+            List<String> lines = Files.readAllLines(Path.of("/proc/partitions")).stream().skip(2).toList();
+            for (String line : lines) {
+                String[] split = line.split("\\s+");
+                HDDPartition partition = new HDDPartition(split[4],null,Long.parseLong(split[3]),null);
+                partitions.add(partition);
+            }
+        } catch (IOException ignore) {
+        }
+        return partitions;
     }
 }
