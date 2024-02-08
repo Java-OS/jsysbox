@@ -121,7 +121,17 @@ JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_system_JSystem_getHostname (JNIEn
 }
 
 JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStatistics(JNIEnv *env, jclass clazz, jstring jMountPoint) {
+    if (jMountPoint == NULL) {
+      throwException(env,"Mount point is null");
+      return NULL;
+    }
     const char *mountPoint = env->GetStringUTFChars(jMountPoint, 0);
+
+    if (strlen(mountPoint) == 0) {
+      throwException(env,"Mount point is empty");
+      return NULL;
+    }
+
     std::ifstream inputFile(MOUNTS_FILE);    
     std::string line; 
     std::string partition; 
@@ -131,6 +141,11 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
             iss >> partition;
             break;
         }
+    }
+
+    if (partition.size() == 0) {
+      throwException(env,"target partition does not exists");
+      return NULL;
     }
 
     struct statvfs fiData;

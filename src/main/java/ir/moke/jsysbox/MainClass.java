@@ -27,7 +27,7 @@ public class MainClass {
         System.out.println(partitions);
 
         System.out.println("-----------------");
-        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("/data1");
+        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("dsads");
         System.out.println(filesystemStatistics);
     }
 }
