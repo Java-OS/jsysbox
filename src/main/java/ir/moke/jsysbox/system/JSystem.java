@@ -49,6 +49,7 @@ public class JSystem {
     public native static void setHostname(String hostname) throws JSysboxException;
 
     public native static String getHostname();
+
     public native static HDDPartition getFilesystemStatistics(String mountPoint);
 
     /*
@@ -83,11 +84,43 @@ public class JSystem {
             List<String> lines = Files.readAllLines(Path.of("/proc/partitions")).stream().skip(2).toList();
             for (String line : lines) {
                 String[] split = line.split("\\s+");
-                HDDPartition partition = new HDDPartition(split[4],null,Long.parseLong(split[3]),null);
-                partitions.add(partition);
+                String blockDevice = split[4];
+                if (!isScsiDeviceType(blockDevice)) {
+                    String mountPoint = mountPoint(blockDevice);
+                    HDDPartition partition;
+                    if (mountPoint == null) {
+                        partition = new HDDPartition(blockDevice, null, Long.parseLong(split[3]), null);
+                    } else {
+                        partition = getFilesystemStatistics(mountPoint);
+                    }
+                    partitions.add(partition);
+                }
             }
         } catch (IOException ignore) {
         }
         return partitions;
+    }
+
+    public static boolean isScsiDeviceType(String blk) {
+        return Files.exists(Path.of("/sys/block/" + blk + "/device/type"));
+    }
+
+    public static String mountPoint(String blk) {
+        try {
+            List<String> lines = Files.readAllLines(Path.of("/proc/mounts"));
+            for (String line : lines) {
+                String srcBlk = line.split("\\s+")[0];
+                String mountPoint = line.split("\\s+")[1];
+                Path path = Path.of(srcBlk);
+                if (Files.isSymbolicLink(path) && path.toRealPath().toString().endsWith(blk)) {
+                    return mountPoint;
+                } else if (srcBlk.endsWith(blk)) {
+                    return mountPoint;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 }

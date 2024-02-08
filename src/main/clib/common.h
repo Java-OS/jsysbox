@@ -14,6 +14,11 @@ limitations under the License.
 
 #include <jni.h>
 #include <string>
+#include <iostream> 
+#include <string.h> 
+#include <algorithm> 
+#include <cctype>
+#include <locale>
 
 
 inline void throwException(JNIEnv *env, std::string err) {
@@ -21,3 +26,21 @@ inline void throwException(JNIEnv *env, std::string err) {
     env->ThrowNew(jexception, err.data());
 }
 
+inline char *ltrim(char *s)
+{
+    while(isspace(*s)) s++;
+    return s;
+}
+
+inline char *rtrim(char *s)
+{
+    char* back = s + strlen(s);
+    while(isspace(*--back));
+    *(back+1) = '\0';
+    return s;
+}
+
+inline char *trim(char *s)
+{
+    return rtrim(ltrim(s)); 
+}

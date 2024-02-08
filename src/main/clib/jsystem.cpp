@@ -25,9 +25,10 @@ limitations under the License.
 #include <list>
 #include <vector>
 #include <sys/statvfs.h>
-#include "jexception.h"
+#include "common.h"
 #include <fstream>
 #include <sstream>
+#include <sys/types.h>
 
 extern char **environ;
 int hostname_max_size = 64 ;
@@ -125,9 +126,10 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
       throwException(env,"Mount point is null");
       return NULL;
     }
-    const char *mountPoint = env->GetStringUTFChars(jMountPoint, 0);
+    const char* mp = env->GetStringUTFChars(jMountPoint, 0);
+    std::string mountPoint(mp);
 
-    if (strlen(mountPoint) == 0) {
+    if (mountPoint.size() == 0) {
       throwException(env,"Mount point is empty");
       return NULL;
     }
@@ -136,7 +138,7 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
     std::string line; 
     std::string partition; 
     while (std::getline(inputFile,line)) {
-        if (line.find(mountPoint) != std::string::npos) {
+        if (line.find(" " + mountPoint + " ") != std::string::npos) {
             std::istringstream iss(line); 
             iss >> partition;
             break;
@@ -149,7 +151,7 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
     }
 
     struct statvfs fiData;
-    statvfs(mountPoint, &fiData);
+    statvfs(mountPoint.c_str(), &fiData);
 
     jlong jTotalSize = (jlong) fiData.f_bsize * fiData.f_blocks;
     jlong jFreeSize = (jlong) fiData.f_bsize * fiData.f_bfree;
@@ -158,13 +160,13 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
     jmethodID constructor = env->GetMethodID(hddpClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;)V");
 
     jstring jPartition = env->NewStringUTF(partition.c_str());
-   
+
     jobject jTotalSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), jTotalSize);
     jobject jFreeSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), jFreeSize);
 
     jobject hddPartitionObj = env->NewObject(hddpClass, constructor, jPartition, jMountPoint, jTotalSizeObj, jFreeSizeObj);
 
-    env->ReleaseStringUTFChars(jMountPoint, mountPoint);
+    env->ReleaseStringUTFChars(jMountPoint, mp);
     env->DeleteLocalRef(jPartition);
     env->DeleteLocalRef(jMountPoint);
     env->DeleteLocalRef(jTotalSizeObj);

@@ -23,10 +23,12 @@ public class MainClass {
 
     public static void main(String[] args) throws Exception {
         List<HDDPartition> partitions = JSystem.partitions();
-        System.out.println(partitions);
+        for (HDDPartition partition : partitions) {
+            System.out.println(partition);
+        }
 
-        System.out.println("-----------------");
-        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("dsads");
-        System.out.println(filesystemStatistics);
+//        System.out.println("-----------------");
+//        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("dsads");
+//        System.out.println(filesystemStatistics);
     }
 }

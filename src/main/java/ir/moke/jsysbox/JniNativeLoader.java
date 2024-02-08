@@ -23,8 +23,8 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 public class JniNativeLoader {
+    private static final long BLOCK_SIZE = 4096;
     private static final Path LIB_PATH = Paths.get("/META-INF/native");
-
     private static Path TEMP_DIR_PATH = Paths.get("/tmp/jni");
 
     static {

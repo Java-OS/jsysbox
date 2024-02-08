@@ -49,7 +49,7 @@ limitations under the License.
 #include <bits/ioctls.h>
 #include <string>
 #include <set>
-#include "jexception.h"
+#include "common.h"
 
 using namespace std;
 
