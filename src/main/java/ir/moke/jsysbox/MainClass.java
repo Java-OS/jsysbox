@@ -14,7 +14,6 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.network.JNetwork;
 import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
 
