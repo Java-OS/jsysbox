@@ -14,7 +14,7 @@
 
 package ir.moke.jsysbox.system;
 
-public enum FileSystemType {
+public enum FilesystemType {
     DEV_TMPFS("devtmpfs"),
     SYSFS("sysfs"),
     PROC("proc"),
@@ -26,7 +26,7 @@ public enum FileSystemType {
 
     private final String type ;
 
-    FileSystemType(String type) {
+    FilesystemType(String type) {
         this.type = type;
     }
 
