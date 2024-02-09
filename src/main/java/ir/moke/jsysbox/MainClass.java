@@ -14,8 +14,10 @@
 
 package ir.moke.jsysbox;
 
+import ir.moke.jsysbox.system.FilesystemType;
 import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
+import ir.moke.jsysbox.system.MountOption;
 
 import java.util.List;
 
@@ -29,6 +31,9 @@ public class MainClass {
 //            System.out.println(partition);
 //        }
 
-        JSystem.isMount("/");
+        int bit = MountOption.mapToBit(MountOption.NOSUID, MountOption.NODEV);
+        JSystem.mount("/dev/sdc1","/home/mah454/test", FilesystemType.NTFS.getType(), bit,null);
+        boolean mount = JSystem.isMount("/home/mah454/test");
+        System.out.println(mount);
     }
 }

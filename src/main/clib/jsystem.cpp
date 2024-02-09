@@ -53,17 +53,20 @@ JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_system_JSystem_mount (JNIEnv *en
     const char *fs_type = env->GetStringUTFChars(file_system_type,0);
     const char *mnt_opt = options != NULL ? env->GetStringUTFChars(options,0) : NULL;
     int flags = (int) jflags;
+    int r =  mount(src_path,dst_path,fs_type,flags,mnt_opt)  ;
     env->ReleaseStringUTFChars(src,src_path);
     env->ReleaseStringUTFChars(dst,dst_path);
     env->ReleaseStringUTFChars(file_system_type,fs_type);
     env->ReleaseStringUTFChars(options,mnt_opt);
-    return mount(src_path,dst_path,fs_type,flags,mnt_opt) == 0 ;
+
+    return r == 0;
 }
 
 JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_system_JSystem_umount (JNIEnv *env, jclass clazz, jstring target) {
     const char *target_path = env->GetStringUTFChars(target,0);
+    int r = umount(target_path) ;
     env->ReleaseStringUTFChars(target,target_path);
-    return umount(target_path) == 0 ;
+    return r == 0;
 }
 
 JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_system_JSystem_chroot (JNIEnv *env, jclass, jstring jtarget) {
