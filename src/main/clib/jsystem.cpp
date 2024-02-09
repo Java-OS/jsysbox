@@ -103,12 +103,13 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setHostname (JNIEnv *
     int r ;
     const char *key = env->GetStringUTFChars(jkey,0);
     int size = strlen(key);
-    env->ReleaseStringUTFChars(jkey,key);
     if (size > hostname_max_size) {
+                env->ReleaseStringUTFChars(jkey,key);
                 const char *err = "name too long, max 64 character" ;
                 throwException(env,err);
     }
     r = sethostname(key,size);
+    env->ReleaseStringUTFChars(jkey,key);
     if (r != 0) perror("sethostname");
 }
 
@@ -130,6 +131,7 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
     std::string mountPoint(mp);
 
     if (mountPoint.size() == 0) {
+      env->ReleaseStringUTFChars(jMountPoint, mp);
       throwException(env,"Mount point is empty");
       return NULL;
     }
