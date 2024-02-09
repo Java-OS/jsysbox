@@ -155,8 +155,8 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
     struct statvfs fiData;
     statvfs(mountPoint.c_str(), &fiData);
 
-    jlong jTotalSize = (jlong) fiData.f_bsize * fiData.f_blocks;
-    jlong jFreeSize = (jlong) fiData.f_bsize * fiData.f_bfree;
+    jlong jTotalSize = (jlong) (fiData.f_bsize/1024) * fiData.f_blocks;
+    jlong jFreeSize = (jlong)  (fiData.f_bsize/1024) * fiData.f_bfree;
 
     jclass hddpClass = env->FindClass("ir/moke/jsysbox/system/HDDPartition");
     jmethodID constructor = env->GetMethodID(hddpClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;)V");
