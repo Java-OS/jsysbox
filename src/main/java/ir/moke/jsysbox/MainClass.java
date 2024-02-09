@@ -14,21 +14,12 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
-
-import java.util.List;
 
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-        List<HDDPartition> partitions = JSystem.partitions();
-        for (HDDPartition partition : partitions) {
-            System.out.println(partition);
-        }
-
-//        System.out.println("-----------------");
-//        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("dsads");
-//        System.out.println(filesystemStatistics);
+        System.out.println(JSystem.getPartitionByUUID("/dev/mapper/data-Data1"));
+        System.out.println(JSystem.getPartitionByLabel("/dev/mapper/data-Data1"));
     }
 }
