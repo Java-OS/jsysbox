@@ -14,6 +14,10 @@
 
 package ir.moke.jsysbox.system;
 
+import ir.moke.jsysbox.JSysboxException;
+
+import java.util.List;
+
 public enum FilesystemType {
     DEV_TMPFS("devtmpfs"),
     SYSFS("sysfs"),
@@ -24,7 +28,7 @@ public enum FilesystemType {
     NTFS("ntfs"),
     ;
 
-    private final String type ;
+    private final String type;
 
     FilesystemType(String type) {
         this.type = type;
@@ -33,4 +37,13 @@ public enum FilesystemType {
     public String getType() {
         return type;
     }
+
+    public static List<FilesystemType> list() {
+        return List.of(FilesystemType.values());
+    }
+
+    public static FilesystemType find(String type) throws JSysboxException {
+        return list().stream().filter(item -> item.type.equals(type)).findFirst().orElseThrow(() -> new JSysboxException("Filesystem does not supported"));
+    }
+
 }
