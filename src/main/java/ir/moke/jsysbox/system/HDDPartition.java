@@ -14,10 +14,13 @@
 
 package ir.moke.jsysbox.system;
 
-public record HDDPartition(String partition, String mountPoint, Long total, Long free) {
-    public HDDPartition(String partition, String mountPoint, Long total, Long free) {
+public record HDDPartition(String partition, String mountPoint, String uuid, String label, String type, Long total, Long free) {
+    public HDDPartition(String partition, String mountPoint, String uuid, String label, String type, Long total, Long free) {
         this.partition = partition.trim();
         this.mountPoint = mountPoint != null ? mountPoint.trim() : null;
+        this.uuid = uuid;
+        this.label = label != null ? label.trim() : null;
+        this.type = type;
         this.total = total;
         this.free = free;
     }

@@ -89,12 +89,12 @@ public class JSystem {
                 String[] split = line.split("\\s+");
                 String blockDevice = split[4];
                 if (!isScsiDeviceType(blockDevice)) {
-                    String mountPoint = mountPoint(blockDevice);
                     HDDPartition partition;
-                    if (mountPoint == null) {
-                        partition = new HDDPartition("/dev/" + blockDevice, null, Long.parseLong(split[3]), null);
+                    if (blockDevice.startsWith("dm-")) {
+                        String lvmMapperPath = getLvmMapperPath("/dev/" + blockDevice);
+                        partition = getFilesystemStatistics(lvmMapperPath);
                     } else {
-                        partition = getFilesystemStatistics(mountPoint);
+                        partition = getFilesystemStatistics("/dev/" + blockDevice);
                     }
                     partitions.add(partition);
                 }
@@ -160,6 +160,22 @@ public class JSystem {
             }
         } catch (Exception ignore) {
         }
+        return null;
+    }
+
+    public static String getLvmMapperPath(String dmPath) {
+        try {
+            try (Stream<Path> listStream = Files.list(Path.of("/dev/mapper/"))) {
+                List<Path> list = listStream.toList();
+                for (Path path : list) {
+                    if (Path.of(dmPath).equals(path.toRealPath())) {
+                        return path.toString();
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+
         return null;
     }
 }

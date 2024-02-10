@@ -14,26 +14,17 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.system.FilesystemType;
 import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
-import ir.moke.jsysbox.system.MountOption;
 
 import java.util.List;
 
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-//        System.out.println(JSystem.getPartitionByUUID("/dev/mapper/data-Data1"));
-//        System.out.println(JSystem.getPartitionByLabel("/dev/mapper/data-Data1"));
-//        List<HDDPartition> partitions = JSystem.partitions();
-//        for (HDDPartition partition : partitions) {
-//            System.out.println(partition);
-//        }
-
-        int bit = MountOption.mapToBit(MountOption.NOSUID, MountOption.NODEV);
-        JSystem.mount("/dev/sdc1","/home/mah454/test", FilesystemType.NTFS.getType(), bit,null);
-        boolean mount = JSystem.isMount("/home/mah454/test");
-        System.out.println(mount);
+        List<HDDPartition> partitions = JSystem.partitions();
+        for (HDDPartition partition : partitions) {
+            System.out.println(partition);
+        }
     }
 }

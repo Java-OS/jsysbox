@@ -17,4 +17,4 @@
 rm -rf build lib
 mkdir build
 (cd build || exit ; cmake .. ; make)
-(cd build || exit ; ARCH=aarch64 cmake .. ; make)
+# (cd build || exit ; ARCH=aarch64 cmake .. ; make)

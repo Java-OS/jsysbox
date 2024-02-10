@@ -25,15 +25,13 @@ limitations under the License.
 #include <list>
 #include <vector>
 #include <sys/statvfs.h>
-#include "common.h"
+#include "common.cpp"
 #include <fstream>
 #include <sstream>
 #include <sys/types.h>
 
 extern char **environ;
 int hostname_max_size = 64 ;
-
-const std::string MOUNTS_FILE = "/proc/mounts";
 
 using namespace std;
 
@@ -125,55 +123,64 @@ JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_system_JSystem_getHostname (JNIEn
     return env->NewStringUTF(value);
 }
 
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStatistics(JNIEnv *env, jclass clazz, jstring jMountPoint) {
-    if (jMountPoint == NULL) {
+JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStatistics(JNIEnv *env, jclass clazz, jstring jFilesystem) {
+    if (jFilesystem == NULL) {
       throwException(env,"Mount point is null");
       return NULL;
     }
-    const char* mp = env->GetStringUTFChars(jMountPoint, 0);
-    std::string mountPoint(mp);
 
-    if (mountPoint.size() == 0) {
-      env->ReleaseStringUTFChars(jMountPoint, mp);
+    struct blkinfo blk_info ;
+    struct statvfs fiData;
+    struct swapinfo swInfo ;
+
+    const char* fs = env->GetStringUTFChars(jFilesystem, 0);
+    std::string file_system(fs);
+
+    if (file_system.size() == 0) {
+      env->ReleaseStringUTFChars(jFilesystem, fs);
       throwException(env,"Mount point is empty");
       return NULL;
     }
 
-    std::ifstream inputFile(MOUNTS_FILE);    
-    std::string line; 
-    std::string partition; 
-    while (std::getline(inputFile,line)) {
-        if (line.find(" " + mountPoint + " ") != std::string::npos) {
-            std::istringstream iss(line); 
-            iss >> partition;
-            break;
-        }
+    get_blk_info(file_system,blk_info);
+    bool isMounted = isFilesystemMounted(file_system);
+
+    std::string mountPoint = isMounted ? getMountPoint(file_system) : ""; 
+
+    if (isMounted) {
+        statvfs(mountPoint.c_str(), &fiData);
+    } else if (blk_info.type == "swap") {
+        get_swap_info(file_system,swInfo);
     }
-
-    if (partition.size() == 0) {
-      throwException(env,"target partition does not exists");
-      return NULL;
-    }
-
-    struct statvfs fiData;
-    statvfs(mountPoint.c_str(), &fiData);
-
-    jlong jTotalSize = (jlong) (fiData.f_bsize/1024) * fiData.f_blocks;
-    jlong jFreeSize = (jlong)  (fiData.f_bsize/1024) * fiData.f_bfree;
 
     jclass hddpClass = env->FindClass("ir/moke/jsysbox/system/HDDPartition");
-    jmethodID constructor = env->GetMethodID(hddpClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;)V");
+    jmethodID constructor = env->GetMethodID(hddpClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;)V");
 
-    jstring jPartition = env->NewStringUTF(partition.c_str());
+    jobject jTotalSizeObj = NULL ; 
+    jobject jFreeSizeObj = NULL;
+    
+    if (isMounted) {
+        long freeSize = (fiData.f_bsize/1024) * fiData.f_bfree;
+        jFreeSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), freeSize);
+    } 
 
-    jobject jTotalSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), jTotalSize);
-    jobject jFreeSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), jFreeSize);
+    if (blk_info.type == "swap") {
+        jTotalSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), swInfo.size);
+        jFreeSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), swInfo.size - swInfo.used);
+    } else {
+        long size = get_filesystem_size(file_system);
+        jTotalSizeObj = env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), size);
+    }
 
-    jobject hddPartitionObj = env->NewObject(hddpClass, constructor, jPartition, jMountPoint, jTotalSizeObj, jFreeSizeObj);
+    jstring jMountPoint = env->NewStringUTF(mountPoint.c_str());
+    jstring jUUID  = env->NewStringUTF(blk_info.uuid.c_str());
+    jstring jLabel = env->NewStringUTF(blk_info.label.c_str());
+    jstring jType  = env->NewStringUTF(blk_info.type.c_str());
 
-    env->ReleaseStringUTFChars(jMountPoint, mp);
-    env->DeleteLocalRef(jPartition);
-    env->DeleteLocalRef(jMountPoint);
+    jobject hddPartitionObj = env->NewObject(hddpClass, constructor, jFilesystem,jMountPoint,jUUID,jLabel,jType, jTotalSizeObj, jFreeSizeObj);
+
+    env->ReleaseStringUTFChars(jFilesystem, fs);
+    env->DeleteLocalRef(jFilesystem);
     env->DeleteLocalRef(jTotalSizeObj);
     env->DeleteLocalRef(jFreeSizeObj);
     env->DeleteLocalRef(hddpClass);

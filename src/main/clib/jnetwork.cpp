@@ -49,7 +49,7 @@ limitations under the License.
 #include <bits/ioctls.h>
 #include <string>
 #include <set>
-#include "common.h"
+#include "common.cpp"
 
 using namespace std;
 
