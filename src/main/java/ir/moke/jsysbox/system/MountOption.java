@@ -20,6 +20,7 @@ import java.util.BitSet;
 import java.util.List;
 
 public enum MountOption {
+    NONE(0),
     RDONLY(1),
     NOSUID(2),
     NODEV(4),
