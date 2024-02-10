@@ -81,6 +81,11 @@ public class JSystem {
         return partitions.stream().anyMatch(item -> item.uuid().equals(uuid));
     }
 
+    public static boolean isMountByMountPoint(String mountPoint) {
+        List<HDDPartition> partitions = JSystem.partitions();
+        return partitions.stream().anyMatch(item -> item.mountPoint().equals(mountPoint));
+    }
+
     public static List<HDDPartition> partitions() {
         List<HDDPartition> partitions = new ArrayList<>();
         try {
