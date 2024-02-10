@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class JSystem {
@@ -127,40 +128,14 @@ public class JSystem {
         return null;
     }
 
-    public static String getPartitionByUUID(String blkPath) {
-        try {
-            List<HDDPartition> partitions = JSystem.partitions();
-            for (HDDPartition hddPartition : partitions) {
-                try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-uuid/"))) {
-                    List<Path> list = listStream.toList();
-                    for (Path path : list) {
-                        if (Path.of(hddPartition.partition()).toRealPath().equals(path.toRealPath())) {
-                            return path.toString();
-                        }
-                    }
-                }
-            }
-        } catch (Exception ignore) {
-        }
-        return null;
+    public static HDDPartition getPartitionByUUID(String uuid) {
+        List<HDDPartition> partitions = JSystem.partitions();
+        return partitions.stream().filter(item -> item.uuid().equals(uuid)).findFirst().orElse(null);
     }
 
-    public static String getPartitionByLabel(String blkPath) {
-        try {
-            List<HDDPartition> partitions = JSystem.partitions();
-            for (HDDPartition hddPartition : partitions) {
-                try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-label/"))) {
-                    List<Path> list = listStream.toList();
-                    for (Path path : list) {
-                        if (Path.of(hddPartition.partition()).toRealPath().equals(path.toRealPath())) {
-                            return path.toString();
-                        }
-                    }
-                }
-            }
-        } catch (Exception ignore) {
-        }
-        return null;
+    public static HDDPartition getPartitionByLabel(String label) {
+        List<HDDPartition> partitions = JSystem.partitions();
+        return partitions.stream().filter(item -> Objects.equals(item.label(), label)).findFirst().orElse(null);
     }
 
     public static String getLvmMapperPath(String dmPath) {
