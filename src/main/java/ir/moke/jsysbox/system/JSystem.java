@@ -99,7 +99,7 @@ public class JSystem {
             for (String line : lines) {
                 String[] split = line.split("\\s+");
                 String blockDevice = split[4];
-                if (!isScsiDeviceType(blockDevice)) {
+                if (!isScsiDeviceType(blockDevice)) { //filter only partitions
                     HDDPartition partition;
                     if (blockDevice.startsWith("dm-")) {
                         String lvmMapperPath = getLvmMapperPath("/dev/" + blockDevice);
