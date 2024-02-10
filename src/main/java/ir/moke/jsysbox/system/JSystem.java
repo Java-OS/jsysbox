@@ -53,7 +53,9 @@ public class JSystem {
     public native static String getHostname();
 
     public native static HDDPartition getFilesystemStatistics(String blk);
+
     public native static void swapOn(String blk) throws JSysboxException;
+
     public native static void swapOff(String blk) throws JSysboxException;
 
     /*
@@ -82,8 +84,12 @@ public class JSystem {
     }
 
     public static boolean isMountByMountPoint(String mountPoint) {
-        List<HDDPartition> partitions = JSystem.partitions();
-        return partitions.stream().anyMatch(item -> item.mountPoint().equals(mountPoint));
+        List<String> mounts = mounts();
+        if (mounts == null) return false;
+        for (String line : mounts) {
+            if (mountPoint.equals(line.split("\\s+")[1])) return true;
+        }
+        return false;
     }
 
     public static List<HDDPartition> partitions() {
