@@ -76,12 +76,9 @@ public class JSystem {
         }
     }
 
-    public static boolean isMount(String mountpoint) {
-        List<String> mounts = JSystem.mounts();
-        if (mounts == null) return false;
-        return mounts.stream()
-                .map(item -> item.split("\\s+")[1])
-                .anyMatch(item -> item.equals(mountpoint));
+    public static boolean isMount(String uuid) {
+        List<HDDPartition> partitions = JSystem.partitions();
+        return partitions.stream().anyMatch(item -> item.uuid().equals(uuid));
     }
 
     public static List<HDDPartition> partitions() {
