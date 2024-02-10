@@ -52,7 +52,9 @@ public class JSystem {
 
     public native static String getHostname();
 
-    public native static HDDPartition getFilesystemStatistics(String mountPoint);
+    public native static HDDPartition getFilesystemStatistics(String blk);
+    public native static void swapOn(String blk) throws JSysboxException;
+    public native static void swapOff(String blk) throws JSysboxException;
 
     /*
      * Do not activate this methods . Too buggy

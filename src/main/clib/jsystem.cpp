@@ -20,6 +20,7 @@ limitations under the License.
 #include <unistd.h>
 #include <sys/reboot.h>
 #include <sys/mount.h>
+#include <sys/swap.h>
 #include <stdlib.h>
 #include <string.h>
 #include <list>
@@ -187,6 +188,25 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
 
     return hddPartitionObj;
 }
+
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_swapOn(JNIEnv *env, jclass clazz, jstring jblkPath) {
+  const char* blk = env->GetStringUTFChars(jblkPath,0);
+  int ret = swapon(blk,SWAP_FLAG_PREFER|SWAP_FLAG_DISCARD); 
+  if (ret != 0) {
+    throwException(env,"Failed to swap on"); 
+  }
+}
+
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_swapOff(JNIEnv *env, jclass clazz,jstring jblkPath) {
+  const char* blk = env->GetStringUTFChars(jblkPath,0);
+  int ret = swapoff(blk); 
+  if (ret != 0) {
+    throwException(env,"Failed to swap on"); 
+  }
+
+}
+
+
 
 
 /*

@@ -22,9 +22,12 @@ import java.util.List;
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-        List<HDDPartition> partitions = JSystem.partitions();
-        for (HDDPartition partition : partitions) {
-            System.out.println(partition);
-        }
+//        List<HDDPartition> partitions = JSystem.partitions();
+//        for (HDDPartition partition : partitions) {
+//            System.out.println(partition);
+//        }
+
+//        JSystem.swapOn("/dev/sdb2");
+//        JSystem.swapOff("/dev/sdb2");
     }
 }

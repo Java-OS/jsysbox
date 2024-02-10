@@ -22,10 +22,14 @@ public enum FilesystemType {
     DEV_TMPFS("devtmpfs"),
     SYSFS("sysfs"),
     PROC("proc"),
+    EXT3("ext3"),
     EXT4("ext4"),
     BTRFS("btrfs"),
+    XFS("xfs"),
     VFAT("vfat"),
     NTFS("ntfs"),
+    SWAP("swap"),
+    ISO9660("iso9660"),
     ;
 
     private final String type;
