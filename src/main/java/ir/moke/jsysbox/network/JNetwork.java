@@ -346,7 +346,7 @@ public class JNetwork {
     }
 
     public static void addHost(String ip, String hostname) throws JSysboxException {
-        String line = ip + " " + hostname + "\r\n";
+        String line = ip + " " + hostname + "\n";
         Path path = Path.of("/etc/hosts");
         try {
             Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
@@ -355,16 +355,16 @@ public class JNetwork {
         }
     }
 
-    public static void removeHost(String ip) throws JSysboxException {
+    public static void removeHost(String hostname) throws JSysboxException {
         try {
             Path path = Path.of("/etc/hosts");
             StringBuilder sb = new StringBuilder();
             Files.readAllLines(path)
                     .stream()
-                    .filter(item -> !item.split("\\s+")[0].equals(ip))
+                    .filter(item -> !item.split("\\s+")[1].equals(hostname))
                     .map(item -> item + "\n")
                     .forEach(sb::append);
-            Files.write(path, sb.toString().getBytes(), StandardOpenOption.WRITE);
+            Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.WRITE);
         } catch (IOException e) {
             throw new JSysboxException("Failed to update hosts");
         }
@@ -386,7 +386,7 @@ public class JNetwork {
     }
 
     public static void addNetwork(String network, String name) throws JSysboxException {
-        String line = network + " " + name + "\r\n";
+        String line = network + " " + name + "\n";
         Path path = Path.of("/etc/networks");
         try {
             Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
@@ -395,13 +395,13 @@ public class JNetwork {
         }
     }
 
-    public static void removeNetwork(String network) throws JSysboxException {
+    public static void removeNetwork(String name) throws JSysboxException {
         try {
             Path path = Path.of("/etc/hosts");
             StringBuilder sb = new StringBuilder();
             Files.readAllLines(path)
                     .stream()
-                    .filter(item -> !item.split("\\s+")[0].equals(network))
+                    .filter(item -> !item.split("\\s+")[1].equals(name))
                     .map(item -> item + "\n")
                     .forEach(sb::append);
             Files.write(path, sb.toString().getBytes(), StandardOpenOption.WRITE);

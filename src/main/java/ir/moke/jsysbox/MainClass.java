@@ -40,7 +40,7 @@ public class MainClass {
 //        Map<String, String> hosts = JNetwork.hosts();
 //        hosts.forEach((k,v) -> System.out.println(k + "   " + v));
 
-        JNetwork.removeHost("7.7.7.7");
+        JNetwork.removeHost("bbb");
 
     }
 }
