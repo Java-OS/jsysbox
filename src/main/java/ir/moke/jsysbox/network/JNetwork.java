@@ -346,13 +346,29 @@ public class JNetwork {
     }
 
     public static void addHost(String ip, String hostname) throws JSysboxException {
-        String line = ip + " " + hostname;
+        String line = ip + " " + hostname + "\r\n";
         Path path = Path.of("/etc/hosts");
         try {
             Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
             throw new JSysboxException("Failed to update hosts");
         }
+    }
+
+    public static void removeHost(String ip) throws JSysboxException {
+        try {
+            Path path = Path.of("/etc/hosts");
+            StringBuilder sb = new StringBuilder();
+            Files.readAllLines(path)
+                    .stream()
+                    .filter(item -> !item.split("\\s+")[0].equals(ip))
+                    .map(item -> item + "\n")
+                    .forEach(sb::append);
+            Files.write(path, sb.toString().getBytes(), StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            throw new JSysboxException("Failed to update hosts");
+        }
+
     }
 
     public static Map<String, String> networks() {
@@ -370,12 +386,27 @@ public class JNetwork {
     }
 
     public static void addNetwork(String network, String name) throws JSysboxException {
-        String line = network + " " + name;
+        String line = network + " " + name + "\r\n";
         Path path = Path.of("/etc/networks");
         try {
             Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new JSysboxException("Failed to update hosts");
+            throw new JSysboxException("Failed to update networks");
+        }
+    }
+
+    public static void removeNetwork(String network) throws JSysboxException {
+        try {
+            Path path = Path.of("/etc/hosts");
+            StringBuilder sb = new StringBuilder();
+            Files.readAllLines(path)
+                    .stream()
+                    .filter(item -> !item.split("\\s+")[0].equals(network))
+                    .map(item -> item + "\n")
+                    .forEach(sb::append);
+            Files.write(path, sb.toString().getBytes(), StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            throw new JSysboxException("Failed to update networks");
         }
     }
 }

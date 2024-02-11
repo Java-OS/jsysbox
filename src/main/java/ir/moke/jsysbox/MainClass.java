@@ -35,11 +35,12 @@ public class MainClass {
 //        JSystem.swapOn("/dev/sdb2");
 //        JSystem.swapOff("/dev/sdb2");
 
-        JNetwork.addHost("7.7.7.7","aaa.com");
+//        JNetwork.addHost("7.7.7.7","aaa.com");
 
-        Map<String, String> hosts = JNetwork.hosts();
-        hosts.forEach((k,v) -> System.out.println(k + "   " + v));
+//        Map<String, String> hosts = JNetwork.hosts();
+//        hosts.forEach((k,v) -> System.out.println(k + "   " + v));
 
+        JNetwork.removeHost("7.7.7.7");
 
     }
 }
