@@ -18,12 +18,8 @@ import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.nio.file.*;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class JSystem {
@@ -149,18 +145,15 @@ public class JSystem {
     }
 
     public static String getLvmMapperPath(String dmPath) {
-        try {
-            try (Stream<Path> listStream = Files.list(Path.of("/dev/mapper/"))) {
-                List<Path> list = listStream.toList();
-                for (Path path : list) {
-                    if (Path.of(dmPath).equals(path.toRealPath())) {
-                        return path.toString();
-                    }
+        try (Stream<Path> listStream = Files.list(Path.of("/dev/mapper/"))) {
+            List<Path> list = listStream.toList();
+            for (Path path : list) {
+                if (Path.of(dmPath).equals(path.toRealPath())) {
+                    return path.toString();
                 }
             }
         } catch (Exception ignore) {
         }
-
         return null;
     }
 }

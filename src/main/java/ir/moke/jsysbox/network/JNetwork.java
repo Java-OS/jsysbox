@@ -24,12 +24,10 @@ import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class JNetwork {
@@ -331,5 +329,53 @@ public class JNetwork {
         }
 
         initResolve();
+    }
+
+    public static Map<String, String> hosts() {
+        Map<String, String> map = new HashMap<>();
+        try {
+            List<String> lines = Files.readAllLines(Path.of("/etc/hosts"));
+            for (String line : lines) {
+                String[] split = line.split("\\s+");
+                map.put(split[0], split[1]);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return map;
+    }
+
+    public static void addHost(String ip, String hostname) throws JSysboxException {
+        String line = ip + " " + hostname;
+        Path path = Path.of("/etc/hosts");
+        try {
+            Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            throw new JSysboxException("Failed to update hosts");
+        }
+    }
+
+    public static Map<String, String> networks() {
+        Map<String, String> map = new HashMap<>();
+        try {
+            List<String> lines = Files.readAllLines(Path.of("/etc/networks"));
+            for (String line : lines) {
+                String[] split = line.split("\\s+");
+                map.put(split[0], split[1]);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return map;
+    }
+
+    public static void addNetwork(String network, String name) throws JSysboxException {
+        String line = network + " " + name;
+        Path path = Path.of("/etc/networks");
+        try {
+            Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            throw new JSysboxException("Failed to update hosts");
+        }
     }
 }

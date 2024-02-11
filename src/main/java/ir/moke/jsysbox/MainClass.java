@@ -14,10 +14,15 @@
 
 package ir.moke.jsysbox;
 
+import ir.moke.jsysbox.network.JNetwork;
 import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
+import ir.moke.jsysbox.system.MountOption;
 
 import java.util.List;
+import java.util.Map;
+
+import static ir.moke.jsysbox.system.MountOption.*;
 
 public class MainClass {
 
@@ -29,5 +34,12 @@ public class MainClass {
 
 //        JSystem.swapOn("/dev/sdb2");
 //        JSystem.swapOff("/dev/sdb2");
+
+        JNetwork.addHost("7.7.7.7","aaa.com");
+
+        Map<String, String> hosts = JNetwork.hosts();
+        hosts.forEach((k,v) -> System.out.println(k + "   " + v));
+
+
     }
 }
