@@ -18,7 +18,6 @@ import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Files;
@@ -319,11 +318,11 @@ public class JNetwork {
     }
 
     public static void setDnsNameServers(String... ipAddresses) throws JSysboxException {
-        File file = new File("/etc/resolv.conf");
-        try (FileWriter writer = new FileWriter(file)) {
-            for (String ip : ipAddresses) {
-                writer.write(String.format("nameserver %s\n", ip));
-            }
+        try {
+            Path path = Path.of("/etc/resolv.conf");
+            StringBuilder sb = new StringBuilder();
+            Arrays.stream(ipAddresses).map(item -> "nameserver " + item + "\n").forEach(sb::append);
+            Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
         } catch (IOException e) {
             throw new JSysboxException(e.getMessage());
         }
@@ -351,7 +350,7 @@ public class JNetwork {
         try {
             Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new JSysboxException("Failed to update hosts");
+            throw new JSysboxException(e.getMessage());
         }
     }
 
@@ -364,9 +363,9 @@ public class JNetwork {
                     .filter(item -> !item.split("\\s+")[1].equals(hostname))
                     .map(item -> item + "\n")
                     .forEach(sb::append);
-            Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.WRITE);
+            Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
         } catch (IOException e) {
-            throw new JSysboxException("Failed to update hosts");
+            throw new JSysboxException(e.getMessage());
         }
 
     }
@@ -391,7 +390,7 @@ public class JNetwork {
         try {
             Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new JSysboxException("Failed to update networks");
+            throw new JSysboxException(e.getMessage());
         }
     }
 
@@ -406,7 +405,7 @@ public class JNetwork {
                     .forEach(sb::append);
             Files.write(path, sb.toString().getBytes(), StandardOpenOption.WRITE);
         } catch (IOException e) {
-            throw new JSysboxException("Failed to update networks");
+            throw new JSysboxException(e.getMessage());
         }
     }
 }
