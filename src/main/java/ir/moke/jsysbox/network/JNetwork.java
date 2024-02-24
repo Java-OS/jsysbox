@@ -408,4 +408,25 @@ public class JNetwork {
             throw new JSysboxException(e.getMessage());
         }
     }
+
+    public static String calculateNetwork(String ip, int cidr) {
+        int ipInt = ipToInt(ip);
+        int networkInt = ipInt & (0xFFFFFFFF << (32 - cidr));
+        return intToIp(networkInt);
+    }
+
+    private static int ipToInt(String ip) {
+        String[] parts = ip.split("\\.");
+        return (Integer.parseInt(parts[0]) << 24) +
+                (Integer.parseInt(parts[1]) << 16) +
+                (Integer.parseInt(parts[2]) << 8) +
+                Integer.parseInt(parts[3]);
+    }
+
+    private static String intToIp(int ipInt) {
+        return ((ipInt >> 24) & 0xFF) + "." +
+                ((ipInt >> 16) & 0xFF) + "." +
+                ((ipInt >> 8) & 0xFF) + "." +
+                (ipInt & 0xFF);
+    }
 }
