@@ -396,7 +396,7 @@ public class JNetwork {
 
     public static void removeNetwork(String name) throws JSysboxException {
         try {
-            Path path = Path.of("/etc/hosts");
+            Path path = Path.of("/etc/networks");
             StringBuilder sb = new StringBuilder();
             Files.readAllLines(path)
                     .stream()
