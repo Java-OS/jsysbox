@@ -403,7 +403,7 @@ public class JNetwork {
                     .filter(item -> !item.split("\\s+")[1].equals(name))
                     .map(item -> item + "\n")
                     .forEach(sb::append);
-            Files.write(path, sb.toString().getBytes(), StandardOpenOption.WRITE);
+            Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
         } catch (IOException e) {
             throw new JSysboxException(e.getMessage());
         }
