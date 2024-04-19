@@ -47,6 +47,22 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_updateRoute
  */
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_network_JNetwork_initResolve();
 
+/*
+ * Class:     ir_moke_jsysbox_network_JNetwork
+ * Method:    availableEthernetList
+ * Signature: ()Ljava/util/Set;
+ */
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_availableEthernetList
+        (JNIEnv *, jclass);
+
+/*
+ * Class:     ir_moke_jsysbox_network_JNetwork
+ * Method:    activeEthernetList
+ * Signature: ()Ljava/util/Set;
+ */
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_network_JNetwork_activeEthernetList
+        (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

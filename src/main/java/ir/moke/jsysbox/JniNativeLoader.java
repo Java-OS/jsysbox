@@ -23,8 +23,8 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 public class JniNativeLoader {
+    private static final long BLOCK_SIZE = 4096;
     private static final Path LIB_PATH = Paths.get("/META-INF/native");
-
     private static Path TEMP_DIR_PATH = Paths.get("/tmp/jni");
 
     static {
@@ -41,7 +41,12 @@ public class JniNativeLoader {
     }
 
     public static synchronized void load(String name) {
-        extractLibrary(name).ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+        String arch = System.getProperty("os.arch");
+        if (arch.equals("amd64")) {
+            extractLibrary("lib" + name + "_x86_64.so").ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+        } else {
+            extractLibrary("lib" + name + "_arm64.so").ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+        }
     }
 
     private static Optional<Path> extractLibrary(String name) {
