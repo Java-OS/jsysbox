@@ -108,13 +108,13 @@ int get_blk_info(std::string partition, struct blkinfo &info) {
    blkid_probe pr = blkid_new_probe_from_filename(partition.c_str());
    if (!pr) {
       perror("Failed to open partition") ;
-      return -1; 
+      return -1;
    }
 
    if (blkid_do_probe(pr) < 0) {
       perror("Failed to blk probe") ;
       blkid_free_probe(pr);
-      return -1; 
+      return -1;
    }
 
    blkid_probe_lookup_value(pr, "TYPE", &type, NULL);
@@ -128,11 +128,23 @@ int get_blk_info(std::string partition, struct blkinfo &info) {
      label_string = "";
    }
 
-   std::string type_string(type);
-   std::string uuid_string(uuid);
+   std::string type_string;
+   if (type != NULL) {
+     type_string = type;
+   } else {
+     type_string = "";
+   }
+
+
+   std::string uuid_string;
+   if (uuid != NULL) {
+     uuid_string = uuid;
+   } else {
+     uuid_string = "";
+   }
 
    blkid_free_probe(pr);
-   
+
    info.type  = type_string ;
    info.label = label_string;
    info.uuid  = uuid_string;
