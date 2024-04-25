@@ -14,7 +14,15 @@
 
 package ir.moke.jsysbox;
 
-public class JSysboxException extends Exception {
+public class JSysboxException extends RuntimeException {
+    public JSysboxException(Throwable cause) {
+        super(cause);
+    }
+
+    public JSysboxException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public JSysboxException(String message) {
         super(message);
     }

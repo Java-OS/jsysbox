@@ -75,7 +75,7 @@ public class JSystem {
         try {
             return Files.readAllLines(Paths.get("/proc/mounts"));
         } catch (IOException e) {
-            return null;
+            throw new JSysboxException(e);
         }
     }
 
@@ -111,7 +111,8 @@ public class JSystem {
                     partitions.add(partition);
                 }
             }
-        } catch (IOException ignore) {
+        } catch (IOException e) {
+            throw new JSysboxException(e);
         }
         return partitions;
     }
@@ -157,7 +158,8 @@ public class JSystem {
                     return path.toString();
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            throw new JSysboxException(e);
         }
         return null;
     }
@@ -168,15 +170,14 @@ public class JSystem {
             String line = new String(bytes);
             String rootBlk = Arrays.stream(line.split(" "))
                     .filter(item -> item.contains("root="))
-                    .map(item -> item.split("=",2)[1])
+                    .map(item -> item.split("=", 2)[1])
                     .findFirst()
                     .orElse(null);
-
             if (rootBlk == null) return null;
             if (rootBlk.startsWith("UUID")) return getPartitionByUUID(rootBlk.split("=")[1]);
             return getFilesystemStatistics(rootBlk);
         } catch (Exception e) {
-            return null;
+            throw new JSysboxException(e);
         }
     }
 }
