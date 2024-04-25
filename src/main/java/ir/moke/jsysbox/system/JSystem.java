@@ -18,8 +18,13 @@ import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class JSystem {
@@ -155,5 +160,23 @@ public class JSystem {
         } catch (Exception ignore) {
         }
         return null;
+    }
+
+    public static HDDPartition getRootPartition() {
+        try {
+            byte[] bytes = Files.readAllBytes(Path.of("/proc/cmdline"));
+            String line = new String(bytes);
+            String rootBlk = Arrays.stream(line.split(" "))
+                    .filter(item -> item.contains("root="))
+                    .map(item -> item.split("=",2)[1])
+                    .findFirst()
+                    .orElse(null);
+
+            if (rootBlk == null) return null;
+            if (rootBlk.startsWith("UUID")) return getPartitionByUUID(rootBlk.split("=")[1]);
+            return getFilesystemStatistics(rootBlk);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

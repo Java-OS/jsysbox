@@ -23,5 +23,7 @@ public class MainClass {
         HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("/dev/loop0");
 
         System.out.println(filesystemStatistics);
+
+        System.out.println(JSystem.getRootPartition());
     }
 }
