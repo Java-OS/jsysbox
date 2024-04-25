@@ -17,18 +17,18 @@ package ir.moke.jsysbox.network;
 import java.util.Objects;
 
 public class Route {
-    private final int id;
-    private final String destination;
-    private final String netmask;
-    private final String gateway;
-    private final String iface;
-    private final int flags;
-    private final int use;
-    private final int metrics;
-    private final int mtu;
-    private final int window;
-    private final int irtt;
-    private final int refcnt;
+    private int id;
+    private String destination;
+    private String netmask;
+    private String gateway;
+    private String iface;
+    private int flags;
+    private int use;
+    private int metrics;
+    private int mtu;
+    private int window;
+    private int irtt;
+    private int refcnt;
     private boolean locked = false;
 
     public Route(int id, String destination, String netmask, String gateway, String iface, int flags, int use, int metrics, int mtu, int window, int irtt, int refcnt) {
@@ -54,12 +54,24 @@ public class Route {
         return destination;
     }
 
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
+
     public String getNetmask() {
         return netmask;
     }
 
+    public void setNetmask(String netmask) {
+        this.netmask = netmask;
+    }
+
     public String getGateway() {
         return gateway;
+    }
+
+    public void setGateway(String gateway) {
+        this.gateway = gateway;
     }
 
     public String getIface() {
