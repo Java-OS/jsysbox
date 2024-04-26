@@ -384,8 +384,8 @@ public class JNetwork {
         return map;
     }
 
-    public static void addNetwork(String network, String name) throws JSysboxException {
-        String line = network + " " + name + "\n";
+    public static void addNetwork(String name, String network) throws JSysboxException {
+        String line = name + " " + network + "\n";
         Path path = Path.of("/etc/networks");
         try {
             Files.write(path, line.getBytes(), StandardOpenOption.APPEND);
