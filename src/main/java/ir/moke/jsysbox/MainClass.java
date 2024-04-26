@@ -17,13 +17,14 @@ package ir.moke.jsysbox;
 import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
 
+import java.util.List;
+
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("/dev/loop0");
-
-        System.out.println(filesystemStatistics);
-
-        System.out.println(JSystem.getRootPartition());
+        List<HDDPartition> partitions = JSystem.partitions();
+        for (HDDPartition partition : partitions) {
+            System.out.println(partition.partition() + "  => " + partition.mountPoint());
+        }
     }
 }

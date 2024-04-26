@@ -80,7 +80,7 @@ public class JSystem {
     }
 
     public static boolean isMount(String uuid) {
-        List<HDDPartition> partitions = JSystem.partitions();
+        List<HDDPartition> partitions = partitions();
         return partitions.stream().anyMatch(item -> item.uuid().equals(uuid));
     }
 
@@ -141,12 +141,12 @@ public class JSystem {
     }
 
     public static HDDPartition getPartitionByUUID(String uuid) {
-        List<HDDPartition> partitions = JSystem.partitions();
+        List<HDDPartition> partitions = partitions();
         return partitions.stream().filter(item -> item.uuid().equals(uuid)).findFirst().orElse(null);
     }
 
     public static HDDPartition getPartitionByLabel(String label) {
-        List<HDDPartition> partitions = JSystem.partitions();
+        List<HDDPartition> partitions = partitions();
         return partitions.stream().filter(item -> Objects.equals(item.label(), label)).findFirst().orElse(null);
     }
 

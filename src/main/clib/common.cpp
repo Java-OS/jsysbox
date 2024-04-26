@@ -80,24 +80,18 @@ bool isFilesystemMounted(const std::string& filesystem) {
 }
 
 std::string getMountPoint(const std::string& partition) {
-    FILE* mountsFile = std::fopen("/proc/mounts", "r");
-    if (!mountsFile) {
-        perror("Failed to open mounts file.");
-        return "";
+    struct mntent *ent;
+    FILE *aFile;
+
+    aFile = setmntent("/proc/mounts", "r");
+    if (aFile == NULL) {
+      perror("setmntent");
+      exit(1);
     }
-
-    struct mntent* entry;
-    while ((entry = getmntent(mountsFile))) {
-        if (std::strcmp(entry->mnt_fsname, partition.c_str()) == 0) {
-            std::string mountPoint(entry->mnt_dir);
-            std::fclose(mountsFile);
-            return mountPoint;
-        }
+    while (NULL != (ent = getmntent(aFile))) {
+      return ent->mnt_dir;
     }
-
-    std::fclose(mountsFile);
-
-    return "";
+    endmntent(aFile);
 }
 
 int get_blk_info(std::string partition, struct blkinfo &info) {
