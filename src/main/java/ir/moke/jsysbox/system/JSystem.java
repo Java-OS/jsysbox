@@ -75,7 +75,7 @@ public class JSystem {
         try {
             return Files.readAllLines(Paths.get("/proc/mounts"));
         } catch (IOException e) {
-            throw new JSysboxException(e);
+            return null;
         }
     }
 
