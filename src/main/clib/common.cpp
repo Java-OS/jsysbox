@@ -17,15 +17,12 @@ limitations under the License.
 #include <string>
 #include <iostream> 
 #include <string.h> 
-#include <algorithm> 
 #include <cctype>
-#include <locale>
 #include <fstream>
 #include <blkid/blkid.h>
 #include <mntent.h>
 #include <cstring>
 #include <sstream>
-#include <optional>
 #include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem; 
@@ -92,6 +89,7 @@ std::string getMountPoint(const std::string& partition) {
       return ent->mnt_dir;
     }
     endmntent(aFile);
+    return "";
 }
 
 int get_blk_info(std::string partition, struct blkinfo &info) {

@@ -180,4 +180,16 @@ public class JSystem {
             throw new JSysboxException(e);
         }
     }
+
+    public static boolean isSwapActivated(String blk) {
+        try {
+            return Files.readAllLines(Path.of("/proc/swaps"))
+                    .stream()
+                    .skip(1)
+                    .map(item -> item.split("\\s+")[0])
+                    .anyMatch(item -> item.equals(blk));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

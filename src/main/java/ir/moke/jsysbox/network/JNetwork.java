@@ -333,7 +333,7 @@ public class JNetwork {
     public static Map<String, String> hosts() {
         Map<String, String> map = new HashMap<>();
         try {
-            List<String> lines = Files.readAllLines(Path.of("/etc/hosts"));
+            List<String> lines = Files.readAllLines(Path.of("/etc/hosts")).stream().filter(item -> !item.trim().startsWith("#")).toList();
             for (String line : lines) {
                 String[] split = line.split("\\s+");
                 map.put(split[0], split[1]);
@@ -373,7 +373,7 @@ public class JNetwork {
     public static Map<String, String> networks() {
         Map<String, String> map = new HashMap<>();
         try {
-            List<String> lines = Files.readAllLines(Path.of("/etc/networks"));
+            List<String> lines = Files.readAllLines(Path.of("/etc/networks")).stream().filter(item -> !item.trim().startsWith("#")).toList();
             for (String line : lines) {
                 String[] split = line.split("\\s+");
                 map.put(split[0], split[1]);
@@ -400,7 +400,7 @@ public class JNetwork {
             StringBuilder sb = new StringBuilder();
             Files.readAllLines(path)
                     .stream()
-                    .filter(item -> !item.split("\\s+")[1].equals(name))
+                    .filter(item -> !item.split("\\s+")[0].equals(name))
                     .map(item -> item + "\n")
                     .forEach(sb::append);
             Files.write(path, sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
