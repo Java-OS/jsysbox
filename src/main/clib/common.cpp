@@ -17,15 +17,12 @@ limitations under the License.
 #include <string>
 #include <iostream> 
 #include <string.h> 
-#include <algorithm> 
 #include <cctype>
-#include <locale>
 #include <fstream>
 #include <blkid/blkid.h>
 #include <mntent.h>
 #include <cstring>
 #include <sstream>
-#include <optional>
 #include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem; 
@@ -80,23 +77,18 @@ bool isFilesystemMounted(const std::string& filesystem) {
 }
 
 std::string getMountPoint(const std::string& partition) {
-    FILE* mountsFile = std::fopen("/proc/mounts", "r");
-    if (!mountsFile) {
-        perror("Failed to open mounts file.");
-        return "";
+    struct mntent *ent;
+    FILE *aFile;
+
+    aFile = setmntent("/proc/mounts", "r");
+    if (aFile == NULL) {
+      perror("setmntent");
+      exit(1);
     }
-
-    struct mntent* entry;
-    while ((entry = getmntent(mountsFile))) {
-        if (std::strcmp(entry->mnt_fsname, partition.c_str()) == 0) {
-            std::string mountPoint(entry->mnt_dir);
-            std::fclose(mountsFile);
-            return mountPoint;
-        }
+    while (NULL != (ent = getmntent(aFile))) {
+      return ent->mnt_dir;
     }
-
-    std::fclose(mountsFile);
-
+    endmntent(aFile);
     return "";
 }
 
@@ -108,13 +100,13 @@ int get_blk_info(std::string partition, struct blkinfo &info) {
    blkid_probe pr = blkid_new_probe_from_filename(partition.c_str());
    if (!pr) {
       perror("Failed to open partition") ;
-      return -1; 
+      return -1;
    }
 
    if (blkid_do_probe(pr) < 0) {
       perror("Failed to blk probe") ;
       blkid_free_probe(pr);
-      return -1; 
+      return -1;
    }
 
    blkid_probe_lookup_value(pr, "TYPE", &type, NULL);
@@ -128,11 +120,23 @@ int get_blk_info(std::string partition, struct blkinfo &info) {
      label_string = "";
    }
 
-   std::string type_string(type);
-   std::string uuid_string(uuid);
+   std::string type_string;
+   if (type != NULL) {
+     type_string = type;
+   } else {
+     type_string = "";
+   }
+
+
+   std::string uuid_string;
+   if (uuid != NULL) {
+     uuid_string = uuid;
+   } else {
+     uuid_string = "";
+   }
 
    blkid_free_probe(pr);
-   
+
    info.type  = type_string ;
    info.label = label_string;
    info.uuid  = uuid_string;

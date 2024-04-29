@@ -146,7 +146,7 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStati
     get_blk_info(file_system,blk_info);
     bool isMounted = isFilesystemMounted(file_system);
 
-    std::string mountPoint = isMounted ? getMountPoint(file_system) : ""; 
+    std::string mountPoint = isMounted ? getMountPoint(file_system) : "";
 
     if (isMounted) {
         statvfs(mountPoint.c_str(), &fiData);
