@@ -59,7 +59,7 @@ public class JSystem {
 
     public native static void swapOff(String blk) throws JSysboxException;
 
-    public native static void kill(int pid, int signal);
+    public native static void kill(long pid, long signal);
     /*
      * Do not activate this methods . Too buggy
      * */
