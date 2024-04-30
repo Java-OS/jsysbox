@@ -30,6 +30,7 @@ limitations under the License.
 #include <fstream>
 #include <sstream>
 #include <sys/types.h>
+#include <signal.h>
 
 extern char **environ;
 int hostname_max_size = 64 ;
@@ -206,7 +207,9 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_swapOff(JNIEnv *env, 
 
 }
 
-
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_kill (JNIEnv *env, jclass, jlong pid, jlong signal) {
+   kill(pid,signal);
+}
 
 
 /*
