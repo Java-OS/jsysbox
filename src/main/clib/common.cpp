@@ -86,7 +86,10 @@ std::string getMountPoint(const std::string& partition) {
       exit(1);
     }
     while (NULL != (ent = getmntent(aFile))) {
-      return ent->mnt_dir;
+      if (ent->mnt_fsname == partition) {
+        endmntent(aFile);
+        return ent->mnt_dir;
+      }
     }
     endmntent(aFile);
     return "";
