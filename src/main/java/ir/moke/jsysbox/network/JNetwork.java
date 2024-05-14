@@ -27,6 +27,8 @@ import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 public class JNetwork {
@@ -330,8 +332,8 @@ public class JNetwork {
         initResolve();
     }
 
-    public static Map<String, String> hosts() {
-        Map<String, String> map = new HashMap<>();
+    public static ConcurrentMap<String, String> hosts() {
+        ConcurrentMap<String, String> map = new ConcurrentHashMap<>();
         try {
             List<String> lines = Files.readAllLines(Path.of("/etc/hosts")).stream().filter(item -> !item.trim().startsWith("#")).toList();
             for (String line : lines) {
@@ -370,8 +372,8 @@ public class JNetwork {
 
     }
 
-    public static Map<String, String> networks() {
-        Map<String, String> map = new HashMap<>();
+    public static ConcurrentMap<String, String> networks() {
+        ConcurrentMap<String, String> map = new ConcurrentHashMap<>();
         try {
             List<String> lines = Files.readAllLines(Path.of("/etc/networks")).stream().filter(item -> !item.trim().startsWith("#")).toList();
             for (String line : lines) {
