@@ -36,11 +36,19 @@ int set_system_dt(timeval tv) {
     return 0 ;
 }
 
-int get_hardware_dt(struct rtc_time rt) {
-    int fd = open (RTC_FILE,O_RDONLY);
-    ioctl(fd,RTC_RD_TIME,&rt);
+int get_hardware_dt(struct rtc_time &rt) { // Pass rt by reference
+    int fd = open(RTC_FILE, O_RDONLY);
+    if (fd < 0) { // Check if the file was opened successfully
+        perror("open");
+        return -1;
+    }
+    if (ioctl(fd, RTC_RD_TIME, &rt) < 0) { // Check if ioctl was successful
+        perror("ioctl");
+        close(fd);
+        return -1;
+    }
     close(fd);
-    return 0 ;
+    return 0;
 }
 
 int set_hardware_dt() {
