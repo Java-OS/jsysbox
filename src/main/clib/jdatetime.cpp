@@ -15,7 +15,7 @@
 using namespace std;
 
 
-static char RTC_FILE[] =  "/dev/rtc" ;
+static char RTC_FILE[] =  "/dev/rtc0" ;
 
 void throwException(JNIEnv *env, string err) {
 	jclass jexception = env->FindClass("ir/moke/jsysbox/JSysboxException");
