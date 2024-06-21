@@ -14,17 +14,18 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.system.HDDPartition;
 import ir.moke.jsysbox.system.JSystem;
 
-import java.util.List;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-        List<HDDPartition> partitions = JSystem.partitions();
-        for (HDDPartition partition : partitions) {
-            System.out.println(partition.partition() + "  => " + partition.mountPoint());
-        }
+//        JSystem.sysctl().forEach((k,v) -> System.out.println(k + "        " + v));
+
+        JSystem.sysctl("net.ipv4.ip_forward",args[0]);
     }
 }

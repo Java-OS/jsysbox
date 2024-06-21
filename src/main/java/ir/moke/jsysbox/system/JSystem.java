@@ -21,13 +21,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class JSystem {
+    private static final Path SYSCTL_BASE_PATH = Path.of("/proc/sys");
 
     static {
         JniNativeLoader.load("jsystem");
@@ -49,9 +48,9 @@ public class JSystem {
 
     public native static String getEnv(String key);
 
-    public native static void setHostname(String hostname) throws JSysboxException;
-
     public native static String getHostname();
+
+    public native static void setHostname(String hostname) throws JSysboxException;
 
     public native static HDDPartition getFilesystemStatistics(String blk);
 
@@ -191,6 +190,38 @@ public class JSystem {
                     .anyMatch(item -> item.equals(blk));
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static Map<String, String> sysctl() {
+        Map<String,String> items = new HashMap<>();
+        try (Stream<Path> stream = Files.walk(SYSCTL_BASE_PATH)) {
+            stream.filter(item -> !item.toFile().isDirectory())
+                    .forEach(item -> {
+                        String key = item.toString().substring("/proc/sys/".length()).replace("/",".");
+                        try {
+                            String value = new String(Files.readAllBytes(item));
+                            items.put(key,value);
+                        } catch (IOException e) {
+                            items.put(key,"");
+                        }
+                    });
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+        return items;
+    }
+
+    public static String sysctl(String key) {
+        return sysctl().get(key);
+    }
+
+    public static void sysctl(String key,String value) {
+        Path keyPath = SYSCTL_BASE_PATH.resolve(Path.of(key.replace(".", "/")));
+        try {
+            Files.write(keyPath,value.getBytes(), StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            throw new JSysboxException(e);
         }
     }
 }
