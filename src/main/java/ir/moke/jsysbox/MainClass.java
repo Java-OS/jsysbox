@@ -27,10 +27,8 @@ import java.util.stream.Stream;
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-        JSystem.insmod("xfs", null);
+        List<ModInfo> lsmod = JSystem.lsmod();
 
-        JSystem.lsmod().stream().filter(item -> item.name().equalsIgnoreCase("xfs")).findFirst().ifPresent(System.out::println);
-
-        Map<String, String> xfs = JSystem.modinfo("xfs");
+        lsmod.forEach(System.out::println);
     }
 }
