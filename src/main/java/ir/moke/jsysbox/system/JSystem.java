@@ -59,17 +59,6 @@ public class JSystem {
     public native static void swapOff(String blk) throws JSysboxException;
 
     public native static void kill(long pid, long signal);
-    /*
-     * Do not activate this methods . Too buggy
-     * */
-//    private native static String[] envList();
-//
-//    public static List<String> environments() {
-//        String[] envList = envList();
-//        return Arrays.stream(envList).filter(Objects::nonNull)
-//                .filter(item -> !item.isEmpty())
-//                .toList();
-//    }
 
     public static List<String> mounts() {
         try {
@@ -194,16 +183,16 @@ public class JSystem {
     }
 
     public static Map<String, String> sysctl() {
-        Map<String,String> items = new HashMap<>();
+        Map<String, String> items = new HashMap<>();
         try (Stream<Path> stream = Files.walk(SYSCTL_BASE_PATH)) {
             stream.filter(item -> !item.toFile().isDirectory())
                     .forEach(item -> {
-                        String key = item.toString().substring("/proc/sys/".length()).replace("/",".");
+                        String key = item.toString().substring("/proc/sys/".length()).replace("/", ".");
                         try {
                             String value = new String(Files.readAllBytes(item));
-                            items.put(key,value);
+                            items.put(key, value);
                         } catch (IOException e) {
-                            items.put(key,"");
+                            items.put(key, "");
                         }
                     });
         } catch (IOException e) {
@@ -216,12 +205,28 @@ public class JSystem {
         return sysctl().get(key);
     }
 
-    public static void sysctl(String key,String value) {
+    public static void sysctl(String key, String value) {
         Path keyPath = SYSCTL_BASE_PATH.resolve(Path.of(key.replace(".", "/")));
         try {
-            Files.write(keyPath,value.getBytes(), StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.WRITE);
+            Files.write(keyPath, value.getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
         } catch (IOException e) {
             throw new JSysboxException(e);
         }
     }
+
+    public static List<ModInfo> lsmod() {
+        try {
+            return Files.readAllLines(Path.of("/proc/modules"))
+                    .stream()
+                    .map(item -> item.split("\\s+", 4))
+                    .map(item -> new ModInfo(item[0], Long.parseLong(item[1]), Integer.parseInt(item[2]), item[3].replaceAll(" Live.*", "").replace(",", "")))
+                    .toList();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public native static void insmod(String name, String[] parameters);
+
+    public native static Map<String, String> modinfo(String name);
 }

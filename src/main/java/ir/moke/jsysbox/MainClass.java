@@ -15,17 +15,22 @@
 package ir.moke.jsysbox;
 
 import ir.moke.jsysbox.system.JSystem;
+import ir.moke.jsysbox.system.ModInfo;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-//        JSystem.sysctl().forEach((k,v) -> System.out.println(k + "        " + v));
+        JSystem.insmod("xfs", null);
 
-        JSystem.sysctl("net.ipv4.ip_forward",args[0]);
+        JSystem.lsmod().stream().filter(item -> item.name().equalsIgnoreCase("xfs")).findFirst().ifPresent(System.out::println);
+
+        Map<String, String> xfs = JSystem.modinfo("xfs");
     }
 }

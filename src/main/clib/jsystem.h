@@ -126,6 +126,29 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_swapOff
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_kill
     (JNIEnv *, jclass, jlong, jlong);
 
+/*
+ * Class:     ir_moke_jsysbox_system_JSystem
+ * Method:    insmod
+ * Signature: (Ljava/lang/String;[Ljava/lang/String;)Z
+ * */
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_insmod
+    (JNIEnv *, jclass, jstring, jobjectArray);
+
+/*
+ * Class:     ir_moke_jsysbox_system_JSystem
+ * Method:    insmod
+ * Signature: (Ljava/lang/String;)Z
+ * */
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_rmmod
+    (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     ir_moke_jsysbox_system_JSystem
+ * Method:    modinfo
+ * Signature: (Ljava/lang/String;)Ljava/util/HashMap;
+ * */
+JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_modinfo
+    (JNIEnv *, jclass, jstring);
 
 
 #ifdef __cplusplus
