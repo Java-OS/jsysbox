@@ -23,22 +23,6 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_shutdown();
 
 /*
  * Class:     ir_moke_jsysbox_system_JSystem
- * Method:    mount
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z
- */
-JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_system_JSystem_mount
-  (JNIEnv *, jclass, jstring, jstring, jstring, jint, jstring);
-
-/*
- * Class:     ir_moke_jsysbox_system_JSystem
- * Method:    umount
- * Signature: (Ljava/lang/String;)Z
- */
-JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_system_JSystem_umount
-  (JNIEnv *, jclass, jstring);
-
-/*
- * Class:     ir_moke_jsysbox_system_JSystem
  * Method:    umount
  * Signature: (Ljava/lang/String;)Z
  */
@@ -93,30 +77,6 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setHostname
  */
 JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_system_JSystem_getHostname
     (JNIEnv *, jclass);
-
-/*
- * Class:     ir_moke_jsysbox_system_JSystem
- * Method:    getFilesystemStatistics
- * Signature: (Ljava/lang/String;)Lir/moke/jsysbox/system/HDDPartition;
- * */
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_getFilesystemStatistics
-    (JNIEnv *, jclass, jstring);
-
-/*
- * Class:     ir_moke_jsysbox_system_JSystem
- * Method:    getFilesystemStatistics
- * Signature: (Ljava/lang/String;)Z
- * */
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_swapOn
-    (JNIEnv *, jclass, jstring);
-
-/*
- * Class:     ir_moke_jsysbox_system_JSystem
- * Method:    getFilesystemStatistics
- * Signature: (Ljava/lang/String;)Z
- * */
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_swapOff
-    (JNIEnv *, jclass, jstring);
 
 /*
  * Class:     ir_moke_jsysbox_system_JSystem

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package ir.moke.jsysbox.system;
+package ir.moke.jsysbox.hdd;
 
 public record HDDPartition(String partition, String mountPoint, String uuid, String label, String type, Long total, Long free) {
     public HDDPartition(String partition, String mountPoint, String uuid, String label, String type, Long total, Long free) {

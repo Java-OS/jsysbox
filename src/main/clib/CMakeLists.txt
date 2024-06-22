@@ -25,14 +25,17 @@ find_library(BLKID_LIBRARY NAMES blkid)
 find_library(KMOD_LIBRARY NAMES kmod) 
 
 add_library(jsystem_${ARCH} SHARED jsystem.cpp)
+add_library(jpartition_${ARCH} SHARED jpartition.cpp)
 add_library(jnetwork_${ARCH} SHARED jnetwork.cpp)
 add_library(jdatetime_${ARCH} SHARED jdatetime.cpp)
 
-target_link_libraries(jsystem_${ARCH} ${BLKID_LIBRARY} ${KMOD_LIBRARY} stdc++fs)
+target_link_libraries(jsystem_${ARCH} ${KMOD_LIBRARY} stdc++fs)
+target_link_libraries(jpartition_${ARCH} ${BLKID_LIBRARY} stdc++fs)
 target_link_libraries(jnetwork_${ARCH} ${BLKID_LIBRARY}  stdc++fs)
 target_link_libraries(jdatetime_${ARCH} ${BLKID_LIBRARY} stdc++fs)
 
 set_target_properties(jsystem_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set_target_properties(jpartition_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set_target_properties(jnetwork_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set_target_properties(jdatetime_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 

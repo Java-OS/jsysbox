@@ -14,8 +14,8 @@
 
 package ir.moke.test.network;
 
-import ir.moke.jsysbox.system.HDDPartition;
-import ir.moke.jsysbox.system.JSystem;
+import ir.moke.jsysbox.hdd.HDDPartition;
+import ir.moke.jsysbox.hdd.JPartition;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -26,14 +26,14 @@ public class SystemTest {
     @Test
     @Order(0)
     public void checkPartitions() {
-        List<HDDPartition> partitions = JSystem.partitions();
+        List<HDDPartition> partitions = JPartition.partitions();
         Assertions.assertNotNull(partitions);
     }
 
     @Test
     @Order(0)
     public void checkFileSystemStatistics() {
-        HDDPartition filesystemStatistics = JSystem.getFilesystemStatistics("/data1");
+        HDDPartition filesystemStatistics = JPartition.getFilesystemStatistics("/data1");
         Assertions.assertNotNull(filesystemStatistics);
     }
 }
