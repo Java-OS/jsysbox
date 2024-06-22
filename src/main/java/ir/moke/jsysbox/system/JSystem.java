@@ -228,5 +228,7 @@ public class JSystem {
 
     public native static void insmod(String name, String[] parameters);
 
+    public native static void rmmod(String name);
+
     public native static Map<String, String> modinfo(String name);
 }
