@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class JSystem {
@@ -216,10 +217,17 @@ public class JSystem {
 
     public static List<ModInfo> lsmod() {
         try {
+            Function<String[], ModInfo> modInfoFunction = item -> new ModInfo(
+                    item[0],
+                    Long.parseLong(item[1]),
+                    Integer.parseInt(item[2]),
+                    item[3].replaceAll(" Live.*", "").replaceAll(",$", "")
+            );
+
             return Files.readAllLines(Path.of("/proc/modules"))
                     .stream()
                     .map(item -> item.split("\\s+", 4))
-                    .map(item -> new ModInfo(item[0], Long.parseLong(item[1]), Integer.parseInt(item[2]), item[3].replaceAll(" Live.*", "").replaceAll(",$", "")))
+                    .map(modInfoFunction)
                     .toList();
         } catch (IOException e) {
             throw new RuntimeException(e);
