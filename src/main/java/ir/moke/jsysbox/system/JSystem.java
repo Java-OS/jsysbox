@@ -234,6 +234,10 @@ public class JSystem {
         }
     }
 
+    /**
+     * @param name       kernel module name
+     * @param parameters module parameters should be passed as ["key1=value1","key2=value2"]
+     */
     public native static void insmod(String name, String[] parameters);
 
     public native static void rmmod(String name);
