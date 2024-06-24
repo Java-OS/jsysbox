@@ -14,8 +14,17 @@
 
 package ir.moke.jsysbox;
 
+import ir.moke.jsysbox.disk.PartitionInformation;
+import ir.moke.jsysbox.disk.PartitionManager;
+
+import java.util.List;
+
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
+        List<PartitionInformation> partitions = PartitionManager.partitions();
+        for (PartitionInformation partition : partitions) {
+            System.out.println(partition);
+        }
     }
 }
