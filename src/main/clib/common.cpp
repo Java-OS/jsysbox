@@ -13,31 +13,16 @@ limitations under the License.
 */
 
 #include <jni.h>
-#include <stdio.h>
-#include <string>
-#include <iostream> 
-#include <string.h> 
-#include <cctype>
-#include <fstream>
+#include <parted/parted.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <blkid/blkid.h>
 #include <mntent.h>
 #include <cstring>
-#include <sstream>
 #include <experimental/filesystem>
+#include <cstring>
 
 namespace fs = std::experimental::filesystem; 
-
-struct blkinfo {
-  std::string uuid;
-  std::string label; 
-  std::string type; 
-};
-
-struct swapinfo {
-   long size ;
-   long used;
-   swapinfo() : size(0), used(0) {}
-};
 
 void throwException(JNIEnv *env, std::string err) {
     jclass jexception = env->FindClass("ir/moke/jsysbox/JSysboxException");
@@ -63,112 +48,6 @@ char *trim(char *s)
     return rtrim(ltrim(s)); 
 }
 
-bool isFilesystemMounted(const std::string& filesystem) {
-    std::ifstream mountsFile("/proc/mounts");
-    std::string line;
-    while (std::getline(mountsFile, line)) {
-        size_t pos = line.find(' ');
-        std::string mountedFilesystem = line.substr(0, pos);
-        if (mountedFilesystem == filesystem) {
-            return true; // Filesystem is mounted
-        }
-    }
-    return false; // Filesystem is not mounted
-}
-
-std::string getMountPoint(const std::string& partition) {
-    struct mntent *ent;
-    FILE *aFile;
-
-    aFile = setmntent("/proc/mounts", "r");
-    if (aFile == NULL) {
-      perror("setmntent");
-      exit(1);
-    }
-    while (NULL != (ent = getmntent(aFile))) {
-      if (ent->mnt_fsname == partition) {
-        endmntent(aFile);
-        return ent->mnt_dir;
-      }
-    }
-    endmntent(aFile);
-    return "";
-}
-
-int get_blk_info(std::string partition, struct blkinfo &info) {
-   const char *uuid = NULL;
-   const char *label = NULL;
-   const char *type = NULL;
-
-   blkid_probe pr = blkid_new_probe_from_filename(partition.c_str());
-   if (!pr) {
-      perror("Failed to open partition") ;
-      return -1;
-   }
-
-   if (blkid_do_probe(pr) < 0) {
-      perror("Failed to blk probe") ;
-      blkid_free_probe(pr);
-      return -1;
-   }
-
-   blkid_probe_lookup_value(pr, "TYPE", &type, NULL);
-   blkid_probe_lookup_value(pr, "LABEL", &label, NULL);
-   blkid_probe_lookup_value(pr, "UUID", &uuid, NULL);
-
-   std::string label_string;
-   if (label != NULL) {
-     label_string = label;
-   } else {
-     label_string = "";
-   }
-
-   std::string type_string;
-   if (type != NULL) {
-     type_string = type;
-   } else {
-     type_string = "";
-   }
-
-
-   std::string uuid_string;
-   if (uuid != NULL) {
-     uuid_string = uuid;
-   } else {
-     uuid_string = "";
-   }
-
-   blkid_free_probe(pr);
-
-   info.type  = type_string ;
-   info.label = label_string;
-   info.uuid  = uuid_string;
-   return 0 ;
-}
-
-int get_swap_info(const std::string& partitionPath, struct swapinfo &info) {
-    std::ifstream swapFile("/proc/swaps");
-    if (swapFile.is_open()) {
-        std::string line;
-        std::getline(swapFile, line);  // Skip the header line
-        
-        while (std::getline(swapFile, line)) {
-            std::string device, type, size, used;
-            std::istringstream iss(line);
-            iss >> device >> type >> size >> used;
-            
-            if (device == partitionPath) {
-                info.size = stol(size); 
-                info.used = stol(used);
-                return 0 ;
-            }
-        }
-    } else {
-        perror("Failed to open swap file.");
-    }
-    return -1;
-}
-
 bool isSymbolicLink(const std::string& filePath) {
     return fs::is_symlink(fs::path(filePath));
 }
@@ -182,7 +61,6 @@ std::string getRealPath(const std::string& filePath) {
     try {
         return fs::canonical(path).string();
     } catch (const fs::filesystem_error& e) {
-        std::cerr << "Error resolving path: " << e.what() << std::endl;
         return "";
     }
 }
@@ -197,29 +75,20 @@ std::string extractLastSegment(const std::string& str) {
     }
 }
 
+char* getEnumName(JNIEnv *env, jobject enumObj) {
+    jclass enumClass     = env->GetObjectClass(enumObj);
+    jmethodID nameMethod = env->GetMethodID(enumClass, "name", "()Ljava/lang/String;");
+    jstring nameString   = (jstring)(env)->CallObjectMethod(enumObj, nameMethod);
+    const char* name = env->GetStringUTFChars(nameString,0);
 
-long get_filesystem_size(const std::string& partition) {
-    std::string resolvedPartition = partition;
-    if (isSymbolicLink(partition)) {
-       resolvedPartition = getRealPath(partition); 
-    } 
-    std::ifstream partitionFile("/proc/partitions");
-    if (partitionFile.is_open()) {
-        std::string line;
-        std::getline(partitionFile, line);  // Skip the header line
-        std::getline(partitionFile, line);  // Skip empty (second) line
-        
-        std::string lsg = extractLastSegment(resolvedPartition) ;
-        while (std::getline(partitionFile, line)) {
-            std::string major, minor, blocks, name;
-            std::istringstream iss(line);
-            iss >> major >> minor >> blocks >> name;            
-            if (name == lsg) {
-                return stol(blocks) ;
-            }
-        }
-    } else {
-        perror("Failed to open partitions file.");
+    char *mutableName = strdup(name);
+    env->ReleaseStringUTFChars(nameString, name);
+
+    return mutableName ;
+}
+
+void toLowerCase(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = tolower(str[i]);
     }
-    return -1;
 }

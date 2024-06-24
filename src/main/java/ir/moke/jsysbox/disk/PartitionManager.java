@@ -1,4 +1,4 @@
-package ir.moke.jsysbox.hdd;
+package ir.moke.jsysbox.disk;
 
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
@@ -13,26 +13,37 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class JPartition {
+public class PartitionManager {
     static {
-        JniNativeLoader.load("jpartition");
+        JniNativeLoader.load("jpartition_manager");
     }
 
     public native static boolean mount(String src, String dst, String type, int flags, String options);
 
     public native static boolean umount(String src);
 
-    public native static HDDPartition getFilesystemStatistics(String blk);
+    public native static PartitionInformation[] getPartitionInformation(String blk);
 
     public native static void swapOn(String blk) throws JSysboxException;
 
     public native static void swapOff(String blk) throws JSysboxException;
 
-    public native static void initPartitionTable(String blk, PartitionTable partitionTable);
+    public native static PartitionTable partitionTableType(String blk);
 
-    public native static void create(String blk, long start, long end, FilesystemType filesystemType);
+    public native static void initializePartitionTable(String blk, PartitionTable partitionTable);
 
-    public native static void remove(String blk, long start, long end, FilesystemType filesystemType);
+    public native static void createPartition(String blk, long start, long end, FilesystemType filesystemType);
+
+    public native static void deletePartition(String blk, int partitionNumber);
+
+    public static List<String> listHardDrives() {
+        Path path = Path.of("/sys/block");
+        try (Stream<Path> stream = Files.list(path)) {
+            return stream.map(item -> "/dev/" + item.toString()).toList();
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
 
     public static List<String> mounts() {
         try {
@@ -43,8 +54,8 @@ public class JPartition {
     }
 
     public static boolean isMount(String uuid) {
-        List<HDDPartition> partitions = partitions();
-        return partitions.stream().anyMatch(item -> item.uuid().equals(uuid));
+        List<PartitionInformation> partitions = partitions();
+        return partitions.stream().anyMatch(item -> item.uuid.equals(uuid));
     }
 
     public static boolean isMountByMountPoint(String mountPoint) {
@@ -56,20 +67,20 @@ public class JPartition {
         return false;
     }
 
-    public static List<HDDPartition> partitions() {
-        List<HDDPartition> partitions = new ArrayList<>();
+    public static List<PartitionInformation> partitions() {
+        List<PartitionInformation> partitions = new ArrayList<>();
         try {
             List<String> lines = Files.readAllLines(Path.of("/proc/partitions")).stream().skip(2).toList();
             for (String line : lines) {
                 String[] split = line.split("\\s+");
                 String blockDevice = split[4];
                 if (!isScsiDeviceType(blockDevice)) { //filter only partitions
-                    HDDPartition partition;
+                    PartitionInformation partition;
                     if (blockDevice.startsWith("dm-")) {
                         String lvmMapperPath = getLvmMapperPath("/dev/" + blockDevice);
-                        partition = getFilesystemStatistics(lvmMapperPath);
+                        partition = getPartitionInformation(lvmMapperPath)[0];
                     } else {
-                        partition = getFilesystemStatistics("/dev/" + blockDevice);
+                        partition = getPartitionByLabel("/dev/" + blockDevice);
                     }
                     partitions.add(partition);
                 }
@@ -103,14 +114,14 @@ public class JPartition {
         return null;
     }
 
-    public static HDDPartition getPartitionByUUID(String uuid) {
-        List<HDDPartition> partitions = partitions();
-        return partitions.stream().filter(item -> item.uuid().equals(uuid)).findFirst().orElse(null);
+    public static PartitionInformation getPartitionByUUID(String uuid) {
+        List<PartitionInformation> partitions = partitions();
+        return partitions.stream().filter(item -> item.uuid.equals(uuid)).findFirst().orElse(null);
     }
 
-    public static HDDPartition getPartitionByLabel(String label) {
-        List<HDDPartition> partitions = partitions();
-        return partitions.stream().filter(item -> Objects.equals(item.label(), label)).findFirst().orElse(null);
+    public static PartitionInformation getPartitionByLabel(String label) {
+        List<PartitionInformation> partitions = partitions();
+        return partitions.stream().filter(item -> Objects.equals(item.label, label)).findFirst().orElse(null);
     }
 
     public static String getLvmMapperPath(String dmPath) {
@@ -127,7 +138,7 @@ public class JPartition {
         return null;
     }
 
-    public static HDDPartition getRootPartition() {
+    public static PartitionInformation getRootPartition() {
         try {
             byte[] bytes = Files.readAllBytes(Path.of("/proc/cmdline"));
             String line = new String(bytes);
@@ -138,7 +149,7 @@ public class JPartition {
                     .orElse(null);
             if (rootBlk == null) return null;
             if (rootBlk.startsWith("UUID")) return getPartitionByUUID(rootBlk.split("=")[1]);
-            return getFilesystemStatistics(rootBlk);
+            return getPartitionInformation(rootBlk)[0];
         } catch (Exception e) {
             throw new JSysboxException(e);
         }

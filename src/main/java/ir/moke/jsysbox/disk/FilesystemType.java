@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package ir.moke.jsysbox.hdd;
+package ir.moke.jsysbox.disk;
 
 import ir.moke.jsysbox.JSysboxException;
 

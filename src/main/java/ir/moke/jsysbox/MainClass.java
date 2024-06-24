@@ -14,21 +14,36 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.system.JSystem;
-import ir.moke.jsysbox.system.ModInfo;
+import ir.moke.jsysbox.disk.PartitionInformation;
+import ir.moke.jsysbox.disk.PartitionManager;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-        List<ModInfo> lsmod = JSystem.lsmod();
+        List<PartitionInformation> partitions = PartitionManager.partitions();
+        for (PartitionInformation partition : partitions) {
+            System.out.println(partition);
+        }
 
-        lsmod.forEach(System.out::println);
+//        System.out.println(PartitionManager.getRootPartition());
+//        HDDPartition[] filesystemStatistics = PartitionManager.getFilesystemStatistics("/tmp/test-disk.img");
+//        PartitionInformation[] filesystemStatistics = PartitionManager.getPartitionInformation(args[0]);
+//        for (PartitionInformation filesystemStatistic : filesystemStatistics) {
+//            System.out.println(filesystemStatistic);
+//        }
+//        String diskPath = "/tmp/test-disk.img";
+//        PartitionTable partitionTable = JFilesystem.partitionTableType(diskPath);
+//        System.out.println("Partition table : " + partitionTable);
+//        if (partitionTable == null) {
+//            System.out.println("Initialize new partition table");
+//            JFilesystem.initializePartitionTable(diskPath, PartitionTable.MSDOS);
+//        }
+//
+//        long size = 50;
+//        long lastSector = ((size * 1024 * 1024) / 512) + 2048 - 1;
+//
+//        JFilesystem.createPartition(diskPath, 2048, lastSector, FilesystemType.EXT3);
     }
 }

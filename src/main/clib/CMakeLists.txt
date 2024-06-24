@@ -23,19 +23,20 @@ endif()
 
 find_library(BLKID_LIBRARY NAMES blkid) 
 find_library(KMOD_LIBRARY NAMES kmod) 
+find_library(PARTED_LIBRARY NAMES parted)
 
 add_library(jsystem_${ARCH} SHARED jsystem.cpp)
-add_library(jpartition_${ARCH} SHARED jpartition.cpp)
+add_library(jpartition_manager_${ARCH} SHARED jpartition_manager.cpp)
 add_library(jnetwork_${ARCH} SHARED jnetwork.cpp)
 add_library(jdatetime_${ARCH} SHARED jdatetime.cpp)
 
 target_link_libraries(jsystem_${ARCH} ${KMOD_LIBRARY} stdc++fs)
-target_link_libraries(jpartition_${ARCH} ${BLKID_LIBRARY} stdc++fs)
+target_link_libraries(jpartition_manager_${ARCH} ${BLKID_LIBRARY} ${PARTED_LIBRARY} stdc++fs)
 target_link_libraries(jnetwork_${ARCH} ${BLKID_LIBRARY}  stdc++fs)
 target_link_libraries(jdatetime_${ARCH} ${BLKID_LIBRARY} stdc++fs)
 
 set_target_properties(jsystem_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set_target_properties(jpartition_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set_target_properties(jpartition_manager_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set_target_properties(jnetwork_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set_target_properties(jdatetime_${ARCH} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 

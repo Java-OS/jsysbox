@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package ir.moke.jsysbox.hdd;
+package ir.moke.jsysbox.disk;
 
 import java.util.ArrayList;
 import java.util.Arrays;

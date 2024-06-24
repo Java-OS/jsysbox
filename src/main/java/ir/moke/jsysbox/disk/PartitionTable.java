@@ -1,6 +1,6 @@
-package ir.moke.jsysbox.hdd;
+package ir.moke.jsysbox.disk;
 
 public enum PartitionTable {
     GPT,
-    MBR,
+    MSDOS,
 }
