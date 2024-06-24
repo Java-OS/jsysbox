@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 public class PartitionManager {
@@ -22,6 +21,15 @@ public class PartitionManager {
 
     public native static boolean umount(String src);
 
+    public native static String[] getDisks();
+    /**
+     * @param blk hard drive block device
+     *            for example :
+     *            /dev/sda
+     *            /dev/sdb
+     *            NOTE: WITHOUT PARTITION NUMBER SIGNATURE
+     * @return array of {@link PartitionInformation}
+     */
     public native static PartitionInformation[] getPartitionInformation(String blk);
 
     public native static void swapOn(String blk) throws JSysboxException;
@@ -80,7 +88,7 @@ public class PartitionManager {
                         String lvmMapperPath = getLvmMapperPath("/dev/" + blockDevice);
                         partition = getPartitionInformation(lvmMapperPath)[0];
                     } else {
-                        partition = getPartitionByLabel("/dev/" + blockDevice);
+                        partition = getPartitionInformation("/dev/" + blockDevice)[0];
                     }
                     partitions.add(partition);
                 }
@@ -115,13 +123,33 @@ public class PartitionManager {
     }
 
     public static PartitionInformation getPartitionByUUID(String uuid) {
-        List<PartitionInformation> partitions = partitions();
-        return partitions.stream().filter(item -> item.uuid.equals(uuid)).findFirst().orElse(null);
+        try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-uuid/"))) {
+            List<Path> list = listStream.toList();
+            for (Path path : list) {
+                if (Path.of(uuid).equals(path.toRealPath())) {
+                    Path realPath = getRealPathOfDevice(path);
+                    return getPartitionInformation(realPath.toString())[0];
+                }
+            }
+        } catch (Exception e) {
+            throw new JSysboxException(e);
+        }
+        return null;
     }
 
     public static PartitionInformation getPartitionByLabel(String label) {
-        List<PartitionInformation> partitions = partitions();
-        return partitions.stream().filter(item -> Objects.equals(item.label, label)).findFirst().orElse(null);
+        try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-label/"))) {
+            List<Path> list = listStream.toList();
+            for (Path path : list) {
+                if (Path.of(label).equals(path.toRealPath())) {
+                    Path realPath = getRealPathOfDevice(path);
+                    return getPartitionInformation(realPath.toString())[0];
+                }
+            }
+        } catch (Exception e) {
+            throw new JSysboxException(e);
+        }
+        return null;
     }
 
     public static String getLvmMapperPath(String dmPath) {
@@ -164,6 +192,15 @@ public class PartitionManager {
                     .anyMatch(item -> item.equals(blk));
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static Path getRealPathOfDevice(Path path) {
+        try {
+            Path linkPath = Files.readSymbolicLink(path);
+            return path.getParent().resolve(linkPath).toRealPath();
+        } catch (IOException e) {
+            throw new JSysboxException(e);
         }
     }
 }

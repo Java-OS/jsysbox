@@ -14,36 +14,8 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.disk.PartitionInformation;
-import ir.moke.jsysbox.disk.PartitionManager;
-
-import java.util.List;
-
 public class MainClass {
 
     public static void main(String[] args) throws Exception {
-        List<PartitionInformation> partitions = PartitionManager.partitions();
-        for (PartitionInformation partition : partitions) {
-            System.out.println(partition);
-        }
-
-//        System.out.println(PartitionManager.getRootPartition());
-//        HDDPartition[] filesystemStatistics = PartitionManager.getFilesystemStatistics("/tmp/test-disk.img");
-//        PartitionInformation[] filesystemStatistics = PartitionManager.getPartitionInformation(args[0]);
-//        for (PartitionInformation filesystemStatistic : filesystemStatistics) {
-//            System.out.println(filesystemStatistic);
-//        }
-//        String diskPath = "/tmp/test-disk.img";
-//        PartitionTable partitionTable = JFilesystem.partitionTableType(diskPath);
-//        System.out.println("Partition table : " + partitionTable);
-//        if (partitionTable == null) {
-//            System.out.println("Initialize new partition table");
-//            JFilesystem.initializePartitionTable(diskPath, PartitionTable.MSDOS);
-//        }
-//
-//        long size = 50;
-//        long lastSector = ((size * 1024 * 1024) / 512) + 2048 - 1;
-//
-//        JFilesystem.createPartition(diskPath, 2048, lastSector, FilesystemType.EXT3);
     }
 }

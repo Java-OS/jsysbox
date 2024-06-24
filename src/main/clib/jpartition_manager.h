@@ -26,6 +26,14 @@ JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_umount
 /*
  * Class:     ir_moke_jsysbox_disk_PartitionManager
  * Method:    getFilesystemStatistics
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_getDisks
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     ir_moke_jsysbox_disk_PartitionManager
+ * Method:    getFilesystemStatistics
  * Signature: (Ljava/lang/String;)Lir/moke/jsysbox/disk/HDDPartition;
  */
 JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_getPartitionInformation

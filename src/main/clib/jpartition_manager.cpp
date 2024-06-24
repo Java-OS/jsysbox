@@ -303,3 +303,56 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_deletePartitio
   close(dev,NULL,part);
 }
 
+
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_getDisks(JNIEnv *env, jclass clazz) {
+  struct udev* udev = udev_new();
+  if (!udev) {
+      std::cerr << "Cannot create udev object." << std::endl;
+  }
+
+  struct udev_enumerate* enumerate = udev_enumerate_new(udev);
+  udev_enumerate_add_match_subsystem(enumerate, "block");
+  udev_enumerate_add_match_property(enumerate, "DEVTYPE", "disk");
+  udev_enumerate_scan_devices(enumerate);
+
+  struct udev_list_entry* devices = udev_enumerate_get_list_entry(enumerate);
+  struct udev_list_entry* entry;
+
+  std::vector<std::string> list ;
+  udev_list_entry_foreach(entry, devices) {
+      const char* path = udev_list_entry_get_name(entry);
+      struct udev_device* device = udev_device_new_from_syspath(udev, path);
+
+      const char* devNode = udev_device_get_devnode(device);
+      // struct udev_device* scsi = udev_device_get_parent_with_subsystem_devtype(device, "scsi", "scsi_device");
+      // struct udev_device* ata = udev_device_get_parent_with_subsystem_devtype(device, "ata", "ata_device");
+      // struct udev_device* usb = udev_device_get_parent_with_subsystem_devtype(device, "usb", "usb_device");
+
+      std::string str(devNode) ;
+      list.push_back(str);
+      // if (scsi) {
+      //     std::cout << "SCSI Disk: " << devNode << std::endl;
+      // } else if (ata) {
+      //     std::cout << "ATA Disk: " << devNode << std::endl;
+      // } else if (usb) {
+      //     std::cout << "USB Disk: " << devNode << std::endl;
+      // } else {
+      //     std::cout << "Other Disk: " << devNode << std::endl;
+      // }
+
+      udev_device_unref(device);
+  }
+
+  udev_enumerate_unref(enumerate);
+  udev_unref(udev); 
+  
+  auto size = static_cast<jsize>(list.size());
+  jclass stringClass = env->FindClass("java/lang/String");
+  jobjectArray result = env->NewObjectArray(size, stringClass,nullptr); 
+
+  for (int i = 0; i < size; i++) {
+    env->SetObjectArrayElement(result, i, env->NewStringUTF(list[i].c_str()));
+  }
+
+  return result ;
+}
