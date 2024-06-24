@@ -14,9 +14,7 @@ limitations under the License.
 
 #include <jni.h>
 #include <parted/parted.h>
-#include <iostream>
 #include <cstddef>
-#include <string>
 #include <sys/mount.h>
 #include <sys/swap.h>
 #include <sys/statvfs.h>
@@ -25,12 +23,11 @@ limitations under the License.
 #include <stdlib.h>
 #include <string.h>
 #include <libudev.h>
-#include <vector>
-#include "jpartition_manager.h"
-#include "partition_utils.cpp"
+#include "jdisk_manager.h"
+#include "disk_utils.cpp"
 
 
-JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_mount (JNIEnv *env, jclass clazz, jstring src, jstring dst,jstring file_system_type,jint jflags,jstring options) {
+JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_mount (JNIEnv *env, jclass clazz, jstring src, jstring dst,jstring file_system_type,jint jflags,jstring options) {
     const char *src_path = env->GetStringUTFChars(src,0);
     const char *dst_path = env->GetStringUTFChars(dst,0);
     const char *fs_type = env->GetStringUTFChars(file_system_type,0);
@@ -45,33 +42,24 @@ JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_mount (JNI
     return r == 0;
 }
 
-JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_umount (JNIEnv *env, jclass clazz, jstring target) {
+JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_umount (JNIEnv *env, jclass clazz, jstring target) {
     const char *target_path = env->GetStringUTFChars(target,0);
     int r = umount(target_path) ;
     env->ReleaseStringUTFChars(target,target_path);
     return r == 0;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_getPartitionInformation(JNIEnv *env, jclass clazz, jstring jblkPath) {
-const char* devicePath = env->GetStringUTFChars(jblkPath, nullptr);
-
-    PedDevice* dev = ped_device_get(devicePath);
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartitionInformation(JNIEnv *env, jclass clazz, jstring jblkPath) {
+    PedDevice* dev = getBlockDevice(env, jblkPath);
+    
     if (!dev) {
-        env->ReleaseStringUTFChars(jblkPath, devicePath);
-        return nullptr;
+       throwException(env, "Failed to open device");
+       return NULL ;
     }
-
-    if (!ped_device_open(dev)) {
-        ped_device_destroy(dev);
-        env->ReleaseStringUTFChars(jblkPath, devicePath);
-        return nullptr;
-    }
-
     PedDisk* disk = ped_disk_new(dev);
     if (!disk) {
-        ped_device_destroy(dev);
-        env->ReleaseStringUTFChars(jblkPath, devicePath);
-        return nullptr;
+        close(dev,NULL,NULL);
+        return NULL;
     }
 
     std::vector<PartitionInfo> partitionInfos;
@@ -84,9 +72,7 @@ const char* devicePath = env->GetStringUTFChars(jblkPath, nullptr);
         }
     }
 
-    ped_disk_destroy(disk);
-    ped_device_destroy(dev);
-    env->ReleaseStringUTFChars(jblkPath, devicePath);
+    close(dev,disk,NULL);
 
     auto size = static_cast<jsize>(partitionInfos.size());
     jclass partitionInfoClass = env->FindClass("Lir/moke/jsysbox/disk/PartitionInformation;");
@@ -125,7 +111,7 @@ const char* devicePath = env->GetStringUTFChars(jblkPath, nullptr);
     return result;
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_swapOn(JNIEnv *env, jclass clazz, jstring jblkPath) {
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_swapOn(JNIEnv *env, jclass clazz, jstring jblkPath) {
   const char* blk = env->GetStringUTFChars(jblkPath,0);
   int ret = swapon(blk,SWAP_FLAG_PREFER|SWAP_FLAG_DISCARD); 
   if (ret != 0) {
@@ -133,7 +119,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_swapOn(JNIEnv 
   }
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_swapOff(JNIEnv *env, jclass clazz,jstring jblkPath) {
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_swapOff(JNIEnv *env, jclass clazz,jstring jblkPath) {
   const char* blk = env->GetStringUTFChars(jblkPath,0);
   int ret = swapoff(blk); 
   if (ret != 0) {
@@ -141,7 +127,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_swapOff(JNIEnv
   }
 }
 
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_partitionTableType (JNIEnv *env, jclass clazz,jstring jblkPath) {
+JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionTableType(JNIEnv *env, jclass clazz,jstring jblkPath) {
 
   PedDevice* dev = getBlockDevice(env, jblkPath);
   if (!dev) {
@@ -172,7 +158,7 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_partitionTa
   }
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_initializePartitionTable (JNIEnv *env, jclass clazz,jstring jblkPath, jobject enumObj) {
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_initializePartitionTable(JNIEnv *env, jclass clazz,jstring jblkPath, jobject enumObj) {
   
   // normalize enum name
   char* enumName = getEnumName(env,enumObj); 
@@ -214,7 +200,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_initializePart
   free(enumName);
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_createPartition (JNIEnv *env, jclass clazz, jstring jblkPath, jlong start, jlong end, jobject enumObj) {
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JNIEnv *env, jclass clazz, jstring jblkPath, jlong start, jlong end, jobject enumObj,jboolean isPrimary) {
   char* enumName = getEnumName(env,enumObj); 
   toLowerCase(enumName);
 
@@ -241,7 +227,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_createPartitio
     return ;
   }
 
-  PedPartition* part = ped_partition_new(disk, PED_PARTITION_NORMAL, fs_type, start, end);
+  PedPartition* part = ped_partition_new(disk, isPrimary ? PED_PARTITION_NORMAL : PED_PARTITION_EXTENDED, fs_type, start, end);
   if (!part) {
     close(dev,disk,part);
     free(enumName);
@@ -267,7 +253,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_createPartitio
   close(dev,NULL,part);
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_deletePartition (JNIEnv *env, jclass clazz, jstring jblkPath, jint partitionNumber) {
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_deletePartition (JNIEnv *env, jclass clazz, jstring jblkPath, jint partitionNumber) {
   PedDevice* dev = getBlockDevice(env, jblkPath);
   if (!dev) {
     throwException(env, "Failed to open device");
@@ -304,10 +290,11 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_deletePartitio
 }
 
 
-JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_getDisks(JNIEnv *env, jclass clazz) {
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getDisks(JNIEnv *env, jclass clazz) {
   struct udev* udev = udev_new();
   if (!udev) {
-      std::cerr << "Cannot create udev object." << std::endl;
+    throwException(env, "Filed to create udev object");
+    return NULL ;
   }
 
   struct udev_enumerate* enumerate = udev_enumerate_new(udev);
@@ -324,22 +311,8 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_PartitionManager_getDis
       struct udev_device* device = udev_device_new_from_syspath(udev, path);
 
       const char* devNode = udev_device_get_devnode(device);
-      // struct udev_device* scsi = udev_device_get_parent_with_subsystem_devtype(device, "scsi", "scsi_device");
-      // struct udev_device* ata = udev_device_get_parent_with_subsystem_devtype(device, "ata", "ata_device");
-      // struct udev_device* usb = udev_device_get_parent_with_subsystem_devtype(device, "usb", "usb_device");
-
       std::string str(devNode) ;
       list.push_back(str);
-      // if (scsi) {
-      //     std::cout << "SCSI Disk: " << devNode << std::endl;
-      // } else if (ata) {
-      //     std::cout << "ATA Disk: " << devNode << std::endl;
-      // } else if (usb) {
-      //     std::cout << "USB Disk: " << devNode << std::endl;
-      // } else {
-      //     std::cout << "Other Disk: " << devNode << std::endl;
-      // }
-
       udev_device_unref(device);
   }
 

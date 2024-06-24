@@ -1,3 +1,17 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package ir.moke.jsysbox.disk;
 
 import ir.moke.jsysbox.JSysboxException;
@@ -10,18 +24,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
-public class PartitionManager {
+public class JDiskManager {
     static {
-        JniNativeLoader.load("jpartition_manager");
+        JniNativeLoader.load("jdisk_manager");
     }
 
     public native static boolean mount(String src, String dst, String type, int flags, String options);
 
     public native static boolean umount(String src);
 
-    public native static String[] getDisks();
+    private native static String[] getDisks();
 
     /**
      * @param blk hard drive block device
@@ -41,7 +56,7 @@ public class PartitionManager {
 
     public native static void initializePartitionTable(String blk, PartitionTable partitionTable);
 
-    public native static void createPartition(String blk, long start, long end, FilesystemType filesystemType);
+    public native static void createPartition(String blk, long start, long end, FilesystemType filesystemType, boolean isPrimary);
 
     public native static void deletePartition(String blk, int partitionNumber);
 
@@ -192,5 +207,79 @@ public class PartitionManager {
         } catch (IOException e) {
             throw new JSysboxException(e);
         }
+    }
+
+    public static List<CompactDisk> getCompactDisks() {
+        List<CompactDisk> compactDiskList = new ArrayList<>();
+        try {
+            List<String> lines = Files.readAllLines(Path.of("/proc/sys/dev/cdrom/info"))
+                    .stream()
+                    .skip(2)
+                    .filter(item -> !item.isEmpty())
+                    .map(item -> item.split(":\\s+", 2)[1])
+                    .toList();
+            int columns = lines.get(0).split("\\s+").length;
+            List<String> values = new ArrayList<>();
+            for (int i = 0; i < columns; i++) {
+                for (String line : lines) {
+                    String col = line.split("\\s+")[i];
+                    values.add(col);
+                }
+                CompactDisk compactDisk = new CompactDisk(values.get(0), values.get(1), values.get(2), values.get(3), values.get(4), values.get(5), values.get(6), values.get(7), values.get(8), values.get(9), values.get(10), values.get(11), values.get(12), values.get(13), values.get(14), values.get(15), values.get(16), values.get(17), values.get(18), values.get(19));
+                compactDiskList.add(compactDisk);
+                values.clear();
+            }
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+        return compactDiskList;
+    }
+
+    public static boolean isCompactDisk(String blk) {
+        return getCompactDisks().stream().anyMatch(item -> item.drive_name().equals(blk));
+    }
+
+    public static List<Disk> getDiskInformation() {
+        List<Disk> disks = new ArrayList<>();
+        try {
+            String[] blkDisks = getDisks();
+            for (String blkPath : blkDisks) {
+                String blkName = blkPath.substring(blkPath.lastIndexOf("/") + 1);
+                Path vendorPath = Path.of("/sys/block/%s/device/vendor".formatted(blkName));
+                Path modelPath = Path.of("/sys/block/%s/device/model".formatted(blkName));
+                Path sizePath = Path.of("/sys/block/%s/size".formatted(blkName));
+
+                String vendor = Files.exists(vendorPath) ? Files.readString(vendorPath).trim() : null;
+                String model = Files.exists(modelPath) ? Files.readString(modelPath).trim() : null;
+                Long sectorSize = Files.exists(sizePath) ? Long.parseLong(Files.readString(sizePath).trim()) : null;
+                boolean digit = Character.isDigit(blkName.charAt(blkName.length() - 1));
+                if (digit) continue;
+                PartitionInformation[] partitionInformations = getPartitionInformation(blkPath);
+
+                Long sizeInBytes = sectorSize != null ? sectorSize * 512 : null;
+
+                PartitionTable partitionTable = partitionTableType(blkPath);
+                Disk disk = new Disk(blkPath, vendor, model, sizeInBytes, sectorSize, partitionTable, partitionInformations != null ? partitionInformations.length : null);
+                disks.add(disk);
+            }
+        } catch (Exception e) {
+            throw new JSysboxException(e);
+        }
+        return disks;
+    }
+
+    public static Disk getDiskInformation(String blk) {
+        return getDiskInformation().stream().filter(item -> Objects.equals(item.blk(), blk)).findFirst().orElse(null);
+    }
+
+    /**
+     * each sector is 512 byte
+     * 1MB = (1 * 1024 * 1024) / 512
+     *
+     * @param size size of partition in MB
+     * @return size of sectors
+     */
+    public static long calculatePartitionSectorSize(long size) {
+        return (size * 1024 * 1024) / 512;
     }
 }

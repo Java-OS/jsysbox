@@ -14,17 +14,49 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.disk.PartitionInformation;
-import ir.moke.jsysbox.disk.PartitionManager;
-
-import java.util.List;
+import ir.moke.jsysbox.disk.FilesystemType;
+import ir.moke.jsysbox.disk.JDiskManager;
+import ir.moke.jsysbox.disk.PartitionTable;
 
 public class MainClass {
+    /*
+     * Create disk size 100M :
+     * dd if=/dev/urandom of=/tmp/test-disk.img bs=1M count=100
+     * */
+    private static final String DISK_BLK = "/tmp/test-disk.img";
 
-    public static void main(String[] args) throws Exception {
-        List<PartitionInformation> partitions = PartitionManager.partitions();
-        for (PartitionInformation partition : partitions) {
-            System.out.println(partition);
-        }
+    public static void main(String[] args) {
+
+        System.out.println("Format partition table " + PartitionTable.GPT);
+        JDiskManager.initializePartitionTable(DISK_BLK, PartitionTable.GPT);
+
+        //Note first partition started from 2048
+        // Primary Partition blk(1)
+        long p1_sector_size = JDiskManager.calculatePartitionSectorSize(20);
+        long start = 2048;
+        long end = start + p1_sector_size;
+        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.EXT3, true);
+        System.out.println("Primary partition 1 successfully created");
+
+        // Primary Partition blk(2)
+        long p2_sector_size = JDiskManager.calculatePartitionSectorSize(30);
+        start = end + 1;
+        end = start + p2_sector_size;
+        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.NTFS, true);
+        System.out.println("Primary partition 2 successfully created");
+
+        // Extended Partition blk(3)
+        long p3_sector_size = JDiskManager.calculatePartitionSectorSize(30);
+        start = end + 1;
+        end = start + p3_sector_size;
+        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.NTFS, true);
+        System.out.println("Extended partition 3 successfully created");
+
+        // Primary Partition blk(4)
+        long p4_sector_size = JDiskManager.calculatePartitionSectorSize(30);
+        start = end + 1;
+        end = start + p4_sector_size;
+        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.NTFS, true);
+        System.out.println("Primary partition 4 successfully created");
     }
 }

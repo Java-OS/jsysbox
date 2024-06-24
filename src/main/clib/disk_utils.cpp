@@ -1,6 +1,18 @@
-#include <algorithm>
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 #include <jni.h>
-#include <parted/disk.h>
 #include <parted/parted.h>
 #include <cstddef>
 #include <stdio.h>
@@ -11,6 +23,7 @@
 #include <cstring>
 #include <fstream>
 #include "common.cpp"
+#include <iostream>
 
 struct PartitionInfo {
     std::string blk ;
@@ -24,7 +37,6 @@ struct PartitionInfo {
     PedSector endSector;
     PedSector sectorSize;
 };
-
 
 struct swapinfo {
    long size ;
@@ -123,9 +135,9 @@ PartitionInfo getPartitionInfo(JNIEnv *env, PedPartition* part, PedDevice* dev) 
 }
 
 PedDevice* getBlockDevice(JNIEnv *env, jstring jblkPath) {
-  const char* blk = env->GetStringUTFChars(jblkPath,0);
-  PedDevice* dev = ped_device_get(blk); 
+  const char* blk = env->GetStringUTFChars(jblkPath,0); 
 
+  PedDevice* dev = ped_device_get(blk); 
   if (!dev) {
     return NULL;
   }
