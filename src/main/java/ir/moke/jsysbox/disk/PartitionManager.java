@@ -22,6 +22,7 @@ public class PartitionManager {
     public native static boolean umount(String src);
 
     public native static String[] getDisks();
+
     /**
      * @param blk hard drive block device
      *            for example :
@@ -76,27 +77,16 @@ public class PartitionManager {
     }
 
     public static List<PartitionInformation> partitions() {
-        List<PartitionInformation> partitions = new ArrayList<>();
-        try {
-            List<String> lines = Files.readAllLines(Path.of("/proc/partitions")).stream().skip(2).toList();
-            for (String line : lines) {
-                String[] split = line.split("\\s+");
-                String blockDevice = split[4];
-                if (!isScsiDeviceType(blockDevice)) { //filter only partitions
-                    PartitionInformation partition;
-                    if (blockDevice.startsWith("dm-")) {
-                        String lvmMapperPath = getLvmMapperPath("/dev/" + blockDevice);
-                        partition = getPartitionInformation(lvmMapperPath)[0];
-                    } else {
-                        partition = getPartitionInformation("/dev/" + blockDevice)[0];
-                    }
-                    partitions.add(partition);
-                }
+        List<PartitionInformation> list = new ArrayList<>();
+        List<String> disks = Arrays.stream(getDisks()).filter(item -> !item.contains("sr")).toList();
+        for (String disk : disks) {
+            try {
+                PartitionInformation[] partitionInformation = getPartitionInformation(disk);
+                if (partitionInformation != null) list.addAll(Arrays.asList(partitionInformation));
+            } catch (JSysboxException ignore) {
             }
-        } catch (IOException e) {
-            throw new JSysboxException(e);
         }
-        return partitions;
+        return list;
     }
 
     public static boolean isScsiDeviceType(String blk) {
