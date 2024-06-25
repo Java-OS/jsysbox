@@ -88,10 +88,10 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_initializePartitio
 /*
  * Class:     ir_moke_jsysbox_disk_JDiskManager
  * Method:    createPartition
- * Signature: (Ljava/lang/String;JJLir/moke/jsysbox/disk/FilesystemType;)V
+ * Signature: (Ljava/lang/String;JJLjava/lang/String;Z)V
  */
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition
-  (JNIEnv *, jclass, jstring, jlong, jlong, jobject, jboolean);
+  (JNIEnv *, jclass, jstring, jlong, jlong, jstring, jboolean);
 
 /*
  * Class:     ir_moke_jsysbox_disk_JDiskManager

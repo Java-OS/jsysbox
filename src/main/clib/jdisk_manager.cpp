@@ -200,56 +200,56 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_initializePartitio
   free(enumName);
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JNIEnv *env, jclass clazz, jstring jblkPath, jlong start, jlong end, jobject enumObj,jboolean isPrimary) {
-  char* enumName = getEnumName(env,enumObj); 
-  toLowerCase(enumName);
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JNIEnv *env, jclass clazz, jstring jblkPath, jlong start, jlong end, jstring jpart_type,jboolean isPrimary) {
 
+  const char* part_type = jpart_type != NULL ? env->GetStringUTFChars(jpart_type, 0) : NULL;
   PedDevice* dev = getBlockDevice(env, jblkPath);
   if (!dev) {
     throwException(env, "Failed to open device");
-    free(enumName);
+    env->ReleaseStringUTFChars(jpart_type, part_type);
     return ;
   }
 
   PedDisk* disk = ped_disk_new(dev);
   if (!disk) {
     close(dev,NULL,NULL);
-    free(enumName);
+    env->ReleaseStringUTFChars(jpart_type, part_type);
     throwException(env, "Failed to create disk object");
     return ;
   }
 
-  PedFileSystemType* fs_type = ped_file_system_type_get(enumName);
+  PedFileSystemType* fs_type = ped_file_system_type_get(part_type);
   if (!fs_type) {
     close(dev,disk,NULL);
-    free(enumName);
+    env->ReleaseStringUTFChars(jpart_type, part_type);
     throwException(env, "Invalid filesystem type");
     return ;
   }
 
-  PedPartition* part = ped_partition_new(disk, isPrimary ? PED_PARTITION_NORMAL : PED_PARTITION_EXTENDED, fs_type, start, end);
+  PedPartition* part = ped_partition_new(disk, isPrimary ? PED_PARTITION_NORMAL : PED_PARTITION_EXTENDED, isPrimary ? fs_type : NULL, start, end);
   if (!part) {
     close(dev,disk,part);
-    free(enumName);
+    env->ReleaseStringUTFChars(jpart_type, part_type);
     throwException(env, "Failed to create partition object");
     return ;
   }
 
   if (!ped_disk_add_partition(disk, part, ped_constraint_any(dev))) {
     close(dev,disk,part);
-    free(enumName);
+    env->ReleaseStringUTFChars(jpart_type, part_type);
     throwException(env, "Failed to add partition");
     return ;
   }
 
   if (!ped_disk_commit(disk)) {
     close(dev,disk,NULL);
+    env->ReleaseStringUTFChars(jpart_type, part_type);
     throwException(env, "Failed to commit disk changes");
     return ;
   }
 
 
-  free(enumName);
+  env->ReleaseStringUTFChars(jpart_type, part_type);
   close(dev,NULL,part);
 }
 

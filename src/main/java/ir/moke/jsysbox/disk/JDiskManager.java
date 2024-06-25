@@ -110,15 +110,15 @@ public class JDiskManager {
     /**
      * Create new partition
      *
-     * @param blkDisk        block device address of disk
-     *                       example: /dev/sdx
-     * @param start          Partition start sector
-     *                       NOTE: First partition started from 2048
-     * @param end            Partition end sector
-     * @param filesystemType Partition filesystem type
-     * @param isPrimary      set true if want to create primary partition on MBR partition table
+     * @param blkDisk       block device address of disk
+     *                      example: /dev/sdx
+     * @param start         Partition start sector
+     *                      NOTE: First partition started from 2048
+     * @param end           Partition end sector
+     * @param partitionType Partition filesystem type
+     * @param isPrimary     set true if you want to create primary partition on MBR partition table
      */
-    public native static void createPartition(String blkDisk, long start, long end, FilesystemType filesystemType, boolean isPrimary);
+    private native static void createPartition(String blkDisk, long start, long end, String partitionType, boolean isPrimary);
 
     /**
      * delete partition
@@ -425,5 +425,13 @@ public class JDiskManager {
      */
     public static long calculatePartitionSectorSize(long size) {
         return (size * 1024 * 1024) / 512;
+    }
+
+    public static void createPartition(String blkDisk, long start, long end, PartitionType partitionType) {
+        createPartition(blkDisk, start, end, partitionType.getType(), true);
+    }
+
+    public static void createExtendedPartition(String blkDisk, long start, long end) {
+        createPartition(blkDisk, start, end, null, false);
     }
 }

@@ -14,62 +14,80 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.disk.FilesystemType;
 import ir.moke.jsysbox.disk.JDiskManager;
 import ir.moke.jsysbox.disk.PartitionInformation;
 import ir.moke.jsysbox.disk.PartitionTable;
+import ir.moke.jsysbox.disk.PartitionType;
+import ir.moke.jsysbox.system.JSystem;
+import ir.moke.jsysbox.system.ModInfo;
+
+import java.util.List;
+import java.util.Map;
 
 public class MainClass {
-    /*
-     * Create disk size 100M :
-     * dd if=/dev/urandom of=/tmp/test-disk.img bs=1M count=100
-     * */
-    private static final String DISK_BLK = "/tmp/test-disk.img";
-
     public static void main(String[] args) {
-        PartitionInformation[] list = JDiskManager.getPartitionInformation(DISK_BLK);
-        for (PartitionInformation partitionInformation : list) {
-            System.out.println(partitionInformation);
-        }
+        System.out.println("#### Partition System ####");
+        JDiskManager.initializePartitionTable("/tmp/disk.img", PartitionTable.MSDOS);
 
-        /*---------------------------------*/
-        System.out.println("Format partition table " + PartitionTable.MSDOS);
-        JDiskManager.initializePartitionTable(DISK_BLK, PartitionTable.MSDOS);
-
-        //Note first partition started from 2048
-        // Primary Partition blk(1)
+        // create partition (1)
         long p1_sector_size = JDiskManager.calculatePartitionSectorSize(20);
         long start = 2048;
         long end = start + p1_sector_size;
-        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.EXT3, true);
-        System.out.println("Primary partition 1 successfully created");
+        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.EXT3);
 
-        // Set first partition bootable
-        JDiskManager.bootable(DISK_BLK,1);
+        // Set bootable flag on partition
+        JDiskManager.bootable("/tmp/disk.img", 1);
 
-        // Primary Partition blk(2)
-        long p2_sector_size = JDiskManager.calculatePartitionSectorSize(30);
+        // create partition (2)
+        long p2_sector_size = JDiskManager.calculatePartitionSectorSize(20);
         start = end + 1;
         end = start + p2_sector_size;
-        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.NTFS, true);
-        System.out.println("Primary partition 2 successfully created");
+        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.FAT32);
 
-        // Extended Partition blk(3)
-        long p3_sector_size = JDiskManager.calculatePartitionSectorSize(30);
+        // create extended partition (3)
+        long p3_sector_size = JDiskManager.calculatePartitionSectorSize(40);
         start = end + 1;
         end = start + p3_sector_size;
-        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.NTFS, true);
-        System.out.println("Extended partition 3 successfully created");
+        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.FAT32);
 
-        // Primary Partition blk(4)
-        long p4_sector_size = JDiskManager.calculatePartitionSectorSize(30);
+        // create logical partition (5)
+        long p4_sector_size = JDiskManager.calculatePartitionSectorSize(40);
         start = end + 1;
-        end = start + p4_sector_size;
-        JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.NTFS, true);
-        System.out.println("Primary partition 4 successfully created");
+        end = start + p3_sector_size;
+        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.FAT32);
 
-        // Create logical partition
-        long l1_sector_size = JDiskManager.calculatePartitionSectorSize(10);
+        // standard first logical partition
+        start = start + 2048;
+        end = start + JDiskManager.calculatePartitionSectorSize(10);
+        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.NTFS);
 
+        PartitionInformation[] partitionInformation = JDiskManager.getPartitionInformation("/tmp/disk.img");
+        for (PartitionInformation information : partitionInformation) {
+            System.out.println(information);
+        }
+
+        System.out.println("#### Linux kernel Modules ####");
+        List<ModInfo> lsmod = JSystem.lsmod();
+        System.out.println("Loaded modules size: " + lsmod.size());
+
+        // load module (xfs)
+        JSystem.insmod("xfs", null);
+
+        // module information (xfs)
+        Map<String, String> xfsModuleInfo = JSystem.modinfo("xfs");
+        xfsModuleInfo.forEach((k, v) -> System.out.println(k + "     " + v));
+
+        // remove module (xfs)
+        JSystem.rmmod("xfs");
+
+        System.out.println("### Linux kernel parameters ###");
+        System.out.println("Parameter size: " + JSystem.sysctl().size());
+
+        // value of net.ipv4.ip_forward
+        String value = JSystem.sysctl("net.ipv4.ip_forward");
+        System.out.println(value);
+
+        // value of net.ipv4.ip_forward
+        JSystem.sysctl("net.ipv4.ip_forward", value.equals("0") ? "1" : "0");
     }
 }
