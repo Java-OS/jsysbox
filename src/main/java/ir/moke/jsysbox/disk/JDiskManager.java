@@ -32,45 +32,118 @@ public class JDiskManager {
         JniNativeLoader.load("jdisk_manager");
     }
 
-    public native static boolean mount(String src, String dst, String type, int flags, String options);
+    /**
+     * Mount partition
+     *
+     * @param blkPartition    partition block device
+     *                        example: /dev/sda1
+     * @param targetDirectory Mount point directory
+     * @param type            Filesystem type
+     * @param flags           mount flags
+     * @param options         mount options
+     * @return return true if successfully mounted
+     */
+    public native static boolean mount(String blkPartition, String targetDirectory, String type, int flags, String options);
 
-    public native static boolean umount(String src);
+    /**
+     * unmount partition
+     *
+     * @param targetDirectory mount point directory
+     * @return return true if successfully unmounted
+     */
+    public native static boolean umount(String targetDirectory);
 
+    /**
+     * Get list of available disk
+     *
+     * @return list block device address of available disks
+     * example: ["/dev/sda", "/dev/sdb"]
+     */
     private native static String[] getDisks();
 
     /**
-     * @param blk hard drive block device
-     *            for example :
-     *            /dev/sda
-     *            /dev/sdb
-     *            NOTE: WITHOUT PARTITION NUMBER SIGNATURE
+     * @param blkDisk hard drive block device
+     *                for example:
+     *                /dev/sda
+     *                /dev/sdb
+     *                NOTE: WITHOUT PARTITION NUMBER SIGNATURE
      * @return array of {@link PartitionInformation}
      */
-    public native static PartitionInformation[] getPartitionInformation(String blk);
+    public native static PartitionInformation[] getPartitionInformation(String blkDisk);
 
-    public native static void swapOn(String blk) throws JSysboxException;
+    /**
+     * Activate swap partition
+     *
+     * @param blkPartition swap partition block device address
+     *                     example: /dev/sdb2
+     * @throws JSysboxException
+     */
+    public native static void swapOn(String blkPartition) throws JSysboxException;
 
-    public native static void swapOff(String blk) throws JSysboxException;
+    /**
+     * Deactivate swap partition
+     *
+     * @param blkPartition swap partition block device address
+     *                     example: /dev/sdb2
+     * @throws JSysboxException
+     */
+    public native static void swapOff(String blkPartition) throws JSysboxException;
 
-    public native static PartitionTable partitionTableType(String blk);
+    /**
+     * Get current partition table type of disk
+     *
+     * @param blkDisk block device address of disk
+     *                example: /dev/sda
+     * @return return Type of partition table {@link PartitionInformation}
+     */
+    public native static PartitionTable partitionTableType(String blkDisk);
 
-    public native static void initializePartitionTable(String blk, PartitionTable partitionTable);
+    /**
+     * Write new partition table on disk
+     *
+     * @param blkDisk        block device address of disk
+     *                       example: /dev/sdx
+     * @param partitionTable type of partition table {@link PartitionInformation}
+     */
+    public native static void initializePartitionTable(String blkDisk, PartitionTable partitionTable);
 
-    public native static void createPartition(String blk, long start, long end, FilesystemType filesystemType, boolean isPrimary);
+    /**
+     * Create new partition
+     *
+     * @param blkDisk        block device address of disk
+     *                       example: /dev/sdx
+     * @param start          Partition start sector
+     *                       NOTE: First partition started from 2048
+     * @param end            Partition end sector
+     * @param filesystemType Partition filesystem type
+     * @param isPrimary      set true if want to create primary partition on MBR partition table
+     */
+    public native static void createPartition(String blkDisk, long start, long end, FilesystemType filesystemType, boolean isPrimary);
 
-    public native static void deletePartition(String blk, int partitionNumber);
+    /**
+     * delete partition
+     *
+     * @param blkDisk         block device address of disk
+     *                        example: /dev/sdx
+     * @param partitionNumber partition number
+     */
+    public native static void deletePartition(String blkDisk, int partitionNumber);
 
-    public native static void bootable(String blk, int partitionNumber);
+    /**
+     * Set bootable flag on partition
+     * Note: only work on MBR partition table
+     *
+     * @param blkDisk         block device address of disk
+     *                        example: /dev/sdx
+     * @param partitionNumber partition number
+     */
+    public native static void bootable(String blkDisk, int partitionNumber);
 
-    public static List<String> listHardDrives() {
-        Path path = Path.of("/sys/block");
-        try (Stream<Path> stream = Files.list(path)) {
-            return stream.map(item -> "/dev/" + item.toString()).toList();
-        } catch (IOException e) {
-            throw new JSysboxException(e);
-        }
-    }
-
+    /**
+     * Content of /proc/mounts
+     *
+     * @return return list of mount information
+     */
     public static List<String> mounts() {
         try {
             return Files.readAllLines(Paths.get("/proc/mounts"));
@@ -79,11 +152,23 @@ public class JDiskManager {
         }
     }
 
+    /**
+     * Check partition mounted
+     *
+     * @param uuid partition by uuid
+     * @return return true if mounted
+     */
     public static boolean isMount(String uuid) {
         List<PartitionInformation> partitions = partitions();
         return partitions.stream().anyMatch(item -> item.uuid.equals(uuid));
     }
 
+    /**
+     * Check directory used as mount point
+     *
+     * @param mountPoint mount point directory
+     * @return return true if exists in /proc/mounts
+     */
     public static boolean isMountByMountPoint(String mountPoint) {
         List<String> mounts = mounts();
         if (mounts == null) return false;
@@ -93,6 +178,11 @@ public class JDiskManager {
         return false;
     }
 
+    /**
+     * List of all available partitions
+     *
+     * @return List of {@link PartitionInformation}
+     */
     public static List<PartitionInformation> partitions() {
         List<PartitionInformation> list = new ArrayList<>();
         List<String> disks = Arrays.stream(getDisks()).filter(item -> !item.contains("sr")).toList();
@@ -106,20 +196,23 @@ public class JDiskManager {
         return list;
     }
 
-    public static boolean isScsiDeviceType(String blk) {
-        return Files.exists(Path.of("/sys/block/" + blk + "/device/type"));
-    }
-
-    public static String mountPoint(String blk) {
+    /**
+     * Get mount point of partition
+     *
+     * @param blkPartition block device of partition
+     *                     example: /dev/sdx1
+     * @return mount point address
+     */
+    public static String mountPoint(String blkPartition) {
         try {
             List<String> lines = Files.readAllLines(Path.of("/proc/mounts"));
             for (String line : lines) {
                 String srcBlk = line.split("\\s+")[0];
                 String mountPoint = line.split("\\s+")[1];
                 Path path = Path.of(srcBlk);
-                if (Files.isSymbolicLink(path) && path.toRealPath().toString().endsWith(blk)) {
+                if (Files.isSymbolicLink(path) && path.toRealPath().toString().endsWith(blkPartition)) {
                     return mountPoint;
-                } else if (srcBlk.endsWith(blk)) {
+                } else if (srcBlk.endsWith(blkPartition)) {
                     return mountPoint;
                 }
             }
@@ -129,6 +222,12 @@ public class JDiskManager {
         return null;
     }
 
+    /**
+     * Get {@link PartitionInformation} from uuid of partition
+     *
+     * @param uuid Partition uuid
+     * @return {@link PartitionInformation}
+     */
     public static PartitionInformation getPartitionByUUID(String uuid) {
         try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-uuid/"))) {
             List<Path> list = listStream.toList();
@@ -144,6 +243,12 @@ public class JDiskManager {
         return null;
     }
 
+    /**
+     * Get {@link PartitionInformation} from label of partition
+     *
+     * @param uuid Partition label
+     * @return {@link PartitionInformation}
+     */
     public static PartitionInformation getPartitionByLabel(String label) {
         try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-label/"))) {
             List<Path> list = listStream.toList();
@@ -159,6 +264,13 @@ public class JDiskManager {
         return null;
     }
 
+    /**
+     * Get mapper address of lvm logical partition /dev/mapper directory
+     *
+     * @param dmPath lvm block device dm address
+     *               example: /dev/dm-0
+     * @return mapper path of lvm logical partition
+     */
     public static String getLvmMapperPath(String dmPath) {
         try (Stream<Path> listStream = Files.list(Path.of("/dev/mapper/"))) {
             List<Path> list = listStream.toList();
@@ -173,6 +285,11 @@ public class JDiskManager {
         return null;
     }
 
+    /**
+     * Get root partition of current booted operating system
+     *
+     * @return {@link PartitionInformation}
+     */
     public static PartitionInformation getRootPartition() {
         try {
             byte[] bytes = Files.readAllBytes(Path.of("/proc/cmdline"));
@@ -190,13 +307,19 @@ public class JDiskManager {
         }
     }
 
-    public static boolean isSwapActivated(String blk) {
+    /**
+     * Check swap partition activated
+     *
+     * @param blkPartition Partition block device address
+     * @return true if activated
+     */
+    public static boolean isSwapActivated(String blkPartition) {
         try {
             return Files.readAllLines(Path.of("/proc/swaps"))
                     .stream()
                     .skip(1)
                     .map(item -> item.split("\\s+")[0])
-                    .anyMatch(item -> item.equals(blk));
+                    .anyMatch(item -> item.equals(blkPartition));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -211,6 +334,11 @@ public class JDiskManager {
         }
     }
 
+    /**
+     * return list of compact disks like cdrom or dvdrom
+     *
+     * @return List of {@link CompactDisk}
+     */
     public static List<CompactDisk> getCompactDisks() {
         List<CompactDisk> compactDiskList = new ArrayList<>();
         try {
@@ -237,8 +365,15 @@ public class JDiskManager {
         return compactDiskList;
     }
 
-    public static boolean isCompactDisk(String blk) {
-        return getCompactDisks().stream().anyMatch(item -> item.drive_name().equals(blk));
+    /**
+     * Check block device name is compact disk
+     *
+     * @param blkName Block device name
+     *                Example: sr0
+     * @return true if is compact disk
+     */
+    public static boolean isCompactDisk(String blkName) {
+        return getCompactDisks().stream().anyMatch(item -> item.drive_name().equals(blkName));
     }
 
     public static List<Disk> getDiskInformation() {
@@ -270,34 +405,18 @@ public class JDiskManager {
         return disks;
     }
 
-    public static Disk getDiskInformation(String blk) {
-        return getDiskInformation().stream().filter(item -> Objects.equals(item.blk(), blk)).findFirst().orElse(null);
-    }
-
-    public static int[] diskIdentity(String blk) {
-        int[] identity = new int[2];
-        try (Stream<Path> stream = Files.list(Path.of("/sys/dev/block"))) {
-            Path path = stream.filter(item -> {
-                        try {
-                            return Files.readSymbolicLink(item).getFileName().toString().equals(blk);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .findFirst()
-                    .orElse(null);
-            if (path != null) {
-                identity[0] = Integer.parseInt(path.toString().split(":")[0]);
-                identity[1] = Integer.parseInt(path.toString().split(":")[1]);
-                return identity;
-            }
-            return null;
-        } catch (Exception e) {
-            throw new JSysboxException(e);
-        }
+    /**
+     * Get information of disk
+     *
+     * @param blkDisk Get information of disk
+     * @return {@link Disk}
+     */
+    public static Disk getDiskInformation(String blkDisk) {
+        return getDiskInformation().stream().filter(item -> Objects.equals(item.blk(), blkDisk)).findFirst().orElse(null);
     }
 
     /**
+     * Calculate sector of partition
      * each sector is 512 byte
      * 1MB = (1 * 1024 * 1024) / 512
      *
