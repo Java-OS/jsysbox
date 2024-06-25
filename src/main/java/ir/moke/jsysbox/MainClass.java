@@ -35,31 +35,22 @@ public class MainClass {
         long end = start + p1_sector_size;
         JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.EXT3);
 
-        // Set bootable flag on partition
-        JDiskManager.bootable("/tmp/disk.img", 1);
-
         // create partition (2)
         long p2_sector_size = JDiskManager.calculatePartitionSectorSize(20);
         start = end + 1;
         end = start + p2_sector_size;
-        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.FAT32);
+        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.HFS);
 
         // create extended partition (3)
         long p3_sector_size = JDiskManager.calculatePartitionSectorSize(40);
         start = end + 1;
         end = start + p3_sector_size;
-        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.FAT32);
+        JDiskManager.createExtendedPartition("/tmp/disk.img", start, end);
 
         // create logical partition (5)
-        long p4_sector_size = JDiskManager.calculatePartitionSectorSize(40);
-        start = end + 1;
-        end = start + p3_sector_size;
-        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.FAT32);
-
-        // standard first logical partition
         start = start + 2048;
         end = start + JDiskManager.calculatePartitionSectorSize(10);
-        JDiskManager.createPartition("/tmp/disk.img", start, end, PartitionType.NTFS);
+        JDiskManager.createLogicalPartition("/tmp/disk.img", start, end, PartitionType.NTFS);
 
         PartitionInformation[] partitionInformation = JDiskManager.getPartitionInformation("/tmp/disk.img");
         for (PartitionInformation information : partitionInformation) {

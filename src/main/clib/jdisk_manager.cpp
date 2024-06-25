@@ -218,15 +218,28 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JN
     return ;
   }
 
-  PedFileSystemType* fs_type = ped_file_system_type_get(part_type);
-  if (!fs_type) {
-    close(dev,disk,NULL);
-    env->ReleaseStringUTFChars(jpart_type, part_type);
-    throwException(env, "Invalid filesystem type");
-    return ;
+  PedFileSystemType* fs_type = NULL ;
+  if (part_type) {
+    std::cout << "Partition type detected" << std::endl ;
+    fs_type = ped_file_system_type_get(part_type);
+    if (!fs_type) {
+      close(dev,disk,NULL);
+      env->ReleaseStringUTFChars(jpart_type, part_type);
+      throwException(env, "Invalid filesystem type");
+      return ;
+    }
   }
 
-  PedPartition* part = ped_partition_new(disk, isPrimary ? PED_PARTITION_NORMAL : PED_PARTITION_EXTENDED, isPrimary ? fs_type : NULL, start, end);
+  PedPartitionType partition_type = PED_PARTITION_NORMAL;
+  if (!isPrimary) {
+    if (!fs_type) {
+        partition_type = PED_PARTITION_EXTENDED;
+    } else {
+        partition_type = PED_PARTITION_LOGICAL;
+    }
+  }
+
+  PedPartition* part = ped_partition_new(disk, partition_type, fs_type, start, end);
   if (!part) {
     close(dev,disk,part);
     env->ReleaseStringUTFChars(jpart_type, part_type);

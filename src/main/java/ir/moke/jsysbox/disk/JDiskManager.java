@@ -434,4 +434,8 @@ public class JDiskManager {
     public static void createExtendedPartition(String blkDisk, long start, long end) {
         createPartition(blkDisk, start, end, null, false);
     }
+
+    public static void createLogicalPartition(String blkDisk, long start, long end, PartitionType partitionType) {
+        createPartition(blkDisk, start, end, partitionType.getType(), false);
+    }
 }
