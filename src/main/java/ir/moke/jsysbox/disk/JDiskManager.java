@@ -246,7 +246,7 @@ public class JDiskManager {
     /**
      * Get {@link PartitionInformation} from label of partition
      *
-     * @param uuid Partition label
+     * @param label Partition label
      * @return {@link PartitionInformation}
      */
     public static PartitionInformation getPartitionByLabel(String label) {
