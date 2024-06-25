@@ -272,6 +272,29 @@ public class JDiskManager {
         return getDiskInformation().stream().filter(item -> Objects.equals(item.blk(), blk)).findFirst().orElse(null);
     }
 
+    public static int[] diskIdentity(String blk) {
+        int[] identity = new int[2];
+        try (Stream<Path> stream = Files.list(Path.of("/sys/dev/block"))) {
+            Path path = stream.filter(item -> {
+                        try {
+                            return Files.readSymbolicLink(item).getFileName().toString().equals(blk);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .findFirst()
+                    .orElse(null);
+            if (path != null) {
+                identity[0] = Integer.parseInt(path.toString().split(":")[0]);
+                identity[1] = Integer.parseInt(path.toString().split(":")[1]);
+                return identity;
+            }
+            return null;
+        } catch (Exception e) {
+            throw new JSysboxException(e);
+        }
+    }
+
     /**
      * each sector is 512 byte
      * 1MB = (1 * 1024 * 1024) / 512
