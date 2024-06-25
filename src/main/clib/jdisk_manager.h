@@ -101,6 +101,15 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_deletePartition
   (JNIEnv *, jclass, jstring, jint);
 
+/*
+ * Class:     ir_moke_jsysbox_disk_JDiskManager
+ * Method:    bootable
+ * Signature: (Ljava/lang/Stringa;I)V
+ */
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_bootable
+  (JNIEnv *, jclass, jstring, jint);
+
+
 #ifdef __cplusplus
 }
 #endif

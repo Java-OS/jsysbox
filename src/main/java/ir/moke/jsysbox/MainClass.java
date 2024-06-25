@@ -16,6 +16,7 @@ package ir.moke.jsysbox;
 
 import ir.moke.jsysbox.disk.FilesystemType;
 import ir.moke.jsysbox.disk.JDiskManager;
+import ir.moke.jsysbox.disk.PartitionInformation;
 import ir.moke.jsysbox.disk.PartitionTable;
 
 public class MainClass {
@@ -26,9 +27,14 @@ public class MainClass {
     private static final String DISK_BLK = "/tmp/test-disk.img";
 
     public static void main(String[] args) {
+        PartitionInformation[] list = JDiskManager.getPartitionInformation(DISK_BLK);
+        for (PartitionInformation partitionInformation : list) {
+            System.out.println(partitionInformation);
+        }
 
-        System.out.println("Format partition table " + PartitionTable.GPT);
-        JDiskManager.initializePartitionTable(DISK_BLK, PartitionTable.GPT);
+        /*---------------------------------*/
+        System.out.println("Format partition table " + PartitionTable.MSDOS);
+        JDiskManager.initializePartitionTable(DISK_BLK, PartitionTable.MSDOS);
 
         //Note first partition started from 2048
         // Primary Partition blk(1)
@@ -37,6 +43,9 @@ public class MainClass {
         long end = start + p1_sector_size;
         JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.EXT3, true);
         System.out.println("Primary partition 1 successfully created");
+
+        // Set first partition bootable
+        JDiskManager.bootable(DISK_BLK,1);
 
         // Primary Partition blk(2)
         long p2_sector_size = JDiskManager.calculatePartitionSectorSize(30);
@@ -58,5 +67,9 @@ public class MainClass {
         end = start + p4_sector_size;
         JDiskManager.createPartition(DISK_BLK, start, end, FilesystemType.NTFS, true);
         System.out.println("Primary partition 4 successfully created");
+
+        // Create logical partition
+        long l1_sector_size = JDiskManager.calculatePartitionSectorSize(10);
+
     }
 }

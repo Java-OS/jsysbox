@@ -49,13 +49,14 @@ JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_umount (JNIEnv
     return r == 0;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartitionInformation(JNIEnv *env, jclass clazz, jstring jblkPath) {
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartitionInformation(JNIEnv *env, jclass clazz, jstring jblkPath) { 
     PedDevice* dev = getBlockDevice(env, jblkPath);
-    
+
     if (!dev) {
        throwException(env, "Failed to open device");
        return NULL ;
     }
+
     PedDisk* disk = ped_disk_new(dev);
     if (!disk) {
         close(dev,NULL,NULL);
@@ -63,7 +64,6 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartiti
     }
 
     std::vector<PartitionInfo> partitionInfos;
-
     PedPartition* part = nullptr;
     while ((part = ped_disk_next_partition(disk, part)) != nullptr) {
         if (part->num > 0) {
@@ -290,6 +290,43 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_deletePartition (J
 }
 
 
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_bootable (JNIEnv *env, jclass clazz, jstring jblkPath, jint partitionNumber) {
+  PedDevice* dev = getBlockDevice(env, jblkPath);
+  if (!dev) {
+    throwException(env, "Failed to open device");
+    return ;
+  }
+
+  PedDisk* disk = ped_disk_new(dev);
+  if (!disk) {
+    close(dev,NULL,NULL);
+    throwException(env, "Failed to create disk object");
+    return ;
+  }
+
+  PedPartition* part = ped_disk_get_partition(disk,partitionNumber);
+  if (!part) {
+    close(dev,disk,NULL);
+    throwException(env, "Partition does not exists");
+    return ;
+  }
+
+  if (!ped_partition_set_flag(part,PED_PARTITION_BOOT,1)) {
+    close(dev,disk,part);
+    throwException(env, "Failed to add partition");
+    return ;
+  }
+
+  if (!ped_disk_commit(disk)) {
+    close(dev,disk,NULL);
+    throwException(env, "Failed to commit disk changes");
+    return ;
+  }
+
+  close(dev,NULL,part);
+
+}
+
 JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getDisks(JNIEnv *env, jclass clazz) {
   struct udev* udev = udev_new();
   if (!udev) {
@@ -329,3 +366,4 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getDisks(J
 
   return result ;
 }
+

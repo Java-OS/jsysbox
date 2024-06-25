@@ -95,8 +95,7 @@ PartitionInfo getPartitionInfo(JNIEnv *env, PedPartition* part, PedDevice* dev) 
     info.totalSize = part->geom.length * dev->sector_size;
 
     char* path = ped_partition_get_path(part);
-    if (path) {
-
+    if (path && strncmp(path, "/dev/", strlen("/dev/")) == 0) {
         info.mountPoint = getMountPoint(path);
         blkid_probe pr = blkid_new_probe_from_filename(path);
         if (!pr) {
