@@ -59,6 +59,7 @@ public class JDiskManager {
     public native static void createPartition(String blk, long start, long end, FilesystemType filesystemType, boolean isPrimary);
 
     public native static void deletePartition(String blk, int partitionNumber);
+
     public native static void bootable(String blk, int partitionNumber);
 
     public static List<String> listHardDrives() {
