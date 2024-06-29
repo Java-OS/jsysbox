@@ -4,6 +4,7 @@
 
 #include "common.cpp"
 #include "jfirewall.h"
+#include <iostream>
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_restore (JNIEnv *env, jclass clazz, jstring jfilePath) {
 	struct nft_ctx *ctx;
@@ -52,6 +53,8 @@ JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_export (JNIEnv
   output = nft_ctx_get_output_buffer(ctx); 
   if (output == NULL) return NULL ;
 
+  jstring result = env -> NewStringUTF(output);
   nft_ctx_free(ctx);
-  return env -> NewStringUTF(output);
+
+  return result ;
 }
