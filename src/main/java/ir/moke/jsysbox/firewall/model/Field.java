@@ -1,5 +1,7 @@
 package ir.moke.jsysbox.firewall.model;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum Field {
     DSCP("dscp"),
     LENGTH("length"),
@@ -75,6 +77,7 @@ public enum Field {
         this.values = value;
     }
 
+    @JsonValue
     public String getValues() {
         return values;
     }

@@ -2,7 +2,7 @@ package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum AddressFamily {
+public enum TableType {
     IPv4("ip"),
     IPv6("ip6"),
     INET("inet"),
@@ -12,7 +12,7 @@ public enum AddressFamily {
 
     private final String value;
 
-    AddressFamily(String value) {
+    TableType(String value) {
         this.value = value;
     }
 

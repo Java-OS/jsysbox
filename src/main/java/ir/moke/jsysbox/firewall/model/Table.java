@@ -1,23 +1,23 @@
 package ir.moke.jsysbox.firewall.model;
 
 public class Table {
-    private AddressFamily family;
+    private TableType family;
     private String name;
     private int handle;
 
     public Table() {
     }
 
-    public Table(AddressFamily family, String name) {
+    public Table(TableType family, String name) {
         this.family = family;
         this.name = name;
     }
 
-    public AddressFamily getFamily() {
+    public TableType getFamily() {
         return family;
     }
 
-    public void setFamily(AddressFamily family) {
+    public void setFamily(TableType family) {
         this.family = family;
     }
 
@@ -35,5 +35,14 @@ public class Table {
 
     public void setHandle(int handle) {
         this.handle = handle;
+    }
+
+    @Override
+    public String toString() {
+        return "Table{" +
+                "family=" + family +
+                ", name='" + name + '\'' +
+                ", handle=" + handle +
+                '}';
     }
 }

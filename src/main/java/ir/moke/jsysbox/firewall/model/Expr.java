@@ -1,5 +1,7 @@
 package ir.moke.jsysbox.firewall.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Expr {
     private Match match;
     private Object accept;
@@ -42,22 +44,25 @@ public class Expr {
         this.queue = queue;
     }
 
-    public Object getCu() {
+    @JsonProperty("continue")
+    public Object getContinue() {
         return cu;
     }
 
-    public void setCu(Object cu) {
+    public void setContinue(Object cu) {
         this.cu = cu;
     }
 
-    public Object getRet() {
+    @JsonProperty("return")
+    public Object getReturn() {
         return ret;
     }
 
-    public void setRet(Object ret) {
+    public void setReturn(Object ret) {
         this.ret = ret;
     }
 
+    @JsonProperty("jump")
     public Object getJump() {
         return jump;
     }
@@ -66,11 +71,12 @@ public class Expr {
         this.jump = jump;
     }
 
-    public Object getGo() {
+    @JsonProperty("goto")
+    public Object getGoto() {
         return go;
     }
 
-    public void setGo(Object go) {
+    public void setGoto(Object go) {
         this.go = go;
     }
 }

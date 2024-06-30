@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ChainHook {
     NETDEV_INGRESS("ingress"),
-    NETDEV_EGRESS("ingress"),
+    NETDEV_EGRESS("egress"),
     INET_PREROUTING("prerouting"),
     INET_INPUT("input"),
     INET_FORWARD("forward"),

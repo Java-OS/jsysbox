@@ -1,7 +1,7 @@
 package ir.moke.jsysbox.firewall.model;
 
 public class Chain {
-    private String family;
+    private TableType family;
     private String table;
     private String name;
     private int handle;
@@ -10,11 +10,11 @@ public class Chain {
     private int prio;
     private ChainPolicy policy;
 
-    public String getFamily() {
+    public TableType getFamily() {
         return family;
     }
 
-    public void setFamily(String family) {
+    public void setFamily(TableType family) {
         this.family = family;
     }
 
@@ -72,5 +72,19 @@ public class Chain {
 
     public void setPolicy(ChainPolicy policy) {
         this.policy = policy;
+    }
+
+    @Override
+    public String toString() {
+        return "Chain{" +
+                "family='" + family + '\'' +
+                ", table='" + table + '\'' +
+                ", name='" + name + '\'' +
+                ", handle=" + handle +
+                ", type=" + type +
+                ", hook=" + hook +
+                ", prio=" + prio +
+                ", policy=" + policy +
+                '}';
     }
 }

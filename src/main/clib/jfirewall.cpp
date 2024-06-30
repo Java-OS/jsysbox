@@ -4,24 +4,23 @@
 
 #include "common.cpp"
 #include "jfirewall.h"
-#include <iostream>
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_restore (JNIEnv *env, jclass clazz, jstring jfilePath) {
-	struct nft_ctx *ctx;
-	int err;
+  struct nft_ctx *ctx;
+  int err;
 
-	ctx = nft_ctx_new(0);
-	if (!ctx) {
+  ctx = nft_ctx_new(0);
+  if (!ctx) {
     throwException(env, "Cannot allocate nft context");
-		return ;
-	}
+  	return ;
+  }
 
-	nft_ctx_output_set_flags(ctx, NFT_CTX_OUTPUT_JSON);
+  nft_ctx_output_set_flags(ctx, NFT_CTX_OUTPUT_JSON);
 
-	/* create ruleset: all commands in the buffer are atomically applied */ 
+  /* create ruleset: all commands in the buffer are atomically applied */
   const char *filePath = env->GetStringUTFChars(jfilePath, 0);
-	err = nft_run_cmd_from_filename(ctx, filePath);
-	if (err < 0) {
+  err = nft_run_cmd_from_filename(ctx, filePath);
+  if (err < 0) {
     throwException(env, "failed to apply rules");
     return ;
   }
@@ -30,7 +29,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_restore (JNIEnv *
 	nft_ctx_free(ctx);
 }
 
-JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_export (JNIEnv *env, jclass clazz) {
+JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_exec (JNIEnv *env, jclass clazz, jstring jcmd) {
   struct nft_ctx *ctx;
   int err;
   const char *output;
@@ -44,7 +43,8 @@ JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_export (JNIEnv
   nft_ctx_output_set_flags(ctx, NFT_CTX_OUTPUT_HANDLE | NFT_CTX_OUTPUT_JSON);
   nft_ctx_buffer_output(ctx);
 
-  err = nft_run_cmd_from_buffer(ctx, "list ruleset");
+  const char *cmd = env->GetStringUTFChars(jcmd, 0);
+  err = nft_run_cmd_from_buffer(ctx, cmd);
   if (err < 0) {
     throwException(env, "Failed to run nftables");
     return NULL ;
@@ -53,8 +53,14 @@ JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_export (JNIEnv
   output = nft_ctx_get_output_buffer(ctx); 
   if (output == NULL) return NULL ;
 
-  jstring result = env -> NewStringUTF(output);
-  nft_ctx_free(ctx);
+  env->ReleaseStringUTFChars(jcmd, cmd);
 
-  return result ;
+  if (!output) {
+    nft_ctx_free(ctx);
+    return NULL;
+  } else {
+    jstring result = env -> NewStringUTF(output);
+    nft_ctx_free(ctx);
+    return result ;
+  }
 }

@@ -17,11 +17,11 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_restore
 
 /*
  * Class:     ir_moke_jsysbox_firewall_JFirewall
- * Method:    export
- * Signature: ()Ljava/lang/String;
+ * Method:    exec
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_export
-  (JNIEnv *, jclass);
+JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_exec
+  (JNIEnv *, jclass, jstring);
 
 #ifdef __cplusplus
 }

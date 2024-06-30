@@ -3,7 +3,7 @@ package ir.moke.jsysbox.firewall.model;
 import java.util.List;
 
 public class Set {
-    private AddressFamily family;
+    private TableType family;
     private String name;
     private String table;
     private SetType type;
@@ -13,11 +13,11 @@ public class Set {
     private int timeout;
     private List<Elem> elem;
 
-    public AddressFamily getFamily() {
+    public TableType getFamily() {
         return family;
     }
 
-    public void setFamily(AddressFamily family) {
+    public void setFamily(TableType family) {
         this.family = family;
     }
 
