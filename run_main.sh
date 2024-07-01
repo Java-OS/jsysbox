@@ -7,3 +7,4 @@ PACKAGE_VERSION=$(cat pom.xml | grep version | head -n1  | sed 's/<version>//' |
 # sudo java -cp target/jsysbox-"${PACKAGE_VERSION}".jar ir.moke.jsysbox.MainClass
 #
 (cd target/lib ; sudo java -cp .:* -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005 ir.moke.jsysbox.MainClass)
+# (cd target/lib ; sudo java -cp .:* ir.moke.jsysbox.MainClass)

@@ -12,6 +12,7 @@ import ir.moke.jsysbox.firewall.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,10 +26,7 @@ public class JFirewall {
         JniNativeLoader.load("jfirewall");
 
         om.setVisibility(om.getSerializationConfig().getDefaultVisibilityChecker()
-                .withFieldVisibility(JsonAutoDetect.Visibility.NONE)
-                .withGetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+                .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, false);
         om.configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, false);
@@ -107,8 +105,8 @@ public class JFirewall {
      *
      * @param handle table handle id
      */
-    public static void tableRemove(long handle) {
-        checkTableExists(handle);
+    public static void tableRemove(int handle) {
+        tableCheckExists(handle);
         exec("delete table handle %s".formatted(handle));
     }
 
@@ -117,7 +115,7 @@ public class JFirewall {
      *
      * @param handle table handle id
      */
-    public static void checkTableExists(long handle) {
+    public static void tableCheckExists(int handle) {
         boolean exists = tableList().stream().anyMatch(item -> item.getHandle() == handle);
         if (!exists) throw new JSysboxException("Table with handle %s does not exists".formatted(handle));
     }
@@ -128,9 +126,21 @@ public class JFirewall {
      * @param handle table handle id
      * @return table {@link Table}
      */
-    public static Table getTable(long handle) {
+    public static Table table(int handle) {
         Table table = tableList().stream().filter(item -> item.getHandle() == handle).findFirst().orElse(null);
         if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(handle));
+        return table;
+    }
+
+    /**
+     * get specific table by name
+     *
+     * @param name name of table
+     * @return table {@link Table}
+     */
+    public static Table table(String name) {
+        Table table = tableList().stream().filter(item -> item.getName().equals(name)).findFirst().orElse(null);
+        if (table == null) throw new JSysboxException("Table with name %s does not exists".formatted(name));
         return table;
     }
 
@@ -146,10 +156,10 @@ public class JFirewall {
      * @param policy   chain policy {@link ChainPolicy}
      * @param priority chain priority
      */
-    public static void addChain(long handle, String name, ChainType type, ChainHook hook, ChainPolicy policy, int priority) throws JSysboxException {
-        Table table = getTable(handle);
+    public static void chainAdd(int handle, String name, ChainType type, ChainHook hook, ChainPolicy policy, int priority) throws JSysboxException {
+        Table table = table(handle);
         String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
-        exec(cmd.formatted(table.getFamily().getValue(), table.getName(), name, type.getValue(), hook.getValue(), priority, policy.getValue()));
+        exec(cmd.formatted(table.getType().getValue(), table.getName(), name, type.getValue(), hook.getValue(), priority, policy.getValue()));
     }
 
     /**
@@ -157,7 +167,7 @@ public class JFirewall {
      *
      * @return list of chains {@link Chain}
      */
-    public static List<Chain> listChain() {
+    public static List<Chain> chainList() {
         String result = exec("list chains");
         try {
             List<Chain> chains = new ArrayList<>();
@@ -180,13 +190,13 @@ public class JFirewall {
      *
      * @param handle handle id
      */
-    public static void checkChainExists(long handle) {
-        boolean exists = listChain().stream().anyMatch(item -> item.getHandle() == handle);
+    public static void chainCheckExists(int handle) {
+        boolean exists = chainList().stream().anyMatch(item -> item.getHandle() == handle);
         if (!exists) throw new JSysboxException("Chain with handle %s does not exists".formatted(handle));
     }
 
-    public static Chain getChain(long handle) {
-        Chain chain = listChain().stream().filter(item -> item.getHandle() == handle).findFirst().orElse(null);
+    public static Chain chain(int handle) {
+        Chain chain = chainList().stream().filter(item -> item.getHandle() == handle).findFirst().orElse(null);
         if (chain == null) throw new JSysboxException("Chain with handle %s does not exists".formatted(handle));
         return chain;
     }
@@ -196,13 +206,137 @@ public class JFirewall {
      * command format :
      * by id : delete chain <type> <table name> handle <handle id>
      *
-     * @param tableName name of name
-     * @param tableType type of table {@link TableType}
-     * @param handle    handle id
+     * @param chain chain object to remove {@link Chain}
      */
-    public static void removeChain(String tableName, TableType tableType, long handle) {
-        checkChainExists(handle);
+    public static void chainRemove(Chain chain) {
+        int handle = chain.getHandle();
+        TableType tableType = chain.getTable().getType();
+        String tableName = chain.getName();
+        chainCheckExists(handle);
         String cmd = "delete chain %s %s handle %s";
         exec(cmd.formatted(tableType.getValue(), tableName, handle));
+    }
+
+    /**
+     * nftables add new set
+     *
+     * @param tableType  type of table {@link TableType}
+     * @param tableName  name of table
+     * @param setName    name of set
+     * @param setType    type of set {@link SetType}
+     * @param flags      list of set flags {@link FlagType}
+     * @param timeout    set timeout
+     * @param gcInterval set garbage collector timeout
+     * @param size       size of elements
+     * @param comment    set comment
+     * @param policy     set policy type {@link SetPolicy}
+     * @param autoMerge  set auto-merge
+     */
+    public static void setAdd(TableType tableType, String tableName, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy, boolean autoMerge) {
+        if (autoMerge && !flags.contains(FlagType.INTERVAL)) throw new JSysboxException("auto-merge only work with interval set");
+
+        StringBuilder sb = new StringBuilder("add set %s %s %s { type %s".formatted(tableType.getValue(), tableName, setName, setType.getValue())).append(";");
+        if (flags != null && !flags.isEmpty()) {
+            sb.append(" flags ").append(String.join(",", flags.stream().map(FlagType::getValue).toList())).append(";");
+        }
+        Optional.ofNullable(timeout).ifPresent(item -> sb.append(" timeout ").append(item).append("s").append(";"));
+        Optional.ofNullable(gcInterval).ifPresent(item -> sb.append(" gc-interval ").append(item).append("s").append(";"));
+        Optional.ofNullable(size).ifPresent(item -> sb.append(" size ").append(item).append(";"));
+        Optional.ofNullable(comment).ifPresent(item -> sb.append(" comment ").append("\"").append(item).append("\"").append(";"));
+        Optional.ofNullable(policy).ifPresent(item -> sb.append(" policy ").append(policy.getValue()).append(";"));
+        if (autoMerge) sb.append(" auto-merge ").append(";");
+        sb.append(" } ");
+
+        exec(sb.toString());
+    }
+
+    /**
+     * nftables list of current sets
+     *
+     * @return list of {@link Set}
+     */
+    public static List<Set> setList() {
+        String result = exec("list sets");
+        try {
+            List<Set> sets = new ArrayList<>();
+            JsonNode jsonNode = om.readValue(result, JsonNode.class);
+            JsonNode nftablesNode = jsonNode.get("nftables");
+            for (JsonNode node : nftablesNode) {
+                if (node.has("set")) {
+                    Set set = om.readValue(node.get("set").toString(), Set.class);
+                    sets.add(set);
+                }
+            }
+            return sets;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * nftables get special set
+     *
+     * @param handle set handle id
+     * @return {@link Set}
+     */
+    public static Set set(int handle) {
+        return setList().stream().filter(item -> item.getHandle() == handle).findFirst().orElseThrow(() -> new JSysboxException("Set with handle %s does not exists".formatted(handle)));
+    }
+
+    /**
+     * check set with special handle id exists
+     *
+     * @param handle set handle id
+     * @throws JSysboxException return exception if it does not exist
+     */
+    public static void setCheckExists(int handle) throws JSysboxException {
+        boolean exists = setList().stream().anyMatch(item -> item.getHandle() == handle);
+        if (!exists) throw new JSysboxException("Set with handle %s does not exists".formatted(handle));
+    }
+
+    /**
+     * nftables remove special set
+     *
+     * @param set set to remove {@link Set}
+     */
+    public static void setRemove(Set set) {
+        int handle = set.getHandle();
+        TableType tableType = set.getTable().getType();
+        String tableName = set.getTable().getName();
+        setCheckExists(handle);
+        String cmd = "delete set %s %s handle %s";
+        exec(cmd.formatted(tableType.getValue(), tableName, handle));
+    }
+
+    /**
+     * replace element of set
+     *
+     * @param set  target set to add element
+     * @param item list of elements
+     */
+    public static void setAddElement(Set set, List<String> item) {
+        int handle = set.getHandle();
+        setCheckExists(handle);
+        String tableType = set.getTable().getType().getValue();
+        String tableName = set.getTable().getName();
+        String name = set.getName();
+        String cmd = "add element %s %s %s { %s }".formatted(tableType, tableName, name, String.join(",", item));
+        exec(cmd);
+    }
+
+    /**
+     * remove items from set elements
+     *
+     * @param set  target set to remove element
+     * @param item list of elements
+     */
+    public static void setRemoveElement(Set set, List<String> item) {
+        int handle = set.getHandle();
+        setCheckExists(handle);
+        String tableType = set.getTable().getType().getValue();
+        String tableName = set.getTable().getName();
+        String name = set.getName();
+        String cmd = "delete element %s %s %s { %s }".formatted(tableType, tableName, name, String.join(",", item));
+        exec(cmd);
     }
 }

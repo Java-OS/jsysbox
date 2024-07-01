@@ -16,19 +16,35 @@ package ir.moke.jsysbox;
 
 import ir.moke.jsysbox.firewall.JFirewall;
 import ir.moke.jsysbox.firewall.model.Chain;
+import ir.moke.jsysbox.firewall.model.Set;
 
 import java.io.IOException;
 import java.util.List;
 
 public class MainClass {
     public static void main(String[] args) throws IOException {
-        JFirewall.restore("/home/mah454/firewall/config.nft");
-        List<Chain> chains = JFirewall.listChain();
-        System.out.println(chains);
-
-        if (!chains.isEmpty()) {
-            Chain chain = chains.get(0);
-            JFirewall.removeChain(chain.getTable(), chain.getFamily(), chain.getHandle());
+        List<Chain> chains = JFirewall.chainList();
+        for (Chain chain : chains) {
+            System.out.println(chain);
         }
+
+        List<Set> sets = JFirewall.setList();
+        sets.forEach(System.out::println);
+
+        if (!sets.isEmpty()) {
+            JFirewall.setAddElement(sets.get(0), List.of("TCP", "UDP", "ICMP"));
+            JFirewall.setRemoveElement(sets.get(0), List.of("TCP"));
+            JFirewall.setRemove(sets.get(0));
+        }
+
+
+        //        JFirewall.restore("/home/mah454/firewall/config.nft");
+//        List<Chain> chains = JFirewall.listChain();
+//        System.out.println(chains);
+
+//        if (!chains.isEmpty()) {
+//            Chain chain = chains.get(0);
+//            JFirewall.removeChain(chain.getTable(), chain.getFamily(), chain.getHandle());
+//        }
     }
 }

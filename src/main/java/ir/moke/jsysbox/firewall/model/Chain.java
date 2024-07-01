@@ -1,28 +1,25 @@
 package ir.moke.jsysbox.firewall.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import ir.moke.jsysbox.firewall.TableDeserializer;
+
 public class Chain {
-    private TableType family;
-    private String table;
+    @JsonDeserialize(using = TableDeserializer.class)
+    private Table table;
     private String name;
     private int handle;
     private ChainType type;
     private ChainHook hook;
-    private int prio;
+    @JsonProperty("prio")
+    private int priority;
     private ChainPolicy policy;
 
-    public TableType getFamily() {
-        return family;
-    }
-
-    public void setFamily(TableType family) {
-        this.family = family;
-    }
-
-    public String getTable() {
+    public Table getTable() {
         return table;
     }
 
-    public void setTable(String table) {
+    public void setTable(Table table) {
         this.table = table;
     }
 
@@ -38,52 +35,31 @@ public class Chain {
         return handle;
     }
 
-    public void setHandle(int handle) {
-        this.handle = handle;
-    }
-
     public ChainType getType() {
         return type;
-    }
-
-    public void setType(ChainType type) {
-        this.type = type;
     }
 
     public ChainHook getHook() {
         return hook;
     }
 
-    public void setHook(ChainHook hook) {
-        this.hook = hook;
-    }
-
-    public int getPrio() {
-        return prio;
-    }
-
-    public void setPrio(int prio) {
-        this.prio = prio;
+    public int getPriority() {
+        return priority;
     }
 
     public ChainPolicy getPolicy() {
         return policy;
     }
 
-    public void setPolicy(ChainPolicy policy) {
-        this.policy = policy;
-    }
-
     @Override
     public String toString() {
         return "Chain{" +
-                "family='" + family + '\'' +
-                ", table='" + table + '\'' +
+                "table=" + table.toString() +
                 ", name='" + name + '\'' +
                 ", handle=" + handle +
                 ", type=" + type +
                 ", hook=" + hook +
-                ", prio=" + prio +
+                ", priority=" + priority +
                 ", policy=" + policy +
                 '}';
     }

@@ -1,87 +1,72 @@
 package ir.moke.jsysbox.firewall.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import ir.moke.jsysbox.firewall.TableDeserializer;
+
 import java.util.List;
 
 public class Set {
-    private TableType family;
+    @JsonDeserialize(using = TableDeserializer.class)
+    private Table table;
     private String name;
-    private String table;
     private SetType type;
     private int handle;
     private int size;
     private List<FlagType> flags;
     private int timeout;
-    private List<Elem> elem;
-
-    public TableType getFamily() {
-        return family;
-    }
-
-    public void setFamily(TableType family) {
-        this.family = family;
-    }
+    @JsonProperty("gc-interval")
+    private int gcInterval;
+    private List<String> elements;
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getTable() {
+    public Table getTable() {
         return table;
-    }
-
-    public void setTable(String table) {
-        this.table = table;
     }
 
     public SetType getType() {
         return type;
     }
 
-    public void setType(SetType type) {
-        this.type = type;
-    }
-
     public int getHandle() {
         return handle;
-    }
-
-    public void setHandle(int handle) {
-        this.handle = handle;
     }
 
     public int getSize() {
         return size;
     }
 
-    public void setSize(int size) {
-        this.size = size;
-    }
-
     public List<FlagType> getFlags() {
         return flags;
-    }
-
-    public void setFlags(List<FlagType> flags) {
-        this.flags = flags;
     }
 
     public int getTimeout() {
         return timeout;
     }
 
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
+    public List<String> getElements() {
+        return elements;
     }
 
-    public List<Elem> getElem() {
-        return elem;
+    public int getGcInterval() {
+        return gcInterval;
     }
 
-    public void setElem(List<Elem> elem) {
-        this.elem = elem;
+    @Override
+    public String toString() {
+        return "Set{" +
+                "table=" + table.toString() +
+                ", name='" + name + '\'' +
+                ", type=" + type +
+                ", handle=" + handle +
+                ", size=" + size +
+                ", flags=" + flags +
+                ", timeout=" + timeout +
+                ", gcInterval=" + gcInterval +
+                ", elements=" + elements +
+                '}';
     }
 }

@@ -1,24 +1,27 @@
 package ir.moke.jsysbox.firewall.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Table {
-    private TableType family;
+    @JsonProperty("family")
+    private TableType type;
     private String name;
     private int handle;
 
     public Table() {
     }
 
-    public Table(TableType family, String name) {
-        this.family = family;
+    public Table(TableType type, String name) {
+        this.type = type;
         this.name = name;
     }
 
-    public TableType getFamily() {
-        return family;
+    public TableType getType() {
+        return type;
     }
 
-    public void setFamily(TableType family) {
-        this.family = family;
+    public void setType(TableType type) {
+        this.type = type;
     }
 
     public String getName() {
@@ -40,7 +43,7 @@ public class Table {
     @Override
     public String toString() {
         return "Table{" +
-                "family=" + family +
+                "family=" + type +
                 ", name='" + name + '\'' +
                 ", handle=" + handle +
                 '}';

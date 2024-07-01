@@ -2,18 +2,13 @@ package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ChainHook {
-    INGRESS("ingress"),
-    EGRESS("egress"),
-    PREROUTING("prerouting"),
-    FORWARD("forward"),
-    POSTROUTING("postrouting"),
-    INPUT("input"),
-    OUTPUT("output");
+public enum SetPolicy {
+    PERFORMANCE("performance"),
+    MEMORY("memory");
 
     private final String value;
 
-    ChainHook(String value) {
+    SetPolicy(String value) {
         this.value = value;
     }
 
