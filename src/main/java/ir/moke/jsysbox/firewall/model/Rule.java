@@ -1,35 +1,19 @@
 package ir.moke.jsysbox.firewall.model;
 
-import java.util.List;
+import ir.moke.jsysbox.firewall.statement.Statement;
 
 public class Rule {
-    private String family;
-    private String table;
-    private String chain;
+    private Chain chain;
     private int handle;
-    private List<Expr> expr;
+    private Expression expression;
+    private String comment;
+    private Statement statement;
 
-    public String getFamily() {
-        return family;
-    }
-
-    public void setFamily(String family) {
-        this.family = family;
-    }
-
-    public String getTable() {
-        return table;
-    }
-
-    public void setTable(String table) {
-        this.table = table;
-    }
-
-    public String getChain() {
+    public Chain getChain() {
         return chain;
     }
 
-    public void setChain(String chain) {
+    public void setChain(Chain chain) {
         this.chain = chain;
     }
 
@@ -41,11 +25,27 @@ public class Rule {
         this.handle = handle;
     }
 
-    public List<Expr> getExpr() {
-        return expr;
+    public Expression getExpression() {
+        return expression;
     }
 
-    public void setExpr(List<Expr> expr) {
-        this.expr = expr;
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public Statement getStatement() {
+        return statement;
+    }
+
+    public void setStatement(Statement statement) {
+        this.statement = statement;
     }
 }

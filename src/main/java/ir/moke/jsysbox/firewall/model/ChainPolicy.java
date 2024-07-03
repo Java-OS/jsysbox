@@ -4,12 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ChainPolicy {
     ACCEPT("accept"),
-    DROP("drop"),
-    QUEUE("queue"),
-    CONTINUE("continue"),
-    RETURN("return"),
-    JUMP("jump"),
-    GOTO("goto");
+    DROP("drop");
 
     private final String value;
 

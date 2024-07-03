@@ -2,20 +2,33 @@ package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum Protocol {
+public enum MatchType {
     IP("ip"),
     IP6("ip6"),
     TCP("tcp"),
     UDP("udp"),
+    UDPLITE("udplite"),
+    SCTP("sctp"),
+    DCCP("dccp"),
+    AH("ah"),
+    ESP("esp"),
+    COMP("comp"),
     ICMP("icmp"),
     ICMPV6("icmpv6"),
-    SCTP("sctp"),
+    ETHER("ether"),
+    DST("dst"),
+    FRAG("frag"),
+    HBH("hbh"),
+    MH("mh"),
+    RT("rt"),
+    VLAN("vlan"),
     ARP("arp"),
-    ETHER("ether");
+    CT("ct"),
+    META("meta");
 
     private final String value;
 
-    Protocol(String value) {
+    MatchType(String value) {
         this.value = value;
     }
 

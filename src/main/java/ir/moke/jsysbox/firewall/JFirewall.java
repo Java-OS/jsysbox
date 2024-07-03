@@ -9,7 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 import ir.moke.jsysbox.firewall.model.*;
+import ir.moke.jsysbox.firewall.statement.Statement;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +54,20 @@ public class JFirewall {
      */
     private native static String exec(String command);
 
+    public static String export() {
+        return exec("list ruleset");
+    }
+
+    public static void save(File file) {
+        String str = export();
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write(str);
+            fileWriter.flush();
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
     private static void checkCharacters(String str) {
         Matcher matcher = pattern.matcher(str);
         boolean matches = matcher.matches();
@@ -71,9 +89,10 @@ public class JFirewall {
      * @param name table name
      * @param type type of table {@link TableType}
      */
-    public static void tableAdd(String name, TableType type) {
+    public static Table tableAdd(String name, TableType type) {
         checkCharacters(name);
         exec("add table %s %s".formatted(type.getValue(), name));
+        return JFirewall.table(name);
     }
 
     /**
@@ -149,17 +168,31 @@ public class JFirewall {
      * command format :
      * add chain [<family>] <table_name> <chain_name> { type <type> hook <hook> priority <value> \; [policy <policy> \;]
      *
-     * @param handle   table handle id
+     * @param table    target table
      * @param name     chain name
      * @param type     chain type {@link ChainType}
      * @param hook     chain hook {@link ChainHook}
      * @param policy   chain policy {@link ChainPolicy}
      * @param priority chain priority
+     * @return {@link Chain}
      */
-    public static void chainAdd(int handle, String name, ChainType type, ChainHook hook, ChainPolicy policy, int priority) throws JSysboxException {
-        Table table = table(handle);
+    public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, int priority) throws JSysboxException {
         String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
         exec(cmd.formatted(table.getType().getValue(), table.getName(), name, type.getValue(), hook.getValue(), priority, policy.getValue()));
+        return chain(table, name);
+    }
+
+    /**
+     * nftables add new chain
+     *
+     * @param table target table
+     * @param name  chain name
+     * @return {@link Chain}
+     */
+    public static Chain chainAdd(Table table, String name) throws JSysboxException {
+        String cmd = "add chain %s %s %s";
+        exec(cmd.formatted(table.getType().getValue(), table.getName(), name));
+        return chain(table, name);
     }
 
     /**
@@ -198,6 +231,16 @@ public class JFirewall {
     public static Chain chain(int handle) {
         Chain chain = chainList().stream().filter(item -> item.getHandle() == handle).findFirst().orElse(null);
         if (chain == null) throw new JSysboxException("Chain with handle %s does not exists".formatted(handle));
+        return chain;
+    }
+
+    public static Chain chain(Table table, String name) {
+        Chain chain = chainList().stream()
+                .filter(item -> item.getTable().getHandle() == table.getHandle())
+                .filter(item -> item.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+        if (chain == null) throw new JSysboxException("Chain with table handle %s and name %s does not exists".formatted(table.getHandle(), name));
         return chain;
     }
 
@@ -311,32 +354,55 @@ public class JFirewall {
     /**
      * replace element of set
      *
-     * @param set  target set to add element
-     * @param item list of elements
+     * @param set   target set to add element
+     * @param items list of elements
      */
-    public static void setAddElement(Set set, List<String> item) {
+    public static void setAddElement(Set set, List<String> items) {
         int handle = set.getHandle();
         setCheckExists(handle);
         String tableType = set.getTable().getType().getValue();
         String tableName = set.getTable().getName();
         String name = set.getName();
-        String cmd = "add element %s %s %s { %s }".formatted(tableType, tableName, name, String.join(",", item));
+        String cmd = "add element %s %s %s { %s }".formatted(tableType, tableName, name, String.join(",", items));
         exec(cmd);
     }
 
     /**
      * remove items from set elements
      *
-     * @param set  target set to remove element
-     * @param item list of elements
+     * @param set   target set to remove element
+     * @param items list of elements
      */
-    public static void setRemoveElement(Set set, List<String> item) {
+    public static void setRemoveElement(Set set, List<String> items) {
         int handle = set.getHandle();
         setCheckExists(handle);
         String tableType = set.getTable().getType().getValue();
         String tableName = set.getTable().getName();
         String name = set.getName();
-        String cmd = "delete element %s %s %s { %s }".formatted(tableType, tableName, name, String.join(",", item));
+        String cmd = "delete element %s %s %s { %s }".formatted(tableType, tableName, name, String.join(",", items));
         exec(cmd);
+    }
+
+    /**
+     * nftables add new rule
+     * command format :
+     * {add | insert} rule [family] table chain [handle handle | index index] statement ... [comment comment]
+     * example :
+     * add rule filter output ip daddr 192.168.0.0/24 accept
+     */
+    public static void ruleAdd(Chain chain, List<Expression> expressions, Statement statement, String comment) {
+        chainCheckExists(chain.getHandle());
+        Table table = chain.getTable();
+        String chainName = chain.getName();
+        TableType tableType = table.getType();
+        String tableName = table.getName();
+        String sb = "add rule" + " " + tableType.getValue() +
+                " " + tableName +
+                " " + chainName +
+                " " + String.join(" ", expressions.stream().map(Expression::toString).toList()) +
+                " " + statement +
+                " comment " + "\"" + comment + "\"";
+        System.out.println(sb);
+//        exec(sb);
     }
 }

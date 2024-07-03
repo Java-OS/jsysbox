@@ -78,7 +78,7 @@ public enum Field {
     }
 
     @JsonValue
-    public String getValues() {
+    public String getValue() {
         return values;
     }
 }

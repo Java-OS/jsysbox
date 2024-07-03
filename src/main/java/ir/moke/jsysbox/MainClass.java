@@ -15,36 +15,32 @@
 package ir.moke.jsysbox;
 
 import ir.moke.jsysbox.firewall.JFirewall;
-import ir.moke.jsysbox.firewall.model.Chain;
-import ir.moke.jsysbox.firewall.model.Set;
+import ir.moke.jsysbox.firewall.model.*;
+import ir.moke.jsysbox.firewall.statement.NatStatement;
+import ir.moke.jsysbox.firewall.statement.Statement;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 public class MainClass {
     public static void main(String[] args) throws IOException {
-        List<Chain> chains = JFirewall.chainList();
-        for (Chain chain : chains) {
-            System.out.println(chain);
-        }
+        JFirewall.flush(null);
+        Table t1 = JFirewall.tableAdd("t1", TableType.IPv4);
+        Chain c1 = JFirewall.chainAdd(t1, "c1", ChainType.NAT, ChainHook.PREROUTING, ChainPolicy.ACCEPT, 1);
+        Chain c2 = JFirewall.chainAdd(t1, "c2", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+        Chain c3 = JFirewall.chainAdd(t1, "c3", ChainType.NAT, ChainHook.POSTROUTING, ChainPolicy.ACCEPT, 1);
+        JFirewall.save(new File("/home/mah454/firewall/config.nft"));
 
-        List<Set> sets = JFirewall.setList();
-        sets.forEach(System.out::println);
-
-        if (!sets.isEmpty()) {
-            JFirewall.setAddElement(sets.get(0), List.of("TCP", "UDP", "ICMP"));
-            JFirewall.setRemoveElement(sets.get(0), List.of("TCP"));
-            JFirewall.setRemove(sets.get(0));
-        }
-
-
-        //        JFirewall.restore("/home/mah454/firewall/config.nft");
-//        List<Chain> chains = JFirewall.listChain();
-//        System.out.println(chains);
-
-//        if (!chains.isEmpty()) {
-//            Chain chain = chains.get(0);
-//            JFirewall.removeChain(chain.getTable(), chain.getFamily(), chain.getHandle());
-//        }
+        Expression expression1 = new Expression(MatchType.IP, Field.SADDR, Operation.EQ, List.of("4.4.4.4"));
+        Expression expression2 = new Expression(MatchType.TCP, Field.DPORT, Operation.EQ, List.of("5151"));
+//        Statement statement = new VerdictStatement(VerdictStatement.Type.ACCEPT);
+//        Statement statement = LogStatement.ALERT;
+//        Statement statement = RejectStatement.ICMP_TYPE_ADMIN_PROHIBITED;
+//        Statement statement = new CounterStatement();
+//        Statement statement = new LimitStatement(12, LimitStatement.TimeUnit.DAY, true);
+//        Statement statement = new LimitStatement(12, LimitStatement.TimeUnit.DAY, LimitStatement.ByteUnit.KBYTES, true);
+        Statement statement = new NatStatement(NatStatement.Type.SNAT, "10.10.10.2", null);
+        JFirewall.ruleAdd(c1, List.of(expression1, expression2), statement, "this is first rule");
     }
 }

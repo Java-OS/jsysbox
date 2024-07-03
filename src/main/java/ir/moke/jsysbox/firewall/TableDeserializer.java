@@ -15,7 +15,7 @@ public class TableDeserializer extends JsonDeserializer<Table> {
 
     @Override
     public Table deserialize(JsonParser parser, DeserializationContext context) throws IOException, JacksonException {
-        TreeNode treeNode = parser.getCodec().readTree(parser);
-        return JFirewall.table(((TextNode) treeNode).asText());
+        TextNode textNode = parser.getCodec().readTree(parser);
+        return JFirewall.table(textNode.asText());
     }
 }
