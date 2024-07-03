@@ -18,9 +18,9 @@ public class NatStatement implements Statement {
     }
 
     /**
-     * @param type type of nat {@link Type}
+     * @param type    type of nat {@link Type}
      * @param address target address
-     * @param flags nat flags {@link Flag}
+     * @param flags   nat flags {@link Flag}
      */
     public NatStatement(Type type, String address, List<Flag> flags) {
         this.type = type;
@@ -30,6 +30,7 @@ public class NatStatement implements Statement {
 
     /**
      * This constructor usable for masquerade
+     *
      * @param flags nat flags {@link Flag}
      */
     public NatStatement(List<Flag> flags) {
@@ -48,8 +49,8 @@ public class NatStatement implements Statement {
         return port;
     }
 
-    public Flag getFlag() {
-        return flag;
+    public List<Flag> getFlag() {
+        return flags;
     }
 
     @Override
