@@ -427,15 +427,15 @@ public class JDiskManager {
         return (size * 1024 * 1024) / 512;
     }
 
-    public static void createPartition(String blkDisk, long start, long end, PartitionType partitionType) {
-        createPartition(blkDisk, start, end, partitionType.getType(), true);
+    public static void createPartition(String blkDisk, long start, long end, FilesystemType filesystemType) {
+        createPartition(blkDisk, start, end, filesystemType.getType(), true);
     }
 
     public static void createExtendedPartition(String blkDisk, long start, long end) {
         createPartition(blkDisk, start, end, null, false);
     }
 
-    public static void createLogicalPartition(String blkDisk, long start, long end, PartitionType partitionType) {
-        createPartition(blkDisk, start, end, partitionType.getType(), false);
+    public static void createLogicalPartition(String blkDisk, long start, long end, FilesystemType filesystemType) {
+        createPartition(blkDisk, start, end, filesystemType.getType(), false);
     }
 }

@@ -28,18 +28,21 @@ public enum FilesystemType {
     XFS("xfs"),
     VFAT("vfat"),
     NTFS("ntfs"),
-    SWAP("swap"),
+    SWAP("linux-swap"),
     ISO9660("iso9660"),
-    ;
+    EXT2("ext2"),
+    FAT16("fat16"),
+    FAT32("fat32"),
+    HFS("hfs"),
+    HFS_PLUS("hfs+"),
+    REISERFS("reiserfs"),
+    UDF("udf"),
+    XF("xfs");
 
     private final String type;
 
     FilesystemType(String type) {
         this.type = type;
-    }
-
-    public String getType() {
-        return type;
     }
 
     public static List<FilesystemType> list() {
@@ -48,6 +51,10 @@ public enum FilesystemType {
 
     public static FilesystemType find(String type) throws JSysboxException {
         return list().stream().filter(item -> item.type.equals(type)).findFirst().orElseThrow(() -> new JSysboxException("Filesystem does not supported"));
+    }
+
+    public String getType() {
+        return type;
     }
 
 }
