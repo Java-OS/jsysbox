@@ -125,7 +125,7 @@ PartitionInfo getPartitionInfo(JNIEnv *env, PedPartition* part, PedDevice* dev) 
         if (!info.mountPoint.empty()) {
             struct statvfs vfs;
             if (statvfs(info.mountPoint.c_str(), &vfs) == 0) {
-                info.freeSize = (vfs.f_bavail * vfs.f_bsize) / 1024;
+                info.freeSize = vfs.f_bavail * vfs.f_bsize;
             }
         }
         free(path);
