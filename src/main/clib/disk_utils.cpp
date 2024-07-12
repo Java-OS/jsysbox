@@ -127,6 +127,10 @@ PartitionInfo getPartitionInfo(JNIEnv *env, PedPartition* part, PedDevice* dev) 
             if (statvfs(info.mountPoint.c_str(), &vfs) == 0) {
                 info.freeSize = vfs.f_bavail * vfs.f_bsize;
             }
+        } else if (info.type == "swap") {
+            struct swapinfo swi ;
+            get_swap_info(info.blk,swi);
+            info.freeSize = swi.size - swi.used;
         }
         free(path);
     }
