@@ -232,7 +232,7 @@ public class JDiskManager {
         try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-uuid/"))) {
             List<Path> list = listStream.toList();
             for (Path path : list) {
-                if (Path.of(uuid).equals(path.toRealPath())) {
+                if (Path.of(uuid).equals(path.getFileName())) {
                     Path realPath = getRealPathOfDevice(path);
                     return getPartitionInformation(realPath.toString())[0];
                 }
@@ -253,7 +253,7 @@ public class JDiskManager {
         try (Stream<Path> listStream = Files.list(Path.of("/dev/disk/by-label/"))) {
             List<Path> list = listStream.toList();
             for (Path path : list) {
-                if (Path.of(label).equals(path.toRealPath())) {
+                if (Path.of(label).equals(path.getFileName())) {
                     Path realPath = getRealPathOfDevice(path);
                     return getPartitionInformation(realPath.toString())[0];
                 }

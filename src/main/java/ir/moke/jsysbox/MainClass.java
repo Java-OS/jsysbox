@@ -25,6 +25,12 @@ public class MainClass {
         List<PartitionInformation> partitions = JDiskManager.partitions();
         for (PartitionInformation partition : partitions) {
             System.out.println(partition);
+            PartitionInformation partitionByLabel = JDiskManager.getPartitionByLabel(partition.label);
+            if (partitionByLabel != null) {
+                System.out.println(partitionByLabel.blk);
+            } else {
+                System.out.println("Problem : " + partition.uuid);
+            }
         }
     }
 }
