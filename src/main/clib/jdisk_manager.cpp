@@ -89,7 +89,7 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartiti
         jfieldID labelField = env->GetFieldID(partitionInfoClass, "label", "Ljava/lang/String;");
         jfieldID typeField = env->GetFieldID(partitionInfoClass, "type", "Ljava/lang/String;");
         jfieldID totalSizeField = env->GetFieldID(partitionInfoClass, "totalSize", "J");
-        jfieldID freeSizeField = env->GetFieldID(partitionInfoClass, "freeSize", "J");
+        jfieldID freeSizeField = env->GetFieldID(partitionInfoClass, "freeSize", "Ljava/lang/Long;");
         jfieldID startSectorField = env->GetFieldID(partitionInfoClass, "startSector", "J");
         jfieldID endSectorField = env->GetFieldID(partitionInfoClass, "endSector", "J");
         jfieldID sectorSizeField = env->GetFieldID(partitionInfoClass, "sectorSize", "J");
@@ -100,7 +100,15 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartiti
         env->SetObjectField(partitionInfoObj, labelField, env->NewStringUTF(partitionInfos[i].label.c_str()));
         env->SetObjectField(partitionInfoObj, typeField, env->NewStringUTF(partitionInfos[i].type.c_str()));
         env->SetLongField(partitionInfoObj, totalSizeField, partitionInfos[i].totalSize);
-        env->SetLongField(partitionInfoObj, freeSizeField, partitionInfos[i].freeSize);
+
+        if (partitionInfos[i].freeSize) {
+            // Create a java/lang/Long object for freeSize and set it
+            jclass longClass = env->FindClass("java/lang/Long");
+            jmethodID longConstructor = env->GetMethodID(longClass, "<init>", "(J)V");
+            jobject freeSizeObj = env->NewObject(longClass, longConstructor, partitionInfos[i].freeSize);
+            env->SetObjectField(partitionInfoObj, freeSizeField, freeSizeObj);
+        }
+
         env->SetLongField(partitionInfoObj, startSectorField, partitionInfos[i].startSector);
         env->SetLongField(partitionInfoObj, endSectorField, partitionInfos[i].endSector);
         env->SetLongField(partitionInfoObj, sectorSizeField, partitionInfos[i].sectorSize);

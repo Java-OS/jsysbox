@@ -21,7 +21,7 @@ public class PartitionInformation {
     public String label;
     public String type;
     public long totalSize;
-    public long freeSize;
+    public Long freeSize;
     public long startSector;
     public long endSector;
     public long sectorSize;
