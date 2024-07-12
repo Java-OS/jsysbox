@@ -188,6 +188,7 @@ public class JDiskManager {
         List<String> disks = Arrays.stream(getDisks()).filter(item -> !item.contains("sr")).toList();
         for (String disk : disks) {
             try {
+                if (disk.contains("dm-")) disk = getLvmMapperPath(disk);
                 PartitionInformation[] partitionInformation = getPartitionInformation(disk);
                 if (partitionInformation != null) list.addAll(Arrays.asList(partitionInformation));
             } catch (JSysboxException ignore) {

@@ -14,23 +14,17 @@
 
 package ir.moke.jsysbox;
 
+import ir.moke.jsysbox.disk.Disk;
 import ir.moke.jsysbox.disk.JDiskManager;
-import ir.moke.jsysbox.disk.PartitionInformation;
 
 import java.io.IOException;
 import java.util.List;
 
 public class MainClass {
     public static void main(String[] args) throws IOException {
-        List<PartitionInformation> partitions = JDiskManager.partitions();
-        for (PartitionInformation partition : partitions) {
-            System.out.println(partition);
-            PartitionInformation partitionByLabel = JDiskManager.getPartitionByLabel(partition.label);
-            if (partitionByLabel != null) {
-                System.out.println(partitionByLabel.blk);
-            } else {
-                System.out.println("Problem : " + partition.uuid);
-            }
+        List<Disk> diskInformation = JDiskManager.getDiskInformation();
+        for (Disk disk : diskInformation) {
+            System.out.println(disk);
         }
     }
 }
