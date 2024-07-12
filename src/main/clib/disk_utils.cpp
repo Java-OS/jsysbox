@@ -130,6 +130,7 @@ PartitionInfo getPartitionInfo(JNIEnv *env, PedPartition* part, PedDevice* dev) 
         } else if (info.type == "swap") {
             struct swapinfo swi ;
             get_swap_info(info.blk,swi);
+            info.totalSize = swi.size;
             info.freeSize = swi.size - swi.used;
         }
         free(path);
