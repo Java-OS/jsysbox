@@ -104,6 +104,7 @@ public class JSystem {
     }
 
     /**
+     * load kernel parameter
      * @param name       kernel module name
      * @param parameters module parameters should be passed as ["key1=value1","key2=value2"]
      */
