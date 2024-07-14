@@ -14,17 +14,20 @@
 
 package ir.moke.jsysbox;
 
-import ir.moke.jsysbox.disk.JDiskManager;
-import ir.moke.jsysbox.disk.PartitionInformation;
-
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
+import java.nio.file.Path;
 
 public class MainClass {
     public static void main(String[] args) throws IOException {
-        List<PartitionInformation> partitions = JDiskManager.partitions();
-        for (PartitionInformation partition : partitions) {
-            System.out.println(partition);
+        Path path = Path.of("/proc/sys/dev/i915/oa_max_sample_rate");
+        FileReader fileReader = new FileReader(path.toFile());
+        StringBuilder content = new StringBuilder();
+        int code;
+        while ((code = fileReader.read()) != -1) {
+            content.append((char) code);
         }
+
+        System.out.println(content);
     }
 }

@@ -17,6 +17,7 @@ package ir.moke.jsysbox.system;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,9 +59,13 @@ public class JSystem {
             stream.filter(item -> !item.toFile().isDirectory())
                     .forEach(item -> {
                         String key = item.toString().substring("/proc/sys/".length()).replace("/", ".");
-                        try {
-                            String value = new String(Files.readAllBytes(item));
-                            items.put(key, value);
+                        try (FileReader fileReader = new FileReader(item.toFile())) {
+                            StringBuilder value = new StringBuilder();
+                            int code;
+                            while ((code = fileReader.read()) != -1) {
+                                value.append((char) code);
+                            }
+                            items.put(key, value.toString());
                         } catch (IOException e) {
                             items.put(key, "");
                         }
@@ -105,6 +110,7 @@ public class JSystem {
 
     /**
      * load kernel parameter
+     *
      * @param name       kernel module name
      * @param parameters module parameters should be passed as ["key1=value1","key2=value2"]
      */
