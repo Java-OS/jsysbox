@@ -405,4 +405,17 @@ public class JFirewall {
         System.out.println(sb);
 //        exec(sb);
     }
+
+    public static List<Rule> ruleList() {
+        //TODO: Implement me ...
+        return null;
+    }
+
+    public static void ruleRemove(Set set) {
+        //TODO: Implement me ...
+    }
+
+    public static void ruleChangePriority(Rule rule,long priority) {
+        //TODO: Implement me ...
+    }
 }
