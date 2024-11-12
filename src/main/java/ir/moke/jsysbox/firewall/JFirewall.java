@@ -387,7 +387,7 @@ public class JFirewall {
     /**
      * nftables add new rule
      * command format :
-     * {add | insert} rule [family] table chain [handle handle | index index] statement ... [comment comment]
+     * {add | insert} rule [family] table chain [handle | index] statement ... [comment comment]
      * example :
      * add rule filter output ip daddr 192.168.0.0/24 accept
      */
