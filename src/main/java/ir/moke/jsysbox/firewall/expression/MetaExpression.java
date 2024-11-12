@@ -17,6 +17,11 @@ public class MetaExpression implements Expression {
         this.operation = operation;
     }
 
+    @Override
+    public String toString() {
+        return "meta %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+    }
+
     public enum Field {
         IIFNAME("iifname"),
         OIFNAME("oifname"),

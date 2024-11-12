@@ -1,14 +1,23 @@
 package ir.moke.jsysbox.firewall.model;
 
-import ir.moke.jsysbox.firewall.expression.Expression;
-import ir.moke.jsysbox.firewall.statement.Statement;
+import java.util.List;
+import java.util.Map;
 
 public class Rule {
     private Chain chain;
     private int handle;
-    private Expression expression;
+    private List<Map<String, Object>> expr;
     private String comment;
-    private Statement statement;
+
+    public Rule() {
+    }
+
+    public Rule(Chain chain, List<Map<String, Object>> expr, String comment, int handle) {
+        this.chain = chain;
+        this.handle = handle;
+        this.expr = expr;
+        this.comment = comment;
+    }
 
     public Chain getChain() {
         return chain;
@@ -26,12 +35,12 @@ public class Rule {
         this.handle = handle;
     }
 
-    public Expression getExpression() {
-        return expression;
+    public List<Map<String, Object>> getExpr() {
+        return expr;
     }
 
-    public void setExpression(Expression expression) {
-        this.expression = expression;
+    public void setExpr(List<Map<String, Object>> expr) {
+        this.expr = expr;
     }
 
     public String getComment() {
@@ -42,11 +51,13 @@ public class Rule {
         this.comment = comment;
     }
 
-    public Statement getStatement() {
-        return statement;
-    }
-
-    public void setStatement(Statement statement) {
-        this.statement = statement;
+    @Override
+    public String toString() {
+        return "Rule{" +
+                "chain=" + chain +
+                ", handle=" + handle +
+                ", expr=" + expr +
+                ", comment='" + comment + '\'' +
+                '}';
     }
 }

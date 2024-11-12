@@ -7,7 +7,7 @@ import java.util.List;
 
 public class CtExpression implements Expression {
 
-    private Field field;
+    private CtExpression.Field field;
     private Operation operation;
     private List<String> values;
     private Boolean originalType;
@@ -15,7 +15,7 @@ public class CtExpression implements Expression {
     private Boolean over;
     private long value;
 
-    public CtExpression(Field field, Operation operation, List<String> values) {
+    public CtExpression(CtExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -28,6 +28,7 @@ public class CtExpression implements Expression {
     }
 
     public CtExpression(Boolean over, long value) {
+        this.field = Field.COUNT;
         this.over = over;
         this.value = value;
     }
@@ -36,7 +37,7 @@ public class CtExpression implements Expression {
     public String toString() {
         if (originalType != null) {
             String typeMode = originalType ? "original" : "reply";
-            StringBuilder sb = new StringBuilder("ct ").append(typeMode);
+            StringBuilder sb = new StringBuilder("ct ").append(typeMode).append(" ");
             switch (type) {
                 case BYTES, PACKETS -> sb.append("{ ").append(String.join(",", values)).append(" }");
                 case SADDR -> sb.append("ip saddr").append("{ ").append(String.join(",", values)).append(" }");
@@ -49,23 +50,23 @@ public class CtExpression implements Expression {
 
             return sb.toString();
         } else {
-            if (field.equals(Field.COUNT)) {
-                return "ct count %s {%s}".formatted((over != null && over) ? "over" : "", value);
+            if (Field.COUNT.equals(field)) {
+                return "ct count %s %s".formatted((over != null && over) ? "over" : "", value);
             }
 
-            return "dccp %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+            return "ct %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
         }
     }
 
     public enum Type {
-        BYTES("expected"),
-        PACKETS("seen-reply"),
-        SADDR("assured"),
-        DADDR("confirmed"),
-        L3PROTO("snat"),
-        PROTOCOL("dnat"),
-        PROTO_DST("dying"),
-        PROTO_SRC("dnat");
+        BYTES("bytes"),
+        PACKETS("packets"),
+        SADDR("saddr"),
+        DADDR("daddr"),
+        L3PROTO("l3proto"),
+        PROTOCOL("protocol"),
+        PROTO_DST("proto_dst"),
+        PROTO_SRC("proto_src");
 
         private final String values;
 
@@ -80,13 +81,13 @@ public class CtExpression implements Expression {
     }
 
     public enum Status {
-        expected("expected"),
-        seen_reply("seen-reply"),
-        assured("assured"),
-        confirmed("confirmed"),
-        snat("snat"),
-        dnat("dnat"),
-        dying("dying");
+        EXPECTED("expected"),
+        SEEN_REPLY("seen-reply"),
+        ASSURED("assured"),
+        CONFIRMED("confirmed"),
+        SNAT("snat"),
+        DNAT("dnat"),
+        DYING("dying");
 
         private final String values;
 
