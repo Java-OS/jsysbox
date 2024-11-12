@@ -1,4 +1,4 @@
-package ir.moke.jsysbox.firewall.model;
+package ir.moke.jsysbox.firewall.expression;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

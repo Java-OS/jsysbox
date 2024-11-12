@@ -1,6 +1,7 @@
 package ir.moke.jsysbox.firewall.statement;
 
 import ir.moke.jsysbox.JSysboxException;
+import ir.moke.jsysbox.firewall.model.Chain;
 
 public class VerdictStatement implements Statement {
     private final Type type;
@@ -13,6 +14,11 @@ public class VerdictStatement implements Statement {
     public VerdictStatement(Type type, String chainName) {
         this.type = type;
         this.chainName = chainName;
+    }
+
+    public VerdictStatement(Type type, Chain chain) {
+        this.type = type;
+        this.chainName = chain.getName();
     }
 
     public Type getType() {

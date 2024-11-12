@@ -14,20 +14,37 @@
 
 package ir.moke.jsysbox;
 
-import java.io.FileReader;
+import ir.moke.jsysbox.firewall.JFirewall;
+import ir.moke.jsysbox.firewall.expression.Expression;
+import ir.moke.jsysbox.firewall.expression.IpExpression;
+import ir.moke.jsysbox.firewall.expression.MatchType;
+import ir.moke.jsysbox.firewall.expression.TcpExpression;
+import ir.moke.jsysbox.firewall.model.*;
+import ir.moke.jsysbox.firewall.statement.Statement;
+import ir.moke.jsysbox.firewall.statement.VerdictStatement;
+
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.List;
 
 public class MainClass {
-    public static void main(String[] args) throws IOException {
-        Path path = Path.of("/proc/sys/dev/i915/oa_max_sample_rate");
-        FileReader fileReader = new FileReader(path.toFile());
-        StringBuilder content = new StringBuilder();
-        int code;
-        while ((code = fileReader.read()) != -1) {
-            content.append((char) code);
-        }
+    private static final File file = new File("/home/mah454/test/config.nft");
 
-        System.out.println(content);
+    public static void main(String[] args) throws IOException {
+        JFirewall.flush(TableType.IPv4);
+
+        Table filterTable = JFirewall.tableAdd("filter", TableType.IPv4);
+        Chain chain = JFirewall.chainAdd(filterTable, "input", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+
+//        Expression expr1 = new Expression(MatchType.IP, Field.SADDR, Operation.EQ, List.of("10.20.20.12", "20.20.20.1"));
+        Expression expr1 = new TcpExpression(TcpExpression.Field.DPORT,Operation.EQ,List.of("22"));
+        Statement stt1 = new VerdictStatement(VerdictStatement.Type.DROP, chain);
+        JFirewall.ruleAdd(chain, List.of(expr1), stt1, "First Rule");
+
+        Expression expr2 = new IpExpression(IpExpression.Field.SADDR,Operation.EQ,List.of("20.21.12.12"));
+        Statement stt2 = new VerdictStatement(VerdictStatement.Type.ACCEPT, chain);
+        JFirewall.ruleAdd(chain, List.of(expr2), stt2, "Second Rule");
+
+        JFirewall.save(file);
     }
 }

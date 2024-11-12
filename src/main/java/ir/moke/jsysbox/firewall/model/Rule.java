@@ -1,5 +1,6 @@
 package ir.moke.jsysbox.firewall.model;
 
+import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.statement.Statement;
 
 public class Rule {

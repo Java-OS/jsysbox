@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
+import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.statement.Statement;
 
@@ -396,14 +397,15 @@ public class JFirewall {
         String chainName = chain.getName();
         TableType tableType = table.getType();
         String tableName = table.getName();
-        String sb = "add rule" + " " + tableType.getValue() +
+        String sb = "add rule" +
+                " " + tableType.getValue() +
                 " " + tableName +
                 " " + chainName +
                 " " + String.join(" ", expressions.stream().map(Expression::toString).toList()) +
                 " " + statement +
                 " comment " + "\"" + comment + "\"";
         System.out.println(sb);
-//        exec(sb);
+        exec(sb);
     }
 
     public static List<Rule> ruleList() {
@@ -415,7 +417,7 @@ public class JFirewall {
         //TODO: Implement me ...
     }
 
-    public static void ruleChangePriority(Rule rule,long priority) {
+    public static void ruleChangePriority(Rule rule, long priority) {
         //TODO: Implement me ...
     }
 }
