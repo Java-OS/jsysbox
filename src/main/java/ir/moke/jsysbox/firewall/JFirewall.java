@@ -3,7 +3,6 @@ package ir.moke.jsysbox.firewall;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +17,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -410,6 +408,9 @@ public class JFirewall {
         exec(sb);
     }
 
+    /**
+     * @return List of {@link Rule}
+     */
     public static List<Rule> ruleList() {
         String result = exec("list ruleset");
         try {
@@ -418,16 +419,8 @@ public class JFirewall {
             JsonNode nftablesNode = jsonNode.get("nftables");
             for (JsonNode node : nftablesNode) {
                 if (node.has("rule")) {
-                    Table table = table(node.get("rule").get("table").asText());
-                    Chain chain = chain(table, node.get("rule").get("chain").asText());
-
-                    String comment = node.get("rule").get("comment").asText();
-                    int handle = node.get("rule").get("handle").asInt();
-
-                    TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
-                    };
-                    Rule rule = new Rule(chain, om.readValue(node.get("rule").get("expr").toString(), typeReference), comment, handle);
-                    rule.setChain(chain);
+                    JsonNode ruleNode = node.get("rule");
+                    Rule rule = om.readValue(ruleNode.toString(), Rule.class);
                     rules.add(rule);
                 }
             }
@@ -437,11 +430,30 @@ public class JFirewall {
         }
     }
 
+    /**
+     * find rules by chain name
+     *
+     * @param chain name of {@link Chain}
+     * @return list of {@link Rule}
+     */
+    public static List<Rule> findRulesByChain(Chain chain) {
+        return ruleList().stream().filter(item -> item.getChain().equals(chain)).toList();
+    }
+
+    /**
+     * Check rule exists
+     *
+     * @param id rule handle id
+     */
     public static void ruleCheckExists(long id) {
         boolean exists = ruleList().stream().anyMatch(item -> item.getHandle() == id);
         if (!exists) throw new JSysboxException("rule with handle %s does not exists".formatted(id));
     }
 
+    /**
+     * @param chain nftables {@link Chain}
+     * @param id    rule handle id
+     */
     public static void ruleRemove(Chain chain, long id) {
         ruleCheckExists(id);
         exec("delete rule %s %s handle %s".formatted(chain.getTable().getName(), chain.getName(), id));

@@ -52,9 +52,6 @@ public class MainClass {
         JFirewall.ruleAdd(chain, List.of(expr2, expr3, expr4, expr5, expr6, expr7, expr8, expr9, expr10, expr11), stt2, "Second Rule");
 
         List<Rule> rules = JFirewall.ruleList();
-        for (Rule rule : rules) {
-            System.out.println(rule);
-        }
 
         JFirewall.save(file);
     }

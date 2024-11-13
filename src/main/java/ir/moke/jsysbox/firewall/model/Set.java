@@ -2,7 +2,7 @@ package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ir.moke.jsysbox.firewall.TableDeserializer;
+import ir.moke.jsysbox.firewall.config.TableDeserializer;
 
 import java.util.List;
 

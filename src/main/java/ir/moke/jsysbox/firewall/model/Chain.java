@@ -2,7 +2,9 @@ package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ir.moke.jsysbox.firewall.TableDeserializer;
+import ir.moke.jsysbox.firewall.config.TableDeserializer;
+
+import java.util.Objects;
 
 public class Chain {
     @JsonDeserialize(using = TableDeserializer.class)
@@ -62,5 +64,18 @@ public class Chain {
                 ", priority=" + priority +
                 ", policy=" + policy +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Chain chain = (Chain) o;
+        return handle == chain.handle;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(handle);
     }
 }
