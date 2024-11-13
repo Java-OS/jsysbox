@@ -166,8 +166,6 @@ public class JFirewall {
 
     /**
      * nftables add new chain
-     * command format :
-     * add chain [<family>] <table_name> <chain_name> { type <type> hook <hook> priority <value> \; [policy <policy> \;]
      *
      * @param table    target table
      * @param name     chain name
@@ -247,8 +245,6 @@ public class JFirewall {
 
     /**
      * nftables remove chain
-     * command format :
-     * by id : delete chain <type> <table name> handle <handle id>
      *
      * @param chain chain object to remove {@link Chain}
      */

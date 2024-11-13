@@ -12,9 +12,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-### Build 
+### Build
+Native objects of this library dependent with this shared objects : 
+```text
+libblkid.so.1           /lib/x86_64-linux-gnu/libblkid.so.1
+libc.so.6               /lib/x86_64-linux-gnu/libc.so.6
+libcap.so.2             /lib/x86_64-linux-gnu/libcap.so.2
+libcrypto.so.3          /lib/x86_64-linux-gnu/libcrypto.so.3
+libdevmapper.so.1.02.1  /lib/x86_64-linux-gnu/libdevmapper.so.1.02.1
+libgcc_s.so.1           /lib/x86_64-linux-gnu/libgcc_s.so.1
+libgmp.so.10            /lib/x86_64-linux-gnu/libgmp.so.10
+libjansson.so.4         /lib/x86_64-linux-gnu/libjansson.so.4
+libkmod.so.2            /lib/x86_64-linux-gnu/libkmod.so.2
+liblzma.so.5            /lib/x86_64-linux-gnu/liblzma.so.5
+libm.so.6               /lib/x86_64-linux-gnu/libm.so.6
+libmnl.so.0             /lib/x86_64-linux-gnu/libmnl.so.0
+libnftables.so.1        /lib/x86_64-linux-gnu/libnftables.so.1
+libnftnl.so.11          /lib/x86_64-linux-gnu/libnftnl.so.11
+libparted.so.2          /lib/x86_64-linux-gnu/libparted.so.2
+libpcre2-8.so.0         /lib/x86_64-linux-gnu/libpcre2-8.so.0
+libselinux.so.1         /lib/x86_64-linux-gnu/libselinux.so.1
+libstdc++.so.6          /lib/x86_64-linux-gnu/libstdc++.so.6
+libudev.so.1            /lib/x86_64-linux-gnu/libudev.so.1
+libuuid.so.1            /lib/x86_64-linux-gnu/libuuid.so.1
+libxtables.so.12        /lib/x86_64-linux-gnu/libxtables.so.12
+libzstd.so.1            /lib/x86_64-linux-gnu/libzstd.so.1
+```
+Please install dependencies :
 ```shell
-sudo apt install gcc g++ make automake cmake g++-aarch64-linux-gnu 
+# Note I do not listed development headers dependencies, (I will updated this document) 
+sudo apt install gcc g++ make automake cmake
+
+# Install this packages for production or test
+sudo apt install libgmp10 libparted2t64 libkmod2 libzstd1 libblkid1 libcap2 libssl3t64 libdevmapper1.02.1 libgcc-s1 libgmp10 libjansson4 liblzma5 libc6 libmnl0 libnftables1 libnftnl11 libpcre2-8-0 libselinux1 libstdc++6 libudev1 libxtables12 libzstd1
+  
 mvn clean compile package -DskipTests
 ```
 ### Current Implementation 
