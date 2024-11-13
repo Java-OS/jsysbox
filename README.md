@@ -48,6 +48,17 @@ sudo apt install libgmp10 libparted2t64 libkmod2 libzstd1 libblkid1 libcap2 libs
   
 mvn clean compile package -DskipTests
 ```
+
+or add this dependency to your project: 
+```xml
+<dependency>
+   <groupId>ir.moke</groupId>
+   <artifactId>jsysbox</artifactId>
+   <version>0.3</version>
+</dependency>
+```
+
+
 ### Current Implementation 
 1. Networking :
       * list available interfaces
