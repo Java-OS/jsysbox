@@ -99,27 +99,23 @@ public class DiskTest {
         // First partition (primary)
         long startSector = JDiskManager.calculatePartitionSectorSize(1);
         long endSector = JDiskManager.calculatePartitionSectorSize(50) + PARTITION_ALIGNMENT;
-        System.out.println(startSector + "    " + endSector);
         JDiskManager.createPartition(LOOP_DISK_PATH, startSector, endSector, FilesystemType.EXT4);
 
         // Second partition (extended)
         startSector = endSector + 1;
         endSector = disk.sectors() - 1; // whole of disk
-        System.out.println(startSector + "    " + endSector);
         JDiskManager.createExtendedPartition(LOOP_DISK_PATH, startSector, endSector);
 
         // Third partition (logical 1)
         PartitionInformation extendedPartition = JDiskManager.getPartitionInformation(DISK_BLK_PATH)[1];
         startSector = extendedPartition.startSector + PARTITION_ALIGNMENT;
         endSector = extendedPartition.startSector + JDiskManager.calculatePartitionSectorSize(10) + PARTITION_ALIGNMENT;
-        System.out.println(startSector + "    " + endSector);
         JDiskManager.createLogicalPartition(LOOP_DISK_PATH, startSector, endSector, FilesystemType.NTFS);
 
         // Fourth partition (logical 2)
         PartitionInformation firstLogicalPartition = JDiskManager.getPartitionInformation(DISK_BLK_PATH)[2];
         startSector = firstLogicalPartition.endSector + PARTITION_ALIGNMENT;
         endSector = extendedPartition.endSector;
-        System.out.println(startSector + "    " + endSector);
         JDiskManager.createLogicalPartition(LOOP_DISK_PATH, startSector, endSector, FilesystemType.EXT4);
     }
 
