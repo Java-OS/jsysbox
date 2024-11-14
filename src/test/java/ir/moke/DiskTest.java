@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -152,15 +151,5 @@ public class DiskTest {
         startSector = endSector + 1;
         endSector = disk.sectors() - 1;
         JDiskManager.createPartition(LOOP_DISK_PATH, startSector, endSector, FilesystemType.EXT4);
-    }
-
-    @Test
-    @Order(6)
-    public void checkAllDiskInformations() {
-        logger.info("Execute <checkAllDiskInformations>");
-        List<Disk> allDiskInformation = JDiskManager.getAllDiskInformation();
-        for (Disk disk : allDiskInformation) {
-            System.out.println(disk);
-        }
     }
 }
