@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 public class JDiskManager {
@@ -377,27 +376,13 @@ public class JDiskManager {
         return getCompactDisks().stream().anyMatch(item -> item.drive_name().equals(blkName));
     }
 
-    public static List<Disk> getDiskInformation() {
+    public static List<Disk> getAllDiskInformation() {
         List<Disk> disks = new ArrayList<>();
         try {
             String[] blkDisks = getDisks();
             for (String blkPath : blkDisks) {
-                String blkName = blkPath.substring(blkPath.lastIndexOf("/") + 1);
-                Path vendorPath = Path.of("/sys/block/%s/device/vendor".formatted(blkName));
-                Path modelPath = Path.of("/sys/block/%s/device/model".formatted(blkName));
-                Path sizePath = Path.of("/sys/block/%s/size".formatted(blkName));
-
-                String vendor = Files.exists(vendorPath) ? Files.readString(vendorPath).trim() : null;
-                String model = Files.exists(modelPath) ? Files.readString(modelPath).trim() : null;
-                Long sectorSize = Files.exists(sizePath) ? Long.parseLong(Files.readString(sizePath).trim()) : null;
-                boolean digit = Character.isDigit(blkName.charAt(blkName.length() - 1));
-                if (digit) continue;
-                PartitionInformation[] partitionInformations = getPartitionInformation(blkPath);
-
-                Long sizeInBytes = sectorSize != null ? sectorSize * 512 : null;
-
-                PartitionTable partitionTable = partitionTableType(blkPath);
-                Disk disk = new Disk(blkPath, vendor, model, sizeInBytes, sectorSize, partitionTable, partitionInformations != null ? partitionInformations.length : null);
+                Disk disk = getDiskInformation(blkPath);
+                if (disk == null) continue;
                 disks.add(disk);
             }
         } catch (Exception e) {
@@ -413,7 +398,25 @@ public class JDiskManager {
      * @return {@link Disk}
      */
     public static Disk getDiskInformation(String blkDisk) {
-        return getDiskInformation().stream().filter(item -> Objects.equals(item.blk(), blkDisk)).findFirst().orElse(null);
+        try {
+            String blkName = blkDisk.substring(blkDisk.lastIndexOf("/") + 1);
+            Path vendorPath = Path.of("/sys/block/%s/device/vendor".formatted(blkName));
+            Path modelPath = Path.of("/sys/block/%s/device/model".formatted(blkName));
+            Path sizePath = Path.of("/sys/block/%s/size".formatted(blkName));
+
+            String vendor = Files.exists(vendorPath) ? Files.readString(vendorPath).trim() : null;
+            String model = Files.exists(modelPath) ? Files.readString(modelPath).trim() : null;
+            Long sectorSize = Files.exists(sizePath) ? Long.parseLong(Files.readString(sizePath).trim()) : null;
+
+            PartitionInformation[] partitionInformations = getPartitionInformation(blkDisk);
+
+            Long sizeInBytes = sectorSize != null ? sectorSize * 512 : null;
+
+            PartitionTable partitionTable = partitionTableType(blkDisk);
+            return new Disk(blkDisk, vendor, model, sizeInBytes, sectorSize, partitionTable, partitionInformations != null ? partitionInformations.length : null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
