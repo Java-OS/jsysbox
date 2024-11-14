@@ -5,8 +5,12 @@ cd $(dirname $0) # this line used inside container
 sudo rm -rf target/ /tmp/jni/ src/main/clib/lib/ src/main/clib/build/ 
 
 mvn dependency:go-offline
-mvn clean compile package
 
+if [[ ! -z ${EXEC_UNIT_TEST} ]] && [[ ${EXEC_UNIT_TEST} -eq "1" ]] ; then 
+  mvn clean compile package -DskipTests
+else 
+  mvn clean compile package 
+fi 
 sudo chown -R $USER:$USER $HOME/.m2 
 
 
