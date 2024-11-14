@@ -145,7 +145,7 @@ public class DiskTest {
 
         // Last partition
         startSector = endSector + 1;
-        endSector = disk.sectors() - 1;
+        endSector = disk.sectors() - PARTITION_ALIGNMENT;
         JDiskManager.createPartition(LOOP_DISK_PATH, startSector, endSector, FilesystemType.EXT4);
     }
 }
