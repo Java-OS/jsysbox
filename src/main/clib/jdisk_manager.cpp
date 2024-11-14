@@ -255,7 +255,9 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JN
     return ;
   }
 
-  if (!ped_disk_add_partition(disk, part, ped_constraint_any(dev))) {
+  PedGeometry* geom = ped_geometry_new(dev, start, end - start + 1); // Length is (end - start + 1)
+  PedConstraint* constraint = ped_constraint_exact(geom);
+  if (!ped_disk_add_partition(disk, part, constraint)) {
     close(dev,disk,part);
     env->ReleaseStringUTFChars(jpart_type, part_type);
     throwException(env, "Failed to add partition");
