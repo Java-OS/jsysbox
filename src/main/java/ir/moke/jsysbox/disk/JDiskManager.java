@@ -382,7 +382,6 @@ public class JDiskManager {
             String[] blkDisks = getDisks();
             for (String blkPath : blkDisks) {
                 Disk disk = getDiskInformation(blkPath);
-                if (disk == null) continue;
                 disks.add(disk);
             }
         } catch (Exception e) {
