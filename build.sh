@@ -6,7 +6,7 @@ sudo rm -rf target/ /tmp/jni/ src/main/clib/lib/ src/main/clib/build/
 
 mvn dependency:go-offline
 
-if [[ ! -z ${EXEC_UNIT_TEST} ]] && [[ ${EXEC_UNIT_TEST} -eq "1" ]] ; then 
+if [[ ${EXEC_UNIT_TEST} -eq "1" ]] ; then 
   mvn clean compile package 
 else 
   mvn clean compile package -DskipTests
