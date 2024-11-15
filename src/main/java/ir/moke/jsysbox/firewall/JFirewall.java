@@ -72,7 +72,7 @@ public class JFirewall {
     private static void checkCharacters(String str) {
         Matcher matcher = pattern.matcher(str);
         boolean matches = matcher.matches();
-        if (!matches) throw new JSysboxException("String contain invalid character: " + str);
+        if (!matches) throw new JSysboxException("String contains invalid character: " + str);
     }
 
     /**
@@ -131,6 +131,16 @@ public class JFirewall {
     }
 
     /**
+     * nftables remove table
+     *
+     * @param table {@link Table}
+     */
+    public static void tableRemove(Table table) {
+        tableCheckExists(table.getName());
+        exec("delete table handle %s".formatted(table.getHandle()));
+    }
+
+    /**
      * Check table with specific id exists
      *
      * @param handle table handle id
@@ -138,6 +148,16 @@ public class JFirewall {
     public static void tableCheckExists(int handle) {
         boolean exists = tableList().stream().anyMatch(item -> item.getHandle() == handle);
         if (!exists) throw new JSysboxException("Table with handle %s does not exists".formatted(handle));
+    }
+
+    /**
+     * Check table with specific name exists
+     *
+     * @param name table name
+     */
+    public static void tableCheckExists(String name) {
+        boolean exists = tableList().stream().anyMatch(item -> item.getName().equals(name));
+        if (!exists) throw new JSysboxException("Table with name %s does not exists".formatted(name));
     }
 
     /**
@@ -189,6 +209,7 @@ public class JFirewall {
      * @return {@link Chain}
      */
     public static Chain chainAdd(Table table, String name) throws JSysboxException {
+        checkCharacters(name);
         String cmd = "add chain %s %s %s";
         exec(cmd.formatted(table.getType().getValue(), table.getName(), name));
         return chain(table, name);
@@ -251,10 +272,10 @@ public class JFirewall {
     public static void chainRemove(Chain chain) {
         int handle = chain.getHandle();
         TableType tableType = chain.getTable().getType();
-        String tableName = chain.getName();
+        String tableName = chain.getTable().getName();
         chainCheckExists(handle);
-        String cmd = "delete chain %s %s handle %s";
-        exec(cmd.formatted(tableType.getValue(), tableName, handle));
+        String cmd = "delete chain %s %s handle %s".formatted(tableType.getValue(), tableName, handle);
+        exec(cmd);
     }
 
     /**
