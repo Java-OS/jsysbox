@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-### We have two option to build this project    
+### We have two options to build this project    
 #### Option 1:   
 Install dependencies on your linux distro and try to execute this commands
 ```
