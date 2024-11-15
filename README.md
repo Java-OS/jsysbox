@@ -36,7 +36,7 @@ Too simple build with docker
 # Clone the project
 git clone git@github.com:Java-OS/jsysbox.git 
 
-# execure script
+# execute script
 cd jsysbox ; ./build_with_docker.sh
 ```
 
