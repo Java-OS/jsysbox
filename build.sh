@@ -11,7 +11,7 @@ if [[ ! -z ${EXEC_UNIT_TEST} ]] && [[ ${EXEC_UNIT_TEST} -eq "1" ]] ; then
 else 
   mvn clean compile package -DskipTests
 fi 
-sudo chown -R $USER:$USER $HOME/.m2 
+sudo chown -R $USER:$USER $HOME/.m2 .* 
 
 
 # (cd target/lib ; sudo java -cp .:* -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005 ir.moke.jsysbox.MainClass)
