@@ -46,7 +46,7 @@ JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_firewall_JFirewall_exec (JNIEnv *
   const char *cmd = env->GetStringUTFChars(jcmd, 0);
   err = nft_run_cmd_from_buffer(ctx, cmd);
   if (err < 0) {
-    throwException(env, "Failed to run nftables");
+    throwException(env, "Failed to execute statement");
     return NULL ;
   }
 
