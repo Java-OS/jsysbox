@@ -46,7 +46,7 @@ Add dependency to your project:
 <dependency>
    <groupId>ir.moke</groupId>
    <artifactId>jsysbox</artifactId>
-   <version>0.3</version>
+   <version>0.3.1</version>
 </dependency>
 ```
 
