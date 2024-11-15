@@ -4,24 +4,24 @@ import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.firewall.model.Chain;
 
 public class VerdictStatement implements Statement {
-    private final Type type;
+    private final VerdictStatement.Type type;
     private String chainName;
 
-    public VerdictStatement(Type type) {
+    public VerdictStatement(VerdictStatement.Type type) {
         this.type = type;
     }
 
-    public VerdictStatement(Type type, String chainName) {
+    public VerdictStatement(VerdictStatement.Type type, String chainName) {
         this.type = type;
         this.chainName = chainName;
     }
 
-    public VerdictStatement(Type type, Chain chain) {
+    public VerdictStatement(VerdictStatement.Type type, Chain chain) {
         this.type = type;
         this.chainName = chain.getName();
     }
 
-    public Type getType() {
+    public VerdictStatement.Type getType() {
         return type;
     }
 
@@ -32,7 +32,7 @@ public class VerdictStatement implements Statement {
     @Override
     public String toString() {
         String stt = type.name().toLowerCase();
-        if (type.equals(Type.GOTO) || type.equals(Type.JUMP)) {
+        if (type.equals(VerdictStatement.Type.GOTO) || type.equals(VerdictStatement.Type.JUMP)) {
             if (chainName == null || chainName.isEmpty()) throw new JSysboxException("target chain could not be empty");
             return stt + " " + chainName;
         }

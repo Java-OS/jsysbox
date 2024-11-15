@@ -7,11 +7,11 @@ import java.util.List;
 
 public class TcpExpression implements Expression {
 
-    private final Field field;
+    private final TcpExpression.Field field;
     private final Operation operation;
     private final List<String> values;
 
-    public TcpExpression(Field field, Operation operation, List<String> values) {
+    public TcpExpression(TcpExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;

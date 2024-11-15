@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import ir.moke.jsysbox.firewall.config.TableDeserializer;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Set {
     @JsonDeserialize(using = TableDeserializer.class)
@@ -13,11 +15,12 @@ public class Set {
     private SetType type;
     private int handle;
     private int size;
-    private List<FlagType> flags;
+    private final List<FlagType> flags = new ArrayList<>();
     private int timeout;
     @JsonProperty("gc-interval")
     private int gcInterval;
-    private List<String> elements;
+    @JsonProperty("elem")
+    private final List<Map<String,Object>> elements = new ArrayList<>();
 
     public String getName() {
         return name;
@@ -47,7 +50,7 @@ public class Set {
         return timeout;
     }
 
-    public List<String> getElements() {
+    public List<Map<String, Object>> getElements() {
         return elements;
     }
 

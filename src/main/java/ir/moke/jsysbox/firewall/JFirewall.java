@@ -293,7 +293,7 @@ public class JFirewall {
      * @param policy     set policy type {@link SetPolicy}
      * @param autoMerge  set auto-merge
      */
-    public static void setAdd(TableType tableType, String tableName, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy, boolean autoMerge) {
+    public static Set setAdd(TableType tableType, String tableName, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy, boolean autoMerge) {
         if (autoMerge && !flags.contains(FlagType.INTERVAL)) throw new JSysboxException("auto-merge only work with interval set");
 
         StringBuilder sb = new StringBuilder("add set %s %s %s { type %s".formatted(tableType.getValue(), tableName, setName, setType.getValue())).append(";");
@@ -309,6 +309,52 @@ public class JFirewall {
         sb.append(" } ");
 
         exec(sb.toString());
+
+        return set(tableType, tableName, setName);
+    }
+
+    /**
+     * find a set
+     *
+     * @param tableType type of table
+     * @param tableName table name
+     * @param setName   set name
+     * @return the set {@link Set}
+     */
+    public static Set set(TableType tableType, String tableName, String setName) {
+        return setList().stream()
+                .filter(item -> item.getTable().getName().equals(tableName))
+                .filter(item -> item.getTable().getType().equals(tableType))
+                .filter(item -> item.getName().equals(setName))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public static Set set(Table table, String setName) {
+        return setList().stream()
+                .filter(item -> item.getTable().getName().equals(table.getName()))
+                .filter(item -> item.getTable().getType().equals(table.getType()))
+                .filter(item -> item.getName().equals(setName))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * nftables add new set
+     *
+     * @param table      table {@link Table}
+     * @param setName    name of set
+     * @param setType    type of set {@link SetType}
+     * @param flags      list of set flags {@link FlagType}
+     * @param timeout    set timeout
+     * @param gcInterval set garbage collector timeout
+     * @param size       size of elements
+     * @param comment    set comment
+     * @param policy     set policy type {@link SetPolicy}
+     * @param autoMerge  set auto-merge
+     */
+    public static void setAdd(Table table, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy, boolean autoMerge) {
+        setAdd(table.getType(), table.getName(), setName, setType, flags, timeout, gcInterval, size, comment, policy, autoMerge);
     }
 
     /**
@@ -421,7 +467,6 @@ public class JFirewall {
                 " " + String.join(" ", expressions.stream().map(Expression::toString).toList()) +
                 " " + statement +
                 " comment " + "\"" + comment + "\"";
-        System.out.println(sb);
         exec(sb);
     }
 
