@@ -18,7 +18,7 @@
     <groupId>ir.moke</groupId>
     <artifactId>jsysbox</artifactId>
     <packaging>jar</packaging>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
     <name>jsysbox</name>
 
     <dependencies>
@@ -57,9 +57,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git@github.com:mah454/kafir.git</connection>
-        <developerConnection>scm:git:git@github.com:mah454/kafir.git</developerConnection>
-        <url>https://github.com/mah454/kafir</url>
+        <connection>scm:git:git@github.com:Java-OS/jsysbox.git</connection>
+        <developerConnection>scm:git:git@github.com:Java-OS/jsysbox.git</developerConnection>
+        <url>https://github.com/Java-OS/jsysbox</url>
     </scm>
 
     <build>
