@@ -16,7 +16,7 @@ limitations under the License.
 #### Option 1:   
 Install dependencies on your linux distro and try to execute this commands
 ```
-Please install dependencies :
+Please install dependencies :    
 ```shell
 # Clone the project
 git clone git@github.com:Java-OS/jsysbox.git 
