@@ -1,5 +1,6 @@
 package ir.moke;
 
+import ir.moke.jsysbox.JSysboxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public class TestUtils {
             logger.info("### Virtual Disk Created {} ###", diskFile.getAbsolutePath());
             logger.info("Disk Size : {}", Files.readString(Path.of("/sys/block/loop0/size")).trim());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -28,7 +29,7 @@ public class TestUtils {
             Process process = processBuilder.start();
             process.waitFor();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -39,7 +40,7 @@ public class TestUtils {
             Process process = processBuilder.start();
             process.waitFor();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -47,7 +48,7 @@ public class TestUtils {
         try {
             Thread.sleep(mils);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 }

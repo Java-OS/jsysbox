@@ -116,7 +116,7 @@ public class JFirewall {
 
             return tables;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -234,7 +234,7 @@ public class JFirewall {
             }
             return chains;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -376,7 +376,7 @@ public class JFirewall {
             }
             return sets;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -488,7 +488,7 @@ public class JFirewall {
             }
             return rules;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 

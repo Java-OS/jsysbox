@@ -36,7 +36,7 @@ public class JniNativeLoader {
             if (envPath != null && !envPath.isEmpty()) TEMP_DIR_PATH = Paths.get(envPath);
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -61,7 +61,7 @@ public class JniNativeLoader {
                 System.out.println("Resource is null");
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
         return Optional.empty();
     }

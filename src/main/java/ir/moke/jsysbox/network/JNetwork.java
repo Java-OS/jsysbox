@@ -26,7 +26,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
@@ -91,7 +94,7 @@ public class JNetwork {
                     .map(File::getName)
                     .toList();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -99,7 +102,7 @@ public class JNetwork {
         try {
             return Files.readString(SYS_NET_PATH.resolve(iface).resolve(Path.of("address"))).trim();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -109,7 +112,7 @@ public class JNetwork {
             if (networkInterface == null) return null;
             return networkInterface.getInterfaceAddresses().stream().filter(item -> item.getAddress() instanceof Inet4Address).findFirst().map(item -> item.getAddress().getHostAddress()).orElse(null);
         } catch (SocketException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -119,7 +122,7 @@ public class JNetwork {
             if (networkInterface == null) return null;
             return networkInterface.getInterfaceAddresses().stream().filter(item -> item.getAddress() instanceof Inet4Address).findFirst().map(InterfaceAddress::getNetworkPrefixLength).orElse(null);
         } catch (SocketException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -164,7 +167,7 @@ public class JNetwork {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
         return null;
     }
@@ -218,7 +221,7 @@ public class JNetwork {
                 routeList.add(getRoute(lines.get(i), i));
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
         return routeList;
     }
@@ -298,7 +301,7 @@ public class JNetwork {
         try {
             Thread.sleep(mills);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -341,7 +344,7 @@ public class JNetwork {
                 map.put(split[0], split[1]);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
         return map;
     }
@@ -381,7 +384,7 @@ public class JNetwork {
                 map.put(split[0], split[1]);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
         return map;
     }

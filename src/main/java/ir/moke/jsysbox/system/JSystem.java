@@ -104,7 +104,7 @@ public class JSystem {
                     .map(modInfoFunction)
                     .toList();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 

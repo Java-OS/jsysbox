@@ -1,5 +1,6 @@
 package ir.moke;
 
+import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.disk.*;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class DiskTest {
             String value = Files.readString(Path.of("/sys/block/loop0/size")).trim();
             assertTrue(Integer.parseInt(value) > 0);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 

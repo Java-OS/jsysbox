@@ -217,7 +217,7 @@ public class JDiskManager {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
         return null;
     }
@@ -321,7 +321,7 @@ public class JDiskManager {
                     .map(item -> item.split("\\s+")[0])
                     .anyMatch(item -> item.equals(blkPartition));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
@@ -414,7 +414,7 @@ public class JDiskManager {
             PartitionTable partitionTable = partitionTableType(blkDisk);
             return new Disk(blkDisk, vendor, model, sizeInBytes, sectorSize, partitionTable, partitionInformations != null ? partitionInformations.length : null);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JSysboxException(e);
         }
     }
 
