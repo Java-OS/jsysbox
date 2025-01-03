@@ -365,6 +365,7 @@ public class JNetwork {
             StringBuilder sb = new StringBuilder();
             Files.readAllLines(path)
                     .stream()
+                    .filter(item -> !item.contains("#"))
                     .filter(item -> !item.split("\\s+")[1].equals(hostname))
                     .map(item -> item + "\n")
                     .forEach(sb::append);
