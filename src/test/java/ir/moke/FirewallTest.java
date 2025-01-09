@@ -12,6 +12,7 @@ import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -223,5 +224,13 @@ public class FirewallTest {
         Rule rule = JFirewall.ruleList().getFirst();
         JFirewall.ruleRemove(chain, rule.getHandle());
         Assertions.assertThrows(JSysboxException.class, () -> JFirewall.ruleCheckExists(rule.getHandle()));
+    }
+
+    @Test
+    @Order(16)
+    public void checkSaveFirewall() {
+        File file = new File("/tmp/jfirewall.rules");
+        JFirewall.save(file);
+        Assertions.assertTrue(file.exists());
     }
 }
