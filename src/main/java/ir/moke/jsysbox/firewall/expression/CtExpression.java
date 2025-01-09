@@ -7,7 +7,7 @@ import java.util.List;
 
 public class CtExpression implements Expression {
 
-    private CtExpression.Field field;
+    private Field field;
     private Operation operation;
     private List<String> values;
     private Boolean originalType;
@@ -15,7 +15,7 @@ public class CtExpression implements Expression {
     private Boolean over;
     private long value;
 
-    public CtExpression(CtExpression.Field field, Operation operation, List<String> values) {
+    public CtExpression(Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;

@@ -1,7 +1,6 @@
 package ir.moke.jsysbox.firewall.expression;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.JsonNode;
 import ir.moke.jsysbox.firewall.model.Operation;
 
 import java.util.Arrays;
