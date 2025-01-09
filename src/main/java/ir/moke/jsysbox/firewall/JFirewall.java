@@ -606,6 +606,18 @@ public class JFirewall {
     }
 
     /**
+     * Update current rule
+     * old rule removed and new rule inserted
+     */
+    public static void ruleUpdate(Chain chain, List<Expression> expressions, Statement statement, String comment, Integer handle) {
+        if (handle == null) {
+            ruleAdd(chain, expressions, statement, comment);
+        } else {
+            ruleInsert(chain, expressions, statement, comment, handle);
+        }
+    }
+
+    /**
      * @return List of {@link Rule}
      */
     public static List<Rule> ruleList() {
