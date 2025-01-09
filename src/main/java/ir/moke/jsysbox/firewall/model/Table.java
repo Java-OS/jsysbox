@@ -13,6 +13,12 @@ public class Table {
     public Table() {
     }
 
+    public Table(TableType type, String name, int handle) {
+        this.type = type;
+        this.name = name;
+        this.handle = handle;
+    }
+
     public Table(TableType type, String name) {
         this.type = type;
         this.name = name;

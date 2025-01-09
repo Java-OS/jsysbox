@@ -2,6 +2,8 @@ package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Arrays;
+
 public enum ChainType {
     FILTER("filter"),
     ROUTE("route"),
@@ -11,6 +13,13 @@ public enum ChainType {
 
     ChainType(String value) {
         this.value = value;
+    }
+
+    public static ChainType fromValue(String value) {
+        return Arrays.stream(ChainType.class.getEnumConstants())
+                .filter(item -> item.value.equals(value))
+                .findFirst()
+                .orElse(null);
     }
 
     @JsonValue

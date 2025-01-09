@@ -2,6 +2,8 @@ package ir.moke.jsysbox.firewall.expression;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Arrays;
+
 public enum MatchType {
     IP("ip"),
     IP6("ip6"),
@@ -30,6 +32,13 @@ public enum MatchType {
 
     MatchType(String value) {
         this.value = value;
+    }
+
+    public static MatchType fromValue(String value) {
+        return Arrays.stream(MatchType.class.getEnumConstants())
+                .filter(item -> item.value.equals(value))
+                .findFirst()
+                .orElse(null);
     }
 
     @JsonValue

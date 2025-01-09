@@ -3,6 +3,7 @@ package ir.moke.jsysbox.firewall.expression;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ir.moke.jsysbox.firewall.model.Operation;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class CtExpression implements Expression {
@@ -51,11 +52,16 @@ public class CtExpression implements Expression {
             return sb.toString();
         } else {
             if (Field.COUNT.equals(field)) {
-                return "ct count %s %s".formatted((over != null && over) ? "over" : "", value);
+                return "%s count %s %s".formatted(matchType().getValue(), (over != null && over) ? "over" : "", value);
             }
 
-            return "ct %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+            return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
         }
+    }
+
+    @Override
+    public MatchType matchType() {
+        return MatchType.CT;
     }
 
     public enum Type {
@@ -68,15 +74,22 @@ public class CtExpression implements Expression {
         PROTO_DST("proto_dst"),
         PROTO_SRC("proto_src");
 
-        private final String values;
+        private final String value;
 
         Type(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Type fromValue(String value) {
+            return Arrays.stream(Type.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 
@@ -89,15 +102,22 @@ public class CtExpression implements Expression {
         DNAT("dnat"),
         DYING("dying");
 
-        private final String values;
+        private final String value;
 
         Status(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Status fromValue(String value) {
+            return Arrays.stream(Status.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 
@@ -107,15 +127,22 @@ public class CtExpression implements Expression {
         RELATED("related"),
         UNTRACKED("untracked");
 
-        private final String values;
+        private final String value;
 
         State(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static State fromValue(String value) {
+            return Arrays.stream(State.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 
@@ -128,15 +155,22 @@ public class CtExpression implements Expression {
         HELPER("helper"),
         COUNT("count");
 
-        private final String values;
+        private final String value;
 
         Field(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Field fromValue(String value) {
+            return Arrays.stream(Field.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 }

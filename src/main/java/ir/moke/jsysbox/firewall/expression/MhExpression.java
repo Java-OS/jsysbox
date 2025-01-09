@@ -3,6 +3,7 @@ package ir.moke.jsysbox.firewall.expression;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ir.moke.jsysbox.firewall.model.Operation;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class MhExpression implements Expression {
@@ -19,7 +20,12 @@ public class MhExpression implements Expression {
 
     @Override
     public String toString() {
-        return "mh %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+        return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
+    }
+
+    @Override
+    public MatchType matchType() {
+        return MatchType.MH;
     }
 
     public enum Field {
@@ -29,15 +35,22 @@ public class MhExpression implements Expression {
         RESERVED("reserved"),
         CHECKSUM("checksum");
 
-        private final String values;
+        private final String value;
 
         Field(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Field fromValue(String value) {
+            return Arrays.stream(Field.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 }

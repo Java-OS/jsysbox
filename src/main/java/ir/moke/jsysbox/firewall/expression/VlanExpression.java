@@ -1,7 +1,6 @@
 package ir.moke.jsysbox.firewall.expression;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.JsonNode;
 import ir.moke.jsysbox.firewall.model.Operation;
 
 import java.util.Arrays;
@@ -21,7 +20,12 @@ public class VlanExpression implements Expression {
 
     @Override
     public String toString() {
-        return "vlan %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+        return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
+    }
+
+    @Override
+    public MatchType matchType() {
+        return MatchType.VLAN;
     }
 
     public enum Field {
@@ -35,8 +39,8 @@ public class VlanExpression implements Expression {
             this.value = value;
         }
 
-        public static VlanExpression.Field getField(String value) {
-            return Arrays.stream(VlanExpression.Field.class.getEnumConstants())
+        public static Field fromValue(String value) {
+            return Arrays.stream(Field.class.getEnumConstants())
                     .filter(item -> item.value.equals(value))
                     .findFirst()
                     .orElse(null);

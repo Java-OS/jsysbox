@@ -18,7 +18,7 @@ public enum Operation {
         this.value = value;
     }
 
-    public static Operation getOperation(String value) {
+    public static Operation fromValue(String value) {
         return Arrays.stream(Operation.class.getEnumConstants())
                 .filter(item -> item.value.equals(value))
                 .findFirst()

@@ -3,6 +3,7 @@ package ir.moke.jsysbox.firewall.expression;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ir.moke.jsysbox.firewall.model.Operation;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class IcmpExpression implements Expression {
@@ -14,8 +15,8 @@ public class IcmpExpression implements Expression {
 
     public IcmpExpression(Field field, Operation operation, List<String> values) {
         this.field = field;
-        this.values = values;
         this.operation = operation;
+        this.values = values;
     }
 
     public IcmpExpression(List<Type> types) {
@@ -26,10 +27,19 @@ public class IcmpExpression implements Expression {
     public String toString() {
         if (types != null) {
             List<String> typeList = types.stream().map(IcmpExpression.Type::getValue).toList();
-            return "dccp type %s {%s}".formatted(operation.getValue(), String.join(",", typeList));
+            return "%s type {%s}".formatted(matchType().getValue(), String.join(",", typeList));
         } else {
-            return "dccp %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+            if (operation.equals(Operation.EQ) || operation.equals(Operation.NE)) {
+                return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
+            } else {
+                return "%s %s %s %s".formatted(matchType().getValue(), field.getValue(), operation.getValue(), values.getFirst());
+            }
         }
+    }
+
+    @Override
+    public MatchType matchType() {
+        return MatchType.ICMP;
     }
 
     public enum Type {
@@ -49,19 +59,27 @@ public class IcmpExpression implements Expression {
         ROUTER_ADVERTISEMENT("router-advertisement"),
         ROUTER_SOLICITATION("router-solicitation");
 
-        private final String values;
+        private final String value;
 
         Type(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Type fromValue(String value) {
+            return Arrays.stream(Type.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 
     public enum Field {
+        TYPE("type"),
         CODE("code"),
         CHECKSUM("checksum"),
         ID("id"),
@@ -69,15 +87,22 @@ public class IcmpExpression implements Expression {
         MTU("mtu"),
         GATEWAY("gateway");
 
-        private final String values;
+        private final String value;
 
         Field(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Field fromValue(String value) {
+            return Arrays.stream(Field.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 }

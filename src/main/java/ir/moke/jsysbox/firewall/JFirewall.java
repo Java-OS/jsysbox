@@ -87,6 +87,32 @@ public class JFirewall {
         exec("flush ruleset %s".formatted(type != null ? type.getValue() : ""));
     }
 
+    public static NFTables nfTables() {
+        String json = export();
+        try {
+            return om.readValue(json, NFTables.class);
+        } catch (JsonProcessingException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static MetaInfo metaInfo() {
+        String json = export();
+        try {
+            JsonNode root = om.readTree(json);
+            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
+            for (JsonNode jsonNode : nftablesArray) {
+                if (jsonNode.has("metainfo")) {
+                    return om.readValue(jsonNode.get("metaInfo").toString(), MetaInfo.class);
+                }
+            }
+
+            return null;
+        } catch (JsonProcessingException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
     /**
      * nftables add new table
      *
@@ -96,7 +122,7 @@ public class JFirewall {
     public static Table tableAdd(String name, TableType type) {
         checkCharacters(name);
         exec("add table %s %s".formatted(type.getValue(), name));
-        return JFirewall.table(name);
+        return JFirewall.table(name, type);
     }
 
     /**
@@ -134,35 +160,38 @@ public class JFirewall {
         String oldName = table.getName();
         String type = table.getType().getValue();
         try {
-            String json = export();
-            JsonNode root = om.readTree(json);
-            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
-            for (JsonNode node : nftablesArray) {
-                if (node.has("table")) {
-                    ObjectNode tableNode = (ObjectNode) node.get("table");
-                    // Match both table name and family
-                    if (oldName.equals(tableNode.get("name").asText()) && type.equals(tableNode.get("family").asText())) {
-                        tableNode.put("name", newName);
-                    }
-                } else if (node.has("chain")) {
-                    ObjectNode chainNode = (ObjectNode) node.get("chain");
-                    // Match chains referencing the table by both name and family
-                    if (oldName.equals(chainNode.get("table").asText()) && type.equals(chainNode.get("family").asText())) {
-                        chainNode.put("table", newName);
-                    }
-                } else if (node.has("set")) {
-                    ObjectNode setNode = (ObjectNode) node.get("set");
-                    // Match chains referencing the table by both name and family
-                    if (oldName.equals(setNode.get("table").asText()) && type.equals(setNode.get("family").asText())) {
-                        setNode.put("table", newName);
-                    }
-                }
-            }
 
-            String path = "/tmp/jfirewall.rules";
-            File file = new File(path);
-            om.writeValue(file, root);
-            restore(path);
+            table.setName(newName);
+
+//            String json = export();
+//            JsonNode root = om.readTree(json);
+//            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
+//            for (JsonNode node : nftablesArray) {
+//                if (node.has("table")) {
+//                    ObjectNode tableNode = (ObjectNode) node.get("table");
+//                    // Match both table name and family
+//                    if (oldName.equals(tableNode.get("name").asText()) && type.equals(tableNode.get("family").asText())) {
+//                        tableNode.put("name", newName);
+//                    }
+//                } else if (node.has("chain")) {
+//                    ObjectNode chainNode = (ObjectNode) node.get("chain");
+//                    // Match chains referencing the table by both name and family
+//                    if (oldName.equals(chainNode.get("table").asText()) && type.equals(chainNode.get("family").asText())) {
+//                        chainNode.put("table", newName);
+//                    }
+//                } else if (node.has("set")) {
+//                    ObjectNode setNode = (ObjectNode) node.get("set");
+//                    // Match chains referencing the table by both name and family
+//                    if (oldName.equals(setNode.get("table").asText()) && type.equals(setNode.get("family").asText())) {
+//                        setNode.put("table", newName);
+//                    }
+//                }
+//            }
+//
+//            String path = "/tmp/jfirewall.rules";
+//            File file = new File(path);
+//            om.writeValue(file, root);
+//            restore(path);
         } catch (Exception e) {
             throw new JSysboxException(e);
         }
@@ -226,8 +255,13 @@ public class JFirewall {
      * @param name name of table
      * @return table {@link Table}
      */
-    public static Table table(String name) {
-        Table table = tableList().stream().filter(item -> item.getName().equals(name)).findFirst().orElse(null);
+    public static Table table(String name, TableType type) {
+        Table table = tableList()
+                .stream()
+                .filter(item -> item.getName().equals(name))
+                .filter(item -> item.getType().equals(type))
+                .findFirst()
+                .orElse(null);
         if (table == null) throw new JSysboxException("Table with name %s does not exists".formatted(name));
         return table;
     }
@@ -276,7 +310,19 @@ public class JFirewall {
             JsonNode nftablesNode = jsonNode.get("nftables");
             for (JsonNode node : nftablesNode) {
                 if (node.has("chain")) {
-                    Chain chain = om.readValue(node.get("chain").toString(), Chain.class);
+                    JsonNode chainNode = node.get("chain");
+//                    TableType tableType = TableType.fromValue(chainNode.get("family").asText());
+//                    String tableName = chainNode.get("table").asText();
+//                    String name = chainNode.get("name").asText();
+//                    int handle = chainNode.get("handle").asInt();
+//                    ChainType type = chainNode.has("type") ? ChainType.fromValue(chainNode.get("type").asText()) : null;
+//                    ChainHook hook = chainNode.has("hook") ? ChainHook.fromValue(chainNode.get("hook").asText()) : null;
+//                    Integer priority = chainNode.has("prio") ? chainNode.get("prio").asInt() : null;
+//                    ChainPolicy policy = chainNode.has("hook") ? ChainPolicy.fromValue(chainNode.get("policy").asText()) : null;
+//
+//                    Table table = table(tableName, tableType);
+//                    Chain chain = new Chain(table, name, handle, type, hook, priority, policy);
+                    Chain chain = om.readValue(chainNode.toString(), Chain.class);
                     chains.add(chain);
                 }
             }
@@ -309,6 +355,18 @@ public class JFirewall {
                 .findFirst()
                 .orElse(null);
         if (chain == null) throw new JSysboxException("Chain with table handle %s and name %s does not exists".formatted(table.getHandle(), name));
+        return chain;
+    }
+
+    public static Chain chain(String tableName, String type, String name) {
+        TableType tableType = TableType.fromValue(type);
+        Chain chain = chainList().stream()
+                .filter(item -> item.getTable().getName().equals(tableName))
+                .filter(item -> item.getTable().getType().equals(tableType))
+                .filter(item -> item.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+        if (chain == null) throw new JSysboxException("Chain with table %s type %s and name %s does not exists".formatted(tableName, type, name));
         return chain;
     }
 

@@ -1,21 +1,38 @@
 package ir.moke.jsysbox.firewall.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ir.moke.jsysbox.firewall.config.TableDeserializer;
+import ir.moke.jsysbox.firewall.config.ChainDeserializer;
 
 import java.util.Objects;
 
+@JsonDeserialize(using = ChainDeserializer.class)
 public class Chain {
-    @JsonDeserialize(using = TableDeserializer.class)
     private Table table;
     private String name;
     private int handle;
     private ChainType type;
     private ChainHook hook;
-    @JsonProperty("prio")
-    private int priority;
+    private Integer priority;
     private ChainPolicy policy;
+
+    public Chain() {
+    }
+
+    public Chain(Table table, String name, int handle) {
+        this.table = table;
+        this.name = name;
+        this.handle = handle;
+    }
+
+    public Chain(Table table, String name, int handle, ChainType type, ChainHook hook, Integer priority, ChainPolicy policy) {
+        this.table = table;
+        this.name = name;
+        this.handle = handle;
+        this.type = type;
+        this.hook = hook;
+        this.priority = priority;
+        this.policy = policy;
+    }
 
     public Table getTable() {
         return table;
@@ -45,7 +62,7 @@ public class Chain {
         return hook;
     }
 
-    public int getPriority() {
+    public Integer getPriority() {
         return priority;
     }
 

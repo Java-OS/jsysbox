@@ -3,6 +3,7 @@ package ir.moke.jsysbox.firewall.expression;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ir.moke.jsysbox.firewall.model.Operation;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class Icmpv6Expression implements Expression {
@@ -26,10 +27,19 @@ public class Icmpv6Expression implements Expression {
     public String toString() {
         if (types != null) {
             List<String> typeList = types.stream().map(Icmpv6Expression.Type::getValue).toList();
-            return "dccp type %s {%s}".formatted(operation.getValue(), String.join(",", typeList));
+            return "%s type {%s}".formatted(matchType().getValue(), String.join(",", typeList));
         } else {
-            return "dccp %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+            if (operation.equals(Operation.EQ) || operation.equals(Operation.NE)) {
+                return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
+            } else {
+                return "%s %s %s %s".formatted(matchType().getValue(), field.getValue(), operation.getValue(), values.getFirst());
+            }
         }
+    }
+
+    @Override
+    public MatchType matchType() {
+        return MatchType.ICMPV6;
     }
 
     public enum Type {
@@ -48,19 +58,27 @@ public class Icmpv6Expression implements Expression {
         PARAMETER_PROBLEM("parameter-problem"),
         MLD2_LISTENER_REPORT("mld2-listener-report");
 
-        private final String values;
+        private final String value;
 
         Type(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Type fromValue(String value) {
+            return Arrays.stream(Type.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 
     public enum Field {
+        TYPE("type"),
         CODE("code"),
         CHECKSUM("checksum"),
         ID("id"),
@@ -68,15 +86,22 @@ public class Icmpv6Expression implements Expression {
         MTU("mtu"),
         MAX_DELAY("max-delay");
 
-        private final String values;
+        private final String value;
 
         Field(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Field fromValue(String value) {
+            return Arrays.stream(Field.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 }

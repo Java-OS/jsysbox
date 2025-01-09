@@ -3,6 +3,7 @@ package ir.moke.jsysbox.firewall.expression;
 import com.fasterxml.jackson.annotation.JsonValue;
 import ir.moke.jsysbox.firewall.model.Operation;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class EtherExpression implements Expression {
@@ -26,10 +27,15 @@ public class EtherExpression implements Expression {
     public String toString() {
         if (types != null) {
             List<String> typeList = types.stream().map(EtherExpression.Type::getValue).toList();
-            return "ether type %s {%s}".formatted(operation.getValue(), String.join(",", typeList));
+            return "%s type {%s}".formatted(matchType().getValue(), String.join(",", typeList));
         } else {
-            return "ether %s %s {%s}".formatted(field.getValue(), operation.getValue(), String.join(",", values));
+            return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
         }
+    }
+
+    @Override
+    public MatchType matchType() {
+        return MatchType.ETHER;
     }
 
     public enum Field {
@@ -37,15 +43,22 @@ public class EtherExpression implements Expression {
         DADDR("daddr"),
         TYPE("type");
 
-        private final String values;
+        private final String value;
 
         Field(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Field fromValue(String value) {
+            return Arrays.stream(Field.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 
@@ -55,15 +68,22 @@ public class EtherExpression implements Expression {
         IP6("ip6"),
         VLAN("vlan");
 
-        private final String values;
+        private final String value;
 
         Type(String value) {
-            this.values = value;
+            this.value = value;
+        }
+
+        public static Type fromValue(String value) {
+            return Arrays.stream(Type.class.getEnumConstants())
+                    .filter(item -> item.value.equals(value.equals("8021q") ? "vlan" : value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @JsonValue
         public String getValue() {
-            return values;
+            return value;
         }
     }
 }
