@@ -198,6 +198,29 @@ public class FirewallTest {
 
     @Test
     @Order(14)
+    public void checkRuleInsert() {
+        logger.info("Execute <checkRuleInsert>");
+        Table table = JFirewall.table("FirstTable");
+        Chain c1Chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+
+        Rule currentRule = JFirewall.ruleList().stream().filter(item -> item.getChain().equals(c1Chain)).findFirst().orElse(null);
+
+        List<Expression> expressionList = new ArrayList<>();
+        IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
+        TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("114"));
+
+        expressionList.add(ipExpression);
+        expressionList.add(tcpExpression);
+
+        Statement statement = new VerdictStatement(VerdictStatement.Type.ACCEPT);
+        Assertions.assertNotNull(currentRule);
+        JFirewall.ruleInsert(c1Chain, expressionList, statement, "Check Insert rule", currentRule.getHandle());
+        Assertions.assertFalse(JFirewall.ruleList().isEmpty());
+    }
+
+
+    @Test
+    @Order(15)
     public void checkRuleExists() {
         logger.info("Execute <checkRuleExists>");
         Rule rule = JFirewall.ruleList().getFirst();
@@ -205,7 +228,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(15)
+    @Order(16)
     public void checkRulesFindByChain() {
         logger.info("Execute <checkRulesFindByChain>");
         Table table = JFirewall.table("FirstTable");
@@ -215,7 +238,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(16)
+    @Order(17)
     public void checkRuleRemove() {
         logger.info("Execute <checkRuleRemove>");
         Table table = JFirewall.table("FirstTable");
@@ -227,7 +250,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(16)
+    @Order(18)
     public void checkSaveFirewall() {
         File file = new File("/tmp/jfirewall.rules");
         JFirewall.save(file);
