@@ -1,4 +1,4 @@
-package ir.moke.jsysbox.firewall.config;
+package ir.moke.jsysbox.firewall.config.deserializer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

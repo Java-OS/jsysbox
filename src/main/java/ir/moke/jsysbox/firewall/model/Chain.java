@@ -1,7 +1,7 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ir.moke.jsysbox.firewall.config.ChainDeserializer;
+import ir.moke.jsysbox.firewall.config.deserializer.ChainDeserializer;
 
 import java.util.Objects;
 

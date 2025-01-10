@@ -23,7 +23,6 @@ public class CounterStatement implements Statement {
 
     @Override
     public String toString() {
-        if (packets == null && bytes == null) return "counter";
-        return "counter packets %s bytes %s".formatted(packets, bytes);
+        return "counter";
     }
 }

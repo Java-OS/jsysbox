@@ -1,4 +1,4 @@
-package ir.moke.jsysbox.firewall.config;
+package ir.moke.jsysbox.firewall.config.deserializer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -13,13 +13,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class SetDeserializer extends JsonDeserializer<Set> {
-    private static final TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
+    private static final TypeReference<List<String>> typeReference = new TypeReference<>() {
     };
 
-    private static List<Map<String, Object>> getElements(JsonParser parser, JsonNode jsonNode) throws IOException {
+    private static List<String> getElements(JsonParser parser, JsonNode jsonNode) throws IOException {
         if (!jsonNode.has("elem")) return Collections.emptyList();
         ObjectMapper mapper = (ObjectMapper) parser.getCodec();
         return mapper.readValue(jsonNode.get("elem").traverse(), typeReference);
@@ -33,12 +32,12 @@ public class SetDeserializer extends JsonDeserializer<Set> {
         String tableName = jsonNode.get("table").asText();
         SetType type = SetType.fromValue(jsonNode.get("type").asText());
         int handle = jsonNode.get("handle").asInt();
-        String comment = jsonNode.get("comment").asText();
-        int size = jsonNode.get("size").asInt();
-        JsonNode flagsNode = jsonNode.get("flags");
-        int timeout = jsonNode.get("timeout").asInt();
-        int gcInterval = jsonNode.get("gc-interval").asInt();
-        SetPolicy policy = SetPolicy.fromValue(jsonNode.get("policy").asText());
+        String comment = jsonNode.has("comment") ? jsonNode.get("comment").asText() : null;
+        Integer size = jsonNode.has("size") ? jsonNode.get("size").asInt() : null;
+        JsonNode flagsNode = jsonNode.has("flags") ? jsonNode.get("flags") : null ;
+        Integer timeout = jsonNode.has("timeout") ? jsonNode.get("timeout").asInt() : null;
+        Integer gcInterval = jsonNode.has("gc-interval") ? jsonNode.get("gc-interval").asInt() : null;
+        SetPolicy policy = jsonNode.has("policy") ? SetPolicy.fromValue(jsonNode.get("policy").asText()) : null;
 
         List<FlagType> flagTypes = new ArrayList<>();
         if (flagsNode != null && flagsNode.isArray()) {
@@ -47,7 +46,7 @@ public class SetDeserializer extends JsonDeserializer<Set> {
             }
         }
 
-        List<Map<String, Object>> elements = getElements(parser, jsonNode);
+        List<String> elements = getElements(parser, jsonNode);
 
         Table table = JFirewall.table(tableName, TableType.fromValue(tableType));
 

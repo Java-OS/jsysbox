@@ -1,6 +1,7 @@
 package ir.moke.jsysbox.firewall.expression;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.firewall.model.Operation;
 
 import java.util.ArrayList;
@@ -8,61 +9,62 @@ import java.util.List;
 
 public interface Expression {
     static Expression getExpression(JsonNode node) {
-        Operation operation = getOperation(node);
-        List<String> values = null;
-        MatchType matchType = null;
-        String field = null;
-        Integer ctCount = null;
-        String ctKey = null;
-        boolean isOriginal = false;
-        boolean isOver = false;
+        try {
+            Operation operation = null;
+            List<String> values = null;
+            MatchType matchType = null;
+            String field = null;
+            Integer ctCount = null;
+            String ctKey = null;
+            boolean isOriginal = false;
+            boolean isOver = false;
 
-        if (node.get("match").get("left").has("payload")) {
-            matchType = MatchType.fromValue(node.get("match").get("left").get("payload").get("protocol").asText());
-            field = node.get("match").get("left").get("payload").get("field").asText();
-            values = getRight(node);
-        } else if (node.get("match").get("left").has("ct")) {
-            ctKey = node.get("match").get("left").get("ct").get("key").asText();
-            if (node.get("match").get("left").get("ct").has("dir")) {
-                String dir = node.get("match").get("left").get("ct").get("dir").asText();
-                isOriginal = dir.equals("original");
+            if (node.has("match") && node.get("match").get("left").has("payload")) {
+                operation = Operation.fromValue(node.get("match").get("op").asText());
+                matchType = MatchType.fromValue(node.get("match").get("left").get("payload").get("protocol").asText());
+                field = node.get("match").get("left").get("payload").get("field").asText();
+                values = getRight(node);
+            } else if (node.has("match") && node.get("match").get("left").has("ct")) {
+                ctKey = node.get("match").get("left").get("ct").get("key").asText();
+                if (node.get("match").get("left").get("ct").has("dir")) {
+                    String dir = node.get("match").get("left").get("ct").get("dir").asText();
+                    isOriginal = dir.equals("original");
+                }
+            } else if (node.has("ct count")) {
+                ctCount = node.get("ct count").get("val").asInt();
+                isOver = node.get("ct count").has("inv");
+            } else {
+                return null;
             }
-        } else if (node.has("ct count")) {
-            ctCount = node.get("ct count").get("val").asInt();
-            isOver = node.get("ct count").has("inv");
-        } else {
-            return null;
+
+            return switch (matchType) {
+                case IP -> createIpExpression(field, operation, values);
+                case IP6 -> createIp6Expression(field, operation, values);
+                case TCP -> createTcpExpression(field, operation, values);
+                case UDP -> createUdpExpression(field, operation, values);
+                case UDPLITE -> createUdpLightExpression(field, operation, values);
+                case SCTP -> createSctpExpression(field, operation, values);
+                case DCCP -> createDccpExpression(field, operation, values);
+                case AH -> createAhExpression(field, operation, values);
+                case ESP -> createEspExpression(field, operation, values);
+                case COMP -> createCompExpression(field, operation, values);
+                case ICMP -> createIcmpExpression(field, operation, values);
+                case ICMPV6 -> createIcmp6Expression(field, operation, values);
+                case ETHER -> createEtherExpression(field, values, operation);
+                case DST -> createDstExpression(field, operation, values);
+                case FRAG -> createFragExpression(field, operation, values);
+                case HBH -> createHbhExpression(field, operation, values);
+                case MH -> createMhExpression(field, operation, values);
+                case RT -> createRtExpression(field, operation, values);
+                case VLAN -> createVlanExpression(field, operation, values);
+                case ARP -> createArpExpression(field, operation, values);
+                case CT -> createCtExpression(field, operation, values, isOver, ctCount, ctKey, isOriginal);
+                case META -> createMetaExpression(field, operation, values);
+                case null -> null;
+            };
+        } catch (Exception e) {
+            throw new JSysboxException("Failed to parse expression '%s'".formatted(node.toString()), e);
         }
-
-        return switch (matchType) {
-            case IP -> createIpExpression(field, operation, values);
-            case IP6 -> createIp6Expression(field, operation, values);
-            case TCP -> createTcpExpression(field, operation, values);
-            case UDP -> createUdpExpression(field, operation, values);
-            case UDPLITE -> createUdpLightExpression(field, operation, values);
-            case SCTP -> createSctpExpression(field, operation, values);
-            case DCCP -> createDccpExpression(field, operation, values);
-            case AH -> createAhExpression(field, operation, values);
-            case ESP -> createEspExpression(field, operation, values);
-            case COMP -> createCompExpression(field, operation, values);
-            case ICMP -> createIcmpExpression(field, operation, values);
-            case ICMPV6 -> createIcmp6Expression(field, operation, values);
-            case ETHER -> createEtherExpression(field, values, operation);
-            case DST -> createDstExpression(field, operation, values);
-            case FRAG -> createFragExpression(field, operation, values);
-            case HBH -> createHbhExpression(field, operation, values);
-            case MH -> createMhExpression(field, operation, values);
-            case RT -> createRtExpression(field, operation, values);
-            case VLAN -> createVlanExpression(field, operation, values);
-            case ARP -> createArpExpression(field, operation, values);
-            case CT -> createCtExpression(field, operation, values, isOver, ctCount, ctKey, isOriginal);
-            case META -> createMetaExpression(field, operation, values);
-            case null -> null;
-        };
-    }
-
-    private static Operation getOperation(JsonNode node) {
-        return Operation.fromValue(node.get("match").get("op").asText());
     }
 
     private static List<String> getRight(JsonNode node) {

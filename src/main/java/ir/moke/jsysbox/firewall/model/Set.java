@@ -1,30 +1,32 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ir.moke.jsysbox.firewall.config.SetDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import ir.moke.jsysbox.firewall.config.deserializer.SetDeserializer;
+import ir.moke.jsysbox.firewall.config.serializer.SetSerializer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @JsonDeserialize(using = SetDeserializer.class)
+@JsonSerialize(using = SetSerializer.class)
 public class Set {
-    private List<Map<String, Object>> elements = new ArrayList<>();
+    private List<String> elements = new ArrayList<>();
     private List<FlagType> flags = new ArrayList<>();
     private Table table;
     private String name;
     private SetType type;
     private int handle;
-    private int size;
-    private int timeout;
-    private int gcInterval;
+    private Integer size;
+    private Integer timeout;
+    private Integer gcInterval;
     private String comment;
     private SetPolicy policy;
 
     public Set() {
     }
 
-    public Set(List<Map<String, Object>> elements, List<FlagType> flags, Table table, String name, SetType type, int handle, int size, int timeout, int gcInterval, SetPolicy policy, String comment) {
+    public Set(List<String> elements, List<FlagType> flags, Table table, String name, SetType type, int handle, Integer size, Integer timeout, Integer gcInterval, SetPolicy policy, String comment) {
         this.elements = elements;
         this.flags = flags;
         this.table = table;
@@ -50,7 +52,7 @@ public class Set {
         return handle;
     }
 
-    public int getSize() {
+    public Integer getSize() {
         return size;
     }
 
@@ -58,11 +60,11 @@ public class Set {
         return flags;
     }
 
-    public int getTimeout() {
+    public Integer getTimeout() {
         return timeout;
     }
 
-    public List<Map<String, Object>> getElements() {
+    public List<String> getElements() {
         return elements;
     }
 
@@ -74,7 +76,7 @@ public class Set {
         return comment;
     }
 
-    public int getGcInterval() {
+    public Integer getGcInterval() {
         return gcInterval;
     }
 

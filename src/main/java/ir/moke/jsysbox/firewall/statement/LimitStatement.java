@@ -3,25 +3,25 @@ package ir.moke.jsysbox.firewall.statement;
 import ir.moke.jsysbox.JSysboxException;
 
 public class LimitStatement implements Statement {
-    private final long value;
-    private final boolean isOver;
+    private final Long value;
+    private final Boolean isOver;
     private final TimeUnit timeUnit;
     private ByteUnit byteUnit;
 
-    public LimitStatement(long value, TimeUnit timeUnit, boolean isOver) {
+    public LimitStatement(Long value, TimeUnit timeUnit, Boolean isOver) {
         this.value = value;
         this.timeUnit = timeUnit;
         this.isOver = isOver;
     }
 
-    public LimitStatement(long value, TimeUnit timeUnit, ByteUnit byteUnit, boolean isOver) {
+    public LimitStatement(Long value, TimeUnit timeUnit, ByteUnit byteUnit, Boolean isOver) {
         this.value = value;
         this.timeUnit = timeUnit;
         this.byteUnit = byteUnit;
         this.isOver = isOver;
     }
 
-    public long getValue() {
+    public Long getValue() {
         return value;
     }
 

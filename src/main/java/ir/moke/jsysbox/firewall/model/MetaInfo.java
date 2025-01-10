@@ -1,12 +1,6 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import ir.moke.jsysbox.firewall.config.NFTablesDeserializer;
-import ir.moke.jsysbox.firewall.config.NFTablesSerializer;
-
-import java.util.List;
 
 public class MetaInfo {
     private String version;

@@ -1,26 +1,29 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ir.moke.jsysbox.firewall.config.RuleDeserializer;
+import ir.moke.jsysbox.firewall.config.deserializer.RuleDeserializer;
+import ir.moke.jsysbox.firewall.expression.Expression;
+import ir.moke.jsysbox.firewall.statement.Statement;
 
 import java.util.List;
-import java.util.Map;
 
 @JsonDeserialize(using = RuleDeserializer.class)
 public class Rule {
     private Chain chain;
     private int handle;
-    private List<Map<String, Object>> expr;
+    private List<Expression> expr;
     private String comment;
+    private Statement statement;
 
     public Rule() {
     }
 
-    public Rule(Chain chain, List<Map<String, Object>> expr, String comment, int handle) {
+    public Rule(Chain chain, List<Expression> expr, Statement statement, String comment, int handle) {
         this.chain = chain;
         this.handle = handle;
         this.expr = expr;
         this.comment = comment;
+        this.statement = statement;
     }
 
     public Chain getChain() {
@@ -39,11 +42,11 @@ public class Rule {
         this.handle = handle;
     }
 
-    public List<Map<String, Object>> getExpr() {
+    public List<Expression> getExpr() {
         return expr;
     }
 
-    public void setExpr(List<Map<String, Object>> expr) {
+    public void setExpr(List<Expression> expr) {
         this.expr = expr;
     }
 
@@ -53,6 +56,14 @@ public class Rule {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public Statement getStatement() {
+        return statement;
+    }
+
+    public void setStatement(Statement statement) {
+        this.statement = statement;
     }
 
     @Override

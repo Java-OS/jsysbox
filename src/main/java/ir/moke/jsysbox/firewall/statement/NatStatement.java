@@ -2,6 +2,7 @@ package ir.moke.jsysbox.firewall.statement;
 
 import ir.moke.jsysbox.JSysboxException;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class NatStatement implements Statement {
@@ -13,6 +14,12 @@ public class NatStatement implements Statement {
     public NatStatement(Type type, String address, Integer port, List<Flag> flags) {
         this.type = type;
         this.address = address;
+        this.port = port;
+        this.flags = flags;
+    }
+
+    public NatStatement(Type type, Integer port, List<Flag> flags) {
+        this.type = type;
         this.port = port;
         this.flags = flags;
     }
@@ -100,6 +107,13 @@ public class NatStatement implements Statement {
 
         Flag(String value) {
             this.value = value;
+        }
+
+        public static Flag fromValue(String value) {
+            return Arrays.stream(Flag.class.getEnumConstants())
+                    .filter(item -> item.getValue().equals(value))
+                    .findFirst()
+                    .orElse(null);
         }
 
         public String getValue() {

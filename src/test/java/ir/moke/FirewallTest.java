@@ -4,8 +4,7 @@ import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.firewall.JFirewall;
 import ir.moke.jsysbox.firewall.expression.*;
 import ir.moke.jsysbox.firewall.model.*;
-import ir.moke.jsysbox.firewall.statement.Statement;
-import ir.moke.jsysbox.firewall.statement.VerdictStatement;
+import ir.moke.jsysbox.firewall.statement.*;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +26,17 @@ public class FirewallTest {
     @Order(0)
     public void checkTableAdd() {
         logger.info("Execute <checkTableAdd>");
-        Table ipv4Table = JFirewall.tableAdd("FirstTable", TableType.IPv4);
-        Assertions.assertEquals("FirstTable", ipv4Table.getName());
-        Assertions.assertEquals(TableType.IPv4, ipv4Table.getType());
+        Table firstTable = JFirewall.tableAdd("FirstTable", TableType.IPv4);
+        Assertions.assertEquals("FirstTable", firstTable.getName());
+        Assertions.assertEquals(TableType.IPv4, firstTable.getType());
 
-        Table inetTable = JFirewall.tableAdd("SecondTable", TableType.INET);
-        Assertions.assertEquals("SecondTable", inetTable.getName());
-        Assertions.assertEquals(TableType.INET, inetTable.getType());
+        Table secondTable = JFirewall.tableAdd("SecondTable", TableType.INET);
+        Assertions.assertEquals("SecondTable", secondTable.getName());
+        Assertions.assertEquals(TableType.INET, secondTable.getType());
+
+        Table thirdTable = JFirewall.tableAdd("ThirdTable", TableType.IPv4);
+        Assertions.assertEquals("ThirdTable", thirdTable.getName());
+        Assertions.assertEquals(TableType.IPv4, thirdTable.getType());
     }
 
     @Test
@@ -41,7 +44,7 @@ public class FirewallTest {
     public void checkTableList() {
         logger.info("Execute <checkTableList>");
         List<Table> tables = JFirewall.tableList();
-        Assertions.assertEquals(2, tables.size());
+        Assertions.assertEquals(3, tables.size());
     }
 
     @Test
@@ -51,22 +54,6 @@ public class FirewallTest {
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
         Assertions.assertNotNull(table);
     }
-
-//    @Test
-//    @Order(3)
-//    public void checkTableRemove() {
-//        logger.info("Execute <checkTableRemove>");
-//        Table table = JFirewall.table("SecondTable", TableType.INET);
-//        JFirewall.tableRemove(table);
-//        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.table("SecondTable", TableType.INET));
-//    }
-
-//    @Test
-//    @Order(4)
-//    public void checkTableExists() {
-//        logger.info("Execute <checkTableExists>");
-//        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.tableCheckExists("SecondTable"));
-//    }
 
     /**
      * Note1: Duplicate table with same name and type does not have any side effect
@@ -78,7 +65,7 @@ public class FirewallTest {
      * }
      */
     @Test
-    @Order(5)
+    @Order(3)
     public void checkDuplicateTableName() {
         logger.info("Execute <checkDuplicateTableName>");
         Table table = JFirewall.tableAdd("FirstTable", TableType.IPv4);
@@ -86,7 +73,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(6)
+    @Order(4)
     public void checkChainAdd() {
         logger.info("Execute <checkChainAdd>");
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
@@ -102,7 +89,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(7)
+    @Order(5)
     public void checkChainList() {
         logger.info("Execute <checkChainList>");
         List<Chain> chains = JFirewall.chainList();
@@ -110,29 +97,19 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(8)
-    public void checkChainRemove() {
-        logger.info("Execute <checkChainRemove>");
-        Table table = JFirewall.table("FirstTable", TableType.IPv4);
-        Chain chain = JFirewall.chain(table, "c1");
-        JFirewall.chainRemove(chain);
-        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.chainCheckExists(chain.getHandle()));
-    }
-
-    @Test
-    @Order(9)
+    @Order(6)
     public void checkSetAdd() {
         logger.info("Execute <checkSetAdd>");
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
 
-        Set set = JFirewall.setAdd(table.getType(), table.getName(), "localNetworkSet", SetType.IPV4_ADDR, List.of(FlagType.INTERVAL), 20, 2, 30, "My Local Network", SetPolicy.MEMORY, false);
+        Set set = JFirewall.setAdd(table.getType(), table.getName(), "localNetworkSet", SetType.IPV4_ADDR, List.of(FlagType.INTERVAL), null, null, 30, "My Local Network", SetPolicy.MEMORY);
         Assertions.assertNotNull(set);
         Assertions.assertEquals(set.getTable(), table);
         Assertions.assertEquals(set.getName(), "localNetworkSet");
     }
 
     @Test
-    @Order(10)
+    @Order(7)
     public void checkSetExists() {
         logger.info("Execute <checkSetExists>");
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
@@ -141,7 +118,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(10)
+    @Order(8)
     public void checkSetAddItem() {
         logger.info("Execute <checkSetAddItem>");
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
@@ -158,30 +135,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(11)
-    public void checkSetRemoveItem() {
-        logger.info("Execute <checkSetRemoveItem>");
-        Table table = JFirewall.table("FirstTable", TableType.IPv4);
-        Set localNetworkSet = JFirewall.set(table, "localNetworkSet");
-        JFirewall.setRemoveElement(localNetworkSet, List.of("192.168.1.10", "127.0.0.1"));
-
-        Set localNetworkSetAfterUpdate = JFirewall.set(table, "localNetworkSet");
-        Assertions.assertEquals(1, localNetworkSetAfterUpdate.getElements().size());
-    }
-
-    @Test
-    @Order(12)
-    public void checkSetRemove() {
-        logger.info("Execute <checkSetRemove>");
-        Table table = JFirewall.table("FirstTable", TableType.IPv4);
-        Set localNetworkSet = JFirewall.set(table, "localNetworkSet");
-
-        JFirewall.setRemove(localNetworkSet);
-        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.setCheckExists(localNetworkSet.getHandle()));
-    }
-
-    @Test
-    @Order(13)
+    @Order(100)
     public void checkRuleAdd() {
         logger.info("Execute <checkRuleAdd>");
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
@@ -200,7 +154,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(13)
+    @Order(101)
     public void checkRuleAdd2() {
         logger.info("Execute <checkRuleAdd2>");
         Table table = JFirewall.table("SecondTable", TableType.INET);
@@ -208,14 +162,12 @@ public class FirewallTest {
 
         List<Expression> expressionList = new ArrayList<>();
         IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
-//        TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("54"));
-//        IcmpExpression icmpExpression = new IcmpExpression(IcmpExpression.Field.MTU, Operation.GT, List.of("12"));
+        TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("54"));
         CtExpression ctExpression1 = new CtExpression(CtExpression.Field.STATE, Operation.EQ, List.of(CtExpression.State.ESTABLISHED.getValue()));
         CtExpression ctExpression2 = new CtExpression(CtExpression.Field.STATUS, Operation.EQ, List.of(CtExpression.Status.CONFIRMED.getValue()));
         CtExpression ctExpression3 = new CtExpression(true, CtExpression.Type.PROTO_SRC, List.of("120", "54"));
         CtExpression ctExpression4 = new CtExpression(false, CtExpression.Type.DADDR, List.of("10.10.10.12"));
         CtExpression ctExpression5 = new CtExpression(true, 30);
-//        IcmpExpression icmpExpression2 = new IcmpExpression(List.of(IcmpExpression.Type.DESTINATION_UNREACHABLE, IcmpExpression.Type.REDIRECT, IcmpExpression.Type.ECHO_REQUEST));
 
         expressionList.add(ipExpression);
         expressionList.add(ctExpression1);
@@ -223,24 +175,101 @@ public class FirewallTest {
         expressionList.add(ctExpression3);
         expressionList.add(ctExpression4);
         expressionList.add(ctExpression5);
-//        expressionList.add(tcpExpression);
-//        expressionList.add(icmpExpression);
-//        expressionList.add(icmpExpression2);
+        expressionList.add(tcpExpression);
 
-        Statement statement = new VerdictStatement(VerdictStatement.Type.DROP);
-        JFirewall.ruleAdd(c1Chain, expressionList, statement, "Drop any request on protocol ip and port 54");
+        Statement statement = new VerdictStatement(VerdictStatement.Type.CONTINUE);
+        JFirewall.ruleAdd(c1Chain, expressionList, statement, "Check first rule");
         Assertions.assertFalse(JFirewall.ruleList().isEmpty());
-        System.out.println(JFirewall.export());
+    }
+
+
+    @Test
+    @Order(102)
+    public void checkRuleAdd3() {
+        logger.info("Execute <checkRuleAdd3>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        {
+            Chain logAndDropChain = JFirewall.chainAdd(table, "logging");
+            Statement logStatement = new LogStatement("nftable-prefix");
+            JFirewall.ruleAdd(logAndDropChain, null, logStatement, "Log traffic");
+        }
+
+        {
+            Chain c1Chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+            List<Expression> expressionList = new ArrayList<>();
+            TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("443"));
+
+            expressionList.add(tcpExpression);
+
+            Statement statement = new VerdictStatement(VerdictStatement.Type.JUMP, "logging");
+            JFirewall.ruleAdd(c1Chain, expressionList, statement, "Check first rule");
+            Assertions.assertFalse(JFirewall.ruleList().isEmpty());
+        }
     }
 
     @Test
-    @Order(14)
+    @Order(103)
+    public void checkRuleAdd4() {
+        logger.info("Execute <checkRuleAdd4>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain translateChain = JFirewall.chainAdd(table, "translate");
+        Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("123"));
+        Statement natStatement = new NatStatement(NatStatement.Type.SNAT, "10.10.10.12", 25, List.of(NatStatement.Flag.PERSISTENT, NatStatement.Flag.FULLY_RANDOM));
+        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Source NAT");
+    }
+
+    @Test
+    @Order(104)
+    public void checkRuleAdd5() {
+        logger.info("Execute <checkRuleAdd5>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain translateChain = JFirewall.chainAdd(table, "translate");
+        Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("125"));
+        Statement natStatement = new NatStatement(NatStatement.Type.REDIRECT, 26, List.of(NatStatement.Flag.PERSISTENT, NatStatement.Flag.FULLY_RANDOM));
+        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Redirect");
+    }
+
+    @Test
+    @Order(105)
+    public void checkRuleAdd6() {
+        logger.info("Execute <checkRuleAdd6>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain translateChain = JFirewall.chainAdd(table, "translate");
+        Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("220"));
+        Statement natStatement = new NatStatement(List.of(NatStatement.Flag.PERSISTENT, NatStatement.Flag.FULLY_RANDOM));
+        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Masquerade");
+    }
+
+    @Test
+    @Order(106)
+    public void checkRuleAdd7() {
+        logger.info("Execute <checkRuleAdd7>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain counterChain = JFirewall.chainAdd(table, "count");
+        Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("443"));
+        Statement statement = new CounterStatement();
+        JFirewall.ruleAdd(counterChain, List.of(expression), statement, "Counter");
+    }
+
+    @Test
+    @Order(107)
+    public void checkRuleAdd8() {
+        logger.info("Execute <checkRuleAdd8>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain rejectChain = JFirewall.chainAdd(table, "rejectRequest");
+        Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
+        Statement statement = new RejectStatement(RejectStatement.Type.ICMP, RejectStatement.Reason.ADMIN_PROHIBITED);
+        JFirewall.ruleAdd(rejectChain, List.of(expression), statement, "reject packets on sport 1100");
+    }
+
+    @Test
+    @Order(150)
     public void checkRuleInsert() {
         logger.info("Execute <checkRuleInsert>");
-        Table table = JFirewall.table("FirstTable", TableType.IPv4);
-        Chain c1Chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain chain = JFirewall.chain(table, "c1");
 
-        Rule currentRule = JFirewall.ruleList().stream().filter(item -> item.getChain().equals(c1Chain)).findFirst().orElse(null);
+        Rule currentRule = JFirewall.ruleList().stream().filter(item -> item.getChain().equals(chain)).findFirst().orElse(null);
 
         List<Expression> expressionList = new ArrayList<>();
         IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue(), Protocols.MOBILITY_HEADER.getValue(), Protocols.VRRP.getValue(), Protocols.RDP.getValue()));
@@ -255,14 +284,13 @@ public class FirewallTest {
 
         Statement statement = new VerdictStatement(VerdictStatement.Type.ACCEPT);
         Assertions.assertNotNull(currentRule);
-        JFirewall.ruleInsert(c1Chain, expressionList, statement, "Check Insert rule", currentRule.getHandle());
+        JFirewall.ruleInsert(chain, expressionList, statement, "Check Insert rule", currentRule.getHandle());
         Assertions.assertFalse(JFirewall.ruleList().isEmpty());
-        System.out.println(JFirewall.export());
     }
 
 
     @Test
-    @Order(15)
+    @Order(199)
     public void checkRuleExists() {
         logger.info("Execute <checkRuleExists>");
         Rule rule = JFirewall.ruleList().getFirst();
@@ -270,7 +298,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(16)
+    @Order(200)
     public void checkRulesFindByChain() {
         logger.info("Execute <checkRulesFindByChain>");
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
@@ -280,19 +308,7 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(17)
-    public void checkRuleRemove() {
-        logger.info("Execute <checkRuleRemove>");
-        Table table = JFirewall.table("FirstTable", TableType.IPv4);
-        Chain chain = JFirewall.chain(table, "c1");
-
-        Rule rule = JFirewall.ruleList().getFirst();
-        JFirewall.ruleRemove(chain, rule.getHandle());
-        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.ruleCheckExists(rule.getHandle()));
-    }
-
-    @Test
-    @Order(18)
+    @Order(300)
     public void checkSaveFirewall() {
         File file = new File("/tmp/jfirewall.rules");
         JFirewall.save(file);
@@ -300,9 +316,70 @@ public class FirewallTest {
     }
 
     @Test
-    @Order(18)
+    @Order(400)
     public void checkNFTablesObject() {
         NFTables nfTables = JFirewall.nfTables();
         System.out.println(nfTables);
+    }
+
+    @Test
+    @Order(500)
+    public void checkTableRemove() {
+        logger.info("Execute <checkTableRemove>");
+        Table table = JFirewall.table("SecondTable", TableType.INET);
+        JFirewall.tableRemove(table);
+        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.table("SecondTable", TableType.INET));
+    }
+
+    @Test
+    @Order(501)
+    public void checkTableExists() {
+        logger.info("Execute <checkTableExists>");
+        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.tableCheckExists("SecondTable"));
+    }
+
+    @Test
+    @Order(502)
+    public void checkChainRemove() {
+        logger.info("Execute <checkChainRemove>");
+        Table table = JFirewall.table("FirstTable", TableType.IPv4);
+        Chain chain = JFirewall.chain(table, "c1");
+        JFirewall.chainRemove(chain);
+    }
+
+    @Test
+    @Order(503)
+    public void checkSetRemoveItem() {
+        logger.info("Execute <checkSetRemoveItem>");
+        Table table = JFirewall.table("FirstTable", TableType.IPv4);
+        Set localNetworkSet = JFirewall.set(table, "localNetworkSet");
+        JFirewall.setRemoveElement(localNetworkSet, List.of("192.168.1.10", "127.0.0.1"));
+
+        Set localNetworkSetAfterUpdate = JFirewall.set(table, "localNetworkSet");
+        Assertions.assertEquals(1, localNetworkSetAfterUpdate.getElements().size());
+    }
+
+
+    @Test
+    @Order(504)
+    public void checkSetRemove() {
+        logger.info("Execute <checkSetRemove>");
+        Table table = JFirewall.table("FirstTable", TableType.IPv4);
+        Set localNetworkSet = JFirewall.set(table, "localNetworkSet");
+
+        JFirewall.setRemove(localNetworkSet);
+        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.setCheckExists(localNetworkSet.getHandle()));
+    }
+
+    @Test
+    @Order(505)
+    public void checkRuleRemove() {
+        logger.info("Execute <checkRuleRemove>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain chain = JFirewall.chain(table, "c1");
+
+        Rule rule = JFirewall.ruleList(chain).getFirst();
+        JFirewall.ruleRemove(chain, rule.getHandle());
+        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.ruleCheckExists(rule.getHandle()));
     }
 }

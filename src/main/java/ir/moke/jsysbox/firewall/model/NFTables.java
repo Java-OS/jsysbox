@@ -1,20 +1,18 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import ir.moke.jsysbox.firewall.config.NFTablesDeserializer;
-import ir.moke.jsysbox.firewall.config.NFTablesSerializer;
+import ir.moke.jsysbox.firewall.config.deserializer.NFTablesDeserializer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonDeserialize(using = NFTablesDeserializer.class)
-@JsonSerialize(using = NFTablesSerializer.class)
 public class NFTables {
     private MetaInfo metaInfo;
-    private List<Table> tables;
-    private List<Chain> chains;
-    private List<Rule> rules;
-    private List<Set> sets;
+    private List<Table> tables = new ArrayList<>();
+    private List<Chain> chains = new ArrayList<>();
+    private List<Rule> rules = new ArrayList<>();
+    private List<Set> sets = new ArrayList<>();
 
     public NFTables() {
     }

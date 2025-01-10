@@ -1,9 +1,12 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import ir.moke.jsysbox.firewall.config.serializer.TableSerializer;
 
 import java.util.Objects;
 
+@JsonSerialize(using = TableSerializer.class)
 public class Table {
     @JsonProperty("family")
     private TableType type;
@@ -62,7 +65,7 @@ public class Table {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Table table = (Table) o;
-        return type == table.type && Objects.equals(name, table.name);
+        return (type == table.type && Objects.equals(name, table.name)) || (handle == table.handle);
     }
 
     @Override

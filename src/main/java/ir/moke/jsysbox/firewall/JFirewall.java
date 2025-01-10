@@ -350,7 +350,7 @@ public class JFirewall {
 
     public static Chain chain(Table table, String name) {
         Chain chain = chainList().stream()
-                .filter(item -> item.getTable().getHandle() == table.getHandle())
+                .filter(item -> item.getTable().equals(table))
                 .filter(item -> item.getName().equals(name))
                 .findFirst()
                 .orElse(null);
@@ -432,11 +432,8 @@ public class JFirewall {
      * @param size       size of elements
      * @param comment    set comment
      * @param policy     set policy type {@link SetPolicy}
-     * @param autoMerge  set auto-merge
      */
-    public static Set setAdd(TableType tableType, String tableName, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy, boolean autoMerge) {
-        if (autoMerge && !flags.contains(FlagType.INTERVAL)) throw new JSysboxException("auto-merge only work with interval set");
-
+    public static Set setAdd(TableType tableType, String tableName, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy) {
         StringBuilder sb = new StringBuilder("add set %s %s %s { type %s".formatted(tableType.getValue(), tableName, setName, setType.getValue())).append(";");
         if (flags != null && !flags.isEmpty()) {
             sb.append(" flags ").append(String.join(",", flags.stream().map(FlagType::getValue).toList())).append(";");
@@ -446,11 +443,9 @@ public class JFirewall {
         Optional.ofNullable(size).ifPresent(item -> sb.append(" size ").append(item).append(";"));
         Optional.ofNullable(comment).ifPresent(item -> sb.append(" comment ").append("\"").append(item).append("\"").append(";"));
         Optional.ofNullable(policy).ifPresent(item -> sb.append(" policy ").append(policy.getValue()).append(";"));
-        if (autoMerge) sb.append(" auto-merge ").append(";");
+        if (flags != null && flags.contains(FlagType.INTERVAL)) sb.append(" auto-merge ").append(";");
         sb.append(" } ");
-
         exec(sb.toString());
-
         return set(tableType, tableName, setName);
     }
 
@@ -492,10 +487,9 @@ public class JFirewall {
      * @param size       size of elements
      * @param comment    set comment
      * @param policy     set policy type {@link SetPolicy}
-     * @param autoMerge  set auto-merge
      */
-    public static void setAdd(Table table, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy, boolean autoMerge) {
-        setAdd(table.getType(), table.getName(), setName, setType, flags, timeout, gcInterval, size, comment, policy, autoMerge);
+    public static void setAdd(Table table, String setName, SetType setType, List<FlagType> flags, Integer timeout, Integer gcInterval, Integer size, String comment, SetPolicy policy) {
+        setAdd(table.getType(), table.getName(), setName, setType, flags, timeout, gcInterval, size, comment, policy);
     }
 
     /**
@@ -636,11 +630,12 @@ public class JFirewall {
         String chainName = chain.getName();
         TableType tableType = table.getType();
         String tableName = table.getName();
+        String expr = expressions != null ? String.join(" ", expressions.stream().map(Expression::toString).toList()) : "";
         String sb = "add rule" +
                 " " + tableType.getValue() +
                 " " + tableName +
                 " " + chainName +
-                " " + String.join(" ", expressions.stream().map(Expression::toString).toList()) +
+                " " + expr +
                 " " + statement +
                 " comment " + "\"" + comment + "\"";
         exec(sb);
@@ -695,6 +690,13 @@ public class JFirewall {
         } catch (JsonProcessingException e) {
             throw new JSysboxException(e);
         }
+    }
+
+
+    public static List<Rule> ruleList(Chain chain) {
+        return ruleList().stream()
+                .filter(item -> item.getChain().equals(chain))
+                .toList();
     }
 
     /**
@@ -767,6 +769,9 @@ public class JFirewall {
      */
     public static void ruleRemove(Chain chain, long id) {
         ruleCheckExists(id);
-        exec("delete rule %s %s handle %s".formatted(chain.getTable().getName(), chain.getName(), id));
+        String tableName = chain.getTable().getName();
+        String chainName = chain.getName();
+        String cmd = "delete rule %s %s handle %s".formatted(tableName, chainName, id);
+        exec(cmd);
     }
 }
