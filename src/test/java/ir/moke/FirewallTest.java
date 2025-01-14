@@ -356,6 +356,19 @@ public class FirewallTest {
     }
 
     @Test
+    @Order(302)
+    public void checkLoadSerializedJson() {
+        try {
+            Path path = Path.of("/tmp/jfirewall.json");
+            String json = Files.readString(path);
+            NFTables nfTables = JFirewall.deserializeJson(json);
+            System.out.println(nfTables.getTables());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
     @Order(400)
     public void checkNFTablesObject() {
         NFTables nfTables = JFirewall.nfTables();
