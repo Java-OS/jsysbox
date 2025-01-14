@@ -11,7 +11,7 @@ import java.io.IOException;
 public class NFTablesSerializer extends JsonSerializer<NFTables> {
 
     @Override
-    public void serialize(NFTables nfTables, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(NFTables nfTables, JsonGenerator gen, SerializerProvider serializers) {
         try {
             gen.writeStartObject(); // Start NFTables JSON object
 

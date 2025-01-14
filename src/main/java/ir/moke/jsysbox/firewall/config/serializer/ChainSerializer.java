@@ -11,7 +11,7 @@ import java.io.IOException;
 public class ChainSerializer extends JsonSerializer<Chain> {
 
     @Override
-    public void serialize(Chain chain, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(Chain chain, JsonGenerator gen, SerializerProvider serializers) {
         try {
             gen.writeStartObject();
             gen.writeObjectFieldStart("chain");

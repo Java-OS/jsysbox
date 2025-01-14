@@ -16,7 +16,7 @@ import java.io.IOException;
 public class RuleSerializer extends JsonSerializer<Rule> {
 
     @Override
-    public void serialize(Rule rule, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(Rule rule, JsonGenerator gen, SerializerProvider serializers) {
         try {
             gen.writeStartObject();
             gen.writeObjectFieldStart("rule");

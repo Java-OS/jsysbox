@@ -6,12 +6,10 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.firewall.model.Table;
 
-import java.io.IOException;
-
 public class TableSerializer extends JsonSerializer<Table> {
 
     @Override
-    public void serialize(Table table, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(Table table, JsonGenerator gen, SerializerProvider serializers) {
         try {
             gen.writeStartObject();
             gen.writeObjectFieldStart("table");

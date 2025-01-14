@@ -12,7 +12,7 @@ import java.io.IOException;
 public class SetSerializer extends JsonSerializer<Set> {
 
     @Override
-    public void serialize(Set set, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(Set set, JsonGenerator gen, SerializerProvider serializers) {
         try {
             gen.writeStartObject();
             gen.writeObjectFieldStart("set");

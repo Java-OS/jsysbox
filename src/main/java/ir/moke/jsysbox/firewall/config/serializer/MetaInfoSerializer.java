@@ -11,7 +11,7 @@ import java.io.IOException;
 public class MetaInfoSerializer extends JsonSerializer<MetaInfo> {
 
     @Override
-    public void serialize(MetaInfo metaInfo, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(MetaInfo metaInfo, JsonGenerator gen, SerializerProvider serializers) {
         try {
             gen.writeStartObject();
             gen.writeObjectFieldStart("metainfo");
