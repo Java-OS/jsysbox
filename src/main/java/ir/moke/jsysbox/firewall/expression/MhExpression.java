@@ -12,7 +12,7 @@ public class MhExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public MhExpression(Field field, Operation operation, List<String> values) {
+    public MhExpression(MhExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -28,12 +28,27 @@ public class MhExpression implements Expression {
         return MatchType.MH;
     }
 
-    public enum Field {
-        NEXTHDR("nexthdr"),
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public enum Field implements Expression.Field {
+        CHECKSUM("checksum"),
         HDRLENGTH("hdrlength"),
-        TYPE("type"),
+        NEXTHDR("nexthdr"),
         RESERVED("reserved"),
-        CHECKSUM("checksum");
+        TYPE("type");
 
         private final String value;
 

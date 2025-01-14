@@ -13,7 +13,7 @@ public class EtherExpression implements Expression {
     private List<String> values;
     private List<Type> types;
 
-    public EtherExpression(Field field, Operation operation, List<String> values) {
+    public EtherExpression(EtherExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -34,13 +34,44 @@ public class EtherExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public List<Type> getTypes() {
+        return types;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.ETHER;
     }
 
-    public enum Field {
-        SADDR("saddr"),
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    public void setOperation(Operation operation) {
+        this.operation = operation;
+    }
+
+    public void setField(Field field) {
+        this.field = field;
+    }
+
+    public void setValues(List<String> values) {
+        this.values = values;
+    }
+
+    public enum Field implements Expression.Field {
         DADDR("daddr"),
+        SADDR("saddr"),
         TYPE("type");
 
         private final String value;

@@ -1,12 +1,16 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ir.moke.jsysbox.firewall.config.deserializer.ChainDeserializer;
+import ir.moke.jsysbox.firewall.config.serializer.ChainSerializer;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @JsonDeserialize(using = ChainDeserializer.class)
-public class Chain {
+@JsonSerialize(using = ChainSerializer.class)
+public class Chain implements Serializable {
     private Table table;
     private String name;
     private int handle;
@@ -88,7 +92,7 @@ public class Chain {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Chain chain = (Chain) o;
-        return handle == chain.handle;
+        return handle == chain.handle && chain.name.equals(name);
     }
 
     @Override

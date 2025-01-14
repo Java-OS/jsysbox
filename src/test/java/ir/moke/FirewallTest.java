@@ -10,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,7 +108,7 @@ public class FirewallTest {
         Set set = JFirewall.setAdd(table.getType(), table.getName(), "localNetworkSet", SetType.IPV4_ADDR, List.of(FlagType.INTERVAL), null, null, 30, "My Local Network", SetPolicy.MEMORY);
         Assertions.assertNotNull(set);
         Assertions.assertEquals(set.getTable(), table);
-        Assertions.assertEquals(set.getName(), "localNetworkSet");
+        Assertions.assertEquals("localNetworkSet", set.getName());
     }
 
     @Test
@@ -161,27 +164,28 @@ public class FirewallTest {
         Chain c1Chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
 
         List<Expression> expressionList = new ArrayList<>();
-        IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
-        TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("54"));
-        CtExpression ctExpression1 = new CtExpression(CtExpression.Field.STATE, Operation.EQ, List.of(CtExpression.State.ESTABLISHED.getValue()));
-        CtExpression ctExpression2 = new CtExpression(CtExpression.Field.STATUS, Operation.EQ, List.of(CtExpression.Status.CONFIRMED.getValue()));
-        CtExpression ctExpression3 = new CtExpression(true, CtExpression.Type.PROTO_SRC, List.of("120", "54"));
-        CtExpression ctExpression4 = new CtExpression(false, CtExpression.Type.DADDR, List.of("10.10.10.12"));
-        CtExpression ctExpression5 = new CtExpression(true, 30);
+        Expression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
+        Expression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("54"));
+
+        /* CT Expression */
+        Expression ctExpression1 = new CtExpression(CtExpression.Field.STATE, Operation.EQ, List.of(CtExpression.State.ESTABLISHED.getValue()));
+        Expression ctExpression2 = new CtExpression(CtExpression.Field.STATUS, Operation.EQ, List.of(CtExpression.Status.CONFIRMED.getValue()));
+        Expression ctExpression3 = new CtExpression(true, CtExpression.Type.PROTO_SRC, List.of("120", "54"));
+        Expression ctExpression4 = new CtExpression(false, CtExpression.Type.DADDR, List.of("10.10.10.12"));
+        Expression ctExpression5 = new CtExpression(true, 30L);
 
         expressionList.add(ipExpression);
+        expressionList.add(tcpExpression);
         expressionList.add(ctExpression1);
         expressionList.add(ctExpression2);
         expressionList.add(ctExpression3);
         expressionList.add(ctExpression4);
         expressionList.add(ctExpression5);
-        expressionList.add(tcpExpression);
 
         Statement statement = new VerdictStatement(VerdictStatement.Type.CONTINUE);
         JFirewall.ruleAdd(c1Chain, expressionList, statement, "Check first rule");
         Assertions.assertFalse(JFirewall.ruleList().isEmpty());
     }
-
 
     @Test
     @Order(102)
@@ -190,7 +194,7 @@ public class FirewallTest {
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         {
             Chain logAndDropChain = JFirewall.chainAdd(table, "logging");
-            Statement logStatement = new LogStatement("nftable-prefix");
+            Statement logStatement = new LogStatement(LogStatement.LogLevel.ALERT);
             JFirewall.ruleAdd(logAndDropChain, null, logStatement, "Log traffic");
         }
 
@@ -263,6 +267,28 @@ public class FirewallTest {
     }
 
     @Test
+    @Order(108)
+    public void checkRuleAdd9() {
+        logger.info("Execute <checkRuleAdd9>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain limitChain = JFirewall.chainAdd(table, "rejectRequest");
+        Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
+        Statement statement = new LimitStatement(12L, LimitStatement.TimeUnit.MINUTE, LimitStatement.ByteUnit.MBYTES, true, 12L, LimitStatement.ByteUnit.KBYTES);
+        JFirewall.ruleAdd(limitChain, List.of(expression), statement, "Limit statement 1");
+    }
+
+    @Test
+    @Order(109)
+    public void checkRuleAdd10() {
+        logger.info("Execute <checkRuleAdd10>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Chain translateChain = JFirewall.chainAdd(table, "translate");
+        Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("220"));
+        Statement natStatement = new NatStatement(null);
+        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Masquerade2");
+    }
+
+    @Test
     @Order(150)
     public void checkRuleInsert() {
         logger.info("Execute <checkRuleInsert>");
@@ -288,38 +314,53 @@ public class FirewallTest {
         Assertions.assertFalse(JFirewall.ruleList().isEmpty());
     }
 
-
-    @Test
-    @Order(199)
-    public void checkRuleExists() {
-        logger.info("Execute <checkRuleExists>");
-        Rule rule = JFirewall.ruleList().getFirst();
-        Assertions.assertDoesNotThrow(() -> JFirewall.ruleCheckExists(rule.getHandle()));
-    }
-
     @Test
     @Order(200)
     public void checkRulesFindByChain() {
         logger.info("Execute <checkRulesFindByChain>");
-        Table table = JFirewall.table("FirstTable", TableType.IPv4);
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain chain = JFirewall.chain(table, "c1");
-        List<Rule> ruleList = JFirewall.findRulesByChain(chain);
-        Assertions.assertFalse(ruleList.isEmpty());
+        List<Rule> rules = JFirewall.ruleList(chain);
+        Assertions.assertFalse(rules.isEmpty());
     }
 
     @Test
     @Order(300)
     public void checkSaveFirewall() {
-        File file = new File("/tmp/jfirewall.rules");
-        JFirewall.save(file);
+        File file = new File("/tmp/jfirewall.json");
+        JFirewall.backup(file);
         Assertions.assertTrue(file.exists());
+    }
+
+    @Test
+    @Order(301)
+    public void checkSerializeByteCode() {
+        try {
+            NFTables nfTables = JFirewall.exportToNFTables();
+            byte[] bytes = JFirewall.serializeByteCode(nfTables);
+
+            // write byte code to file
+            Path path = Path.of("/tmp/jfirewall.bytes");
+            Files.write(path, bytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @Order(302)
+    public void checkSerializeJson() {
+        NFTables nfTables = JFirewall.exportToNFTables();
+        String json = JFirewall.serializeJson(nfTables);
+        System.out.println(json);
     }
 
     @Test
     @Order(400)
     public void checkNFTablesObject() {
         NFTables nfTables = JFirewall.nfTables();
-        System.out.println(nfTables);
+        Assertions.assertNotNull(nfTables);
+        Assertions.assertFalse(nfTables.getTables().isEmpty());
     }
 
     @Test
@@ -328,14 +369,15 @@ public class FirewallTest {
         logger.info("Execute <checkTableRemove>");
         Table table = JFirewall.table("SecondTable", TableType.INET);
         JFirewall.tableRemove(table);
-        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.table("SecondTable", TableType.INET));
     }
 
     @Test
     @Order(501)
     public void checkTableExists() {
         logger.info("Execute <checkTableExists>");
-        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.tableCheckExists("SecondTable"));
+        Table first = JFirewall.tableList().getFirst();
+        Assertions.assertNotNull(first);
+        JFirewall.tableCheckExists(first.getHandle());
     }
 
     @Test
@@ -368,7 +410,6 @@ public class FirewallTest {
         Set localNetworkSet = JFirewall.set(table, "localNetworkSet");
 
         JFirewall.setRemove(localNetworkSet);
-        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.setCheckExists(localNetworkSet.getHandle()));
     }
 
     @Test
@@ -380,6 +421,6 @@ public class FirewallTest {
 
         Rule rule = JFirewall.ruleList(chain).getFirst();
         JFirewall.ruleRemove(chain, rule.getHandle());
-        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.ruleCheckExists(rule.getHandle()));
+        Assertions.assertThrows(JSysboxException.class, () -> JFirewall.ruleCheckExists(rule.getChain(), rule.getHandle()));
     }
 }

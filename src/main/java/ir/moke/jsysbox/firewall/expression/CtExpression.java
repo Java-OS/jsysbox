@@ -14,21 +14,30 @@ public class CtExpression implements Expression {
     private Boolean originalType;
     private Type type;
     private Boolean over;
-    private long value;
+    private Long value;
+    private List<Status> statuses;
+    private List<State> states;
 
-    public CtExpression(Field field, Operation operation, List<String> values) {
-        this.field = field;
+    public CtExpression(CtExpression.Field field, Operation operation, List<String> values) {
+        if (field.equals(Field.STATE)) {
+            states = values.stream().map(State::fromValue).toList();
+        } else if (field.equals(Field.STATUS)) {
+            statuses = values.stream().map(Status::fromValue).toList();
+        } else {
+            this.field = field;
+        }
         this.values = values;
         this.operation = operation;
     }
 
     public CtExpression(Boolean originalType, Type type, List<String> values) {
+        this.operation = Operation.EQ;
         this.originalType = originalType;
         this.values = values;
         this.type = type;
     }
 
-    public CtExpression(Boolean over, long value) {
+    public CtExpression(Boolean over, Long value) {
         this.field = Field.COUNT;
         this.over = over;
         this.value = value;
@@ -36,7 +45,11 @@ public class CtExpression implements Expression {
 
     @Override
     public String toString() {
-        if (originalType != null) {
+        if (states != null && !states.isEmpty()) {
+            return "%s %s %s {%s}".formatted(matchType().getValue(), Field.STATE.getValue(), operation.getValue(), String.join(",", values));
+        } else if (statuses != null && !statuses.isEmpty()) {
+            return "%s %s %s {%s}".formatted(matchType().getValue(), Field.STATUS.getValue(), operation.getValue(), String.join(",", values));
+        } else if (originalType != null) {
             String typeMode = originalType ? "original" : "reply";
             StringBuilder sb = new StringBuilder("ct ").append(typeMode).append(" ");
             switch (type) {
@@ -48,15 +61,37 @@ public class CtExpression implements Expression {
                 case PROTO_DST -> sb.append("proto-dst").append("{ ").append(String.join(",", values)).append(" }");
                 case PROTO_SRC -> sb.append("proto-src").append("{ ").append(String.join(",", values)).append(" }");
             }
-
             return sb.toString();
         } else {
-            if (Field.COUNT.equals(field)) {
+            if (field.equals(Field.COUNT)) {
                 return "%s count %s %s".formatted(matchType().getValue(), (over != null && over) ? "over" : "", value);
+            } else {
+                return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
             }
-
-            return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
         }
+    }
+
+    public List<State> getStates() {
+        return states;
+    }
+
+    public List<Status> getStatuses() {
+        return statuses;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
     }
 
     @Override
@@ -64,15 +99,31 @@ public class CtExpression implements Expression {
         return MatchType.CT;
     }
 
+    public Boolean getOriginalType() {
+        return originalType;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public Boolean getOver() {
+        return over;
+    }
+
+    public Long getValue() {
+        return value;
+    }
+
     public enum Type {
         BYTES("bytes"),
-        PACKETS("packets"),
-        SADDR("saddr"),
-        DADDR("daddr"),
         L3PROTO("l3proto"),
+        PACKETS("packets"),
         PROTOCOL("protocol"),
-        PROTO_DST("proto_dst"),
-        PROTO_SRC("proto_src");
+        PROTO_DST("proto-dst"),
+        PROTO_SRC("proto-src"),
+        DADDR("ip daddr"),
+        SADDR("ip daddr");
 
         private final String value;
 
@@ -94,13 +145,13 @@ public class CtExpression implements Expression {
     }
 
     public enum Status {
-        EXPECTED("expected"),
-        SEEN_REPLY("seen-reply"),
         ASSURED("assured"),
         CONFIRMED("confirmed"),
-        SNAT("snat"),
         DNAT("dnat"),
-        DYING("dying");
+        DYING("dying"),
+        EXPECTED("expected"),
+        SEEN_REPLY("seen-reply"),
+        SNAT("snat");
 
         private final String value;
 
@@ -122,8 +173,8 @@ public class CtExpression implements Expression {
     }
 
     public enum State {
-        NEW("new"),
         ESTABLISHED("established"),
+        NEW("new"),
         RELATED("related"),
         UNTRACKED("untracked");
 
@@ -146,14 +197,14 @@ public class CtExpression implements Expression {
         }
     }
 
-    public enum Field {
-        STATE("state"),
+    public enum Field implements Expression.Field {
+        COUNT("count"),
         DIRECTION("direction"),
-        STATUS("status"),
-        MARK("mark"),
         EXPIRATION("expiration"),
         HELPER("helper"),
-        COUNT("count");
+        MARK("mark"),
+        STATE("state"),
+        STATUS("status");
 
         private final String value;
 

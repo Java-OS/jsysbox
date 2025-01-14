@@ -12,7 +12,7 @@ public class UdpExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public UdpExpression(Field field, Operation operation, List<String> values) {
+    public UdpExpression(UdpExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -28,11 +28,26 @@ public class UdpExpression implements Expression {
         return MatchType.UDP;
     }
 
-    public enum Field {
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public enum Field implements Expression.Field {
+        CHECKSUM("checksum"),
         DPORT("dport"),
-        SPORT("sport"),
         LENGTH("length"),
-        CHECKSUM("checksum");
+        SPORT("sport");
 
         private final String value;
 

@@ -8,7 +8,7 @@ import java.util.List;
 
 public class TcpExpression implements Expression {
 
-    private final TcpExpression.Field field;
+    private final Field field;
     private final Operation operation;
     private final List<String> values;
 
@@ -28,16 +28,31 @@ public class TcpExpression implements Expression {
         return MatchType.TCP;
     }
 
-    public enum Field {
-        DPORT("dport"),
-        SPORT("sport"),
-        SEQUENCE("sequence"),
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public enum Field implements Expression.Field {
         ACKSEQ("ackseq"),
-        FLAGS("flags"),
-        WINDOW("window"),
         CHECKSUM("checksum"),
+        DOFF("doff"),
+        DPORT("dport"),
+        FLAGS("flags"),
+        SEQUENCE("sequence"),
+        SPORT("sport"),
         URGPTR("urgptr"),
-        DOFF("doff");
+        WINDOW("window");
 
         private final String value;
 

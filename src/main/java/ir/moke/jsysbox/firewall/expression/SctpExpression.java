@@ -12,7 +12,7 @@ public class SctpExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public SctpExpression(Field field, Operation operation, List<String> values) {
+    public SctpExpression(SctpExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -28,10 +28,25 @@ public class SctpExpression implements Expression {
         return MatchType.SCTP;
     }
 
-    public enum Field {
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public enum Field implements Expression.Field {
+        CHECKSUM("checksum"),
         DPORT("dport"),
         SPORT("sport"),
-        CHECKSUM("checksum"),
         VTAG("vtag");
 
         private final String value;

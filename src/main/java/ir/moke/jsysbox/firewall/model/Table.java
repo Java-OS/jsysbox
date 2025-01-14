@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ir.moke.jsysbox.firewall.config.serializer.TableSerializer;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @JsonSerialize(using = TableSerializer.class)
-public class Table {
+public class Table implements Serializable {
     @JsonProperty("family")
     private TableType type;
     private String name;

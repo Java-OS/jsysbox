@@ -4,20 +4,34 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface Statement {
+public interface Statement extends Serializable {
 
     static Statement getStatement(JsonNode jsonNode) {
         try {
-            if (jsonNode.has("limit")) {
-                Long rate = jsonNode.has("rate") ? jsonNode.get("rate").asLong() : null;
-                LimitStatement.TimeUnit timeUnit = jsonNode.has("per") ? LimitStatement.TimeUnit.valueOf(jsonNode.get("per").asText().toUpperCase()) : null;
-                Boolean isOver = jsonNode.has("inv") ? jsonNode.get("inv").asBoolean() : null;
-                LimitStatement.ByteUnit byteUnit = jsonNode.has("rate_unit") ? LimitStatement.ByteUnit.valueOf(jsonNode.get("rate_unit").asText().toUpperCase()) : null;
-                if (byteUnit != null) return new LimitStatement(rate, timeUnit, byteUnit, isOver);
-                return new LimitStatement(rate, timeUnit, isOver);
+            if (jsonNode.has("log")) {
+                if (jsonNode.get("log").has("level")) {
+                    return new LogStatement(LogStatement.LogLevel.valueOf(jsonNode.get("log").get("level").asText().toUpperCase()));
+                } else {
+                    return new LogStatement(jsonNode.get("log").get("prefix").asText());
+                }
+            } else if (jsonNode.has("limit")) {
+                Long rate = jsonNode.get("limit").has("rate") ? jsonNode.get("limit").get("rate").asLong() : null;
+                Long burst = jsonNode.get("limit").has("burst") ? jsonNode.get("limit").get("burst").asLong() : null;
+                LimitStatement.TimeUnit timeUnit = jsonNode.get("limit").has("per") ? LimitStatement.TimeUnit.valueOf(jsonNode.get("limit").get("per").asText().toUpperCase()) : null;
+                Boolean isOver = jsonNode.get("limit").has("inv") ? jsonNode.get("limit").get("inv").asBoolean() : null;
+                LimitStatement.ByteUnit rateUnit = jsonNode.get("limit").has("rate_unit") ? LimitStatement.ByteUnit.valueOf(jsonNode.get("limit").get("rate_unit").asText().toUpperCase()) : null;
+                LimitStatement.ByteUnit burstUnit = jsonNode.get("limit").has("burst_unit") ? LimitStatement.ByteUnit.valueOf(jsonNode.get("limit").get("burst_unit").asText().toUpperCase()) : null;
+                if (rateUnit == null) {
+                    return new LimitStatement(rate, timeUnit, isOver);
+                } else if (burst == null) {
+                    return new LimitStatement(rate, timeUnit, rateUnit, isOver);
+                } else {
+                    return new LimitStatement(rate, timeUnit, rateUnit, isOver, burst, burstUnit);
+                }
             } else if (jsonNode.has("drop")) {
                 return new VerdictStatement(VerdictStatement.Type.DROP);
             } else if (jsonNode.has("accept")) {

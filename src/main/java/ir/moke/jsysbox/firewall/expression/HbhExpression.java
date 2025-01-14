@@ -12,7 +12,7 @@ public class HbhExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public HbhExpression(Field field, Operation operation, List<String> values) {
+    public HbhExpression(HbhExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -24,11 +24,26 @@ public class HbhExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.HBH;
     }
 
-    public enum Field {
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    public enum Field implements Expression.Field {
         NEXTHDR("nexthdr"),
         HDRLENGTH("hdrlength");
 

@@ -5,12 +5,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ir.moke.jsysbox.firewall.config.deserializer.SetDeserializer;
 import ir.moke.jsysbox.firewall.config.serializer.SetSerializer;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonDeserialize(using = SetDeserializer.class)
 @JsonSerialize(using = SetSerializer.class)
-public class Set {
+public class Set implements Serializable {
     private List<String> elements = new ArrayList<>();
     private List<FlagType> flags = new ArrayList<>();
     private Table table;

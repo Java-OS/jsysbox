@@ -1,7 +1,6 @@
 package ir.moke.jsysbox.firewall.expression;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.JsonNode;
 import ir.moke.jsysbox.firewall.model.Operation;
 
 import java.util.Arrays;
@@ -9,7 +8,7 @@ import java.util.List;
 
 public class IpExpression implements Expression {
 
-    private final IpExpression.Field field;
+    private final Field field;
     private final Operation operation;
     private final List<String> values;
 
@@ -17,6 +16,18 @@ public class IpExpression implements Expression {
         this.field = field;
         this.values = values;
         this.operation = operation;
+    }
+
+    public Field getField() {
+        return field;
+    }
+
+    public Operation getOperation() {
+        return operation;
+    }
+
+    public List<String> getValues() {
+        return values;
     }
 
     @Override
@@ -29,18 +40,19 @@ public class IpExpression implements Expression {
         return MatchType.IP;
     }
 
-    public enum Field {
-        DSCP("dscp"),
-        LENGTH("length"),
-        ID("id"),
-        FRAG_OFF("frag-off"),
-        TTL("ttl"),
-        PROTOCOL("protocol"),
+
+    public enum Field implements Expression.Field {
         CHECKSUM("checksum"),
-        SADDR("saddr"),
         DADDR("daddr"),
-        VERSION("version"),
-        HDRLENGTH("hdrlength");
+        DSCP("dscp"),
+        FRAG_OFF("frag-off"),
+        HDRLENGTH("hdrlength"),
+        ID("id"),
+        LENGTH("length"),
+        PROTOCOL("protocol"),
+        SADDR("saddr"),
+        TTL("ttl"),
+        VERSION("version");
 
         private final String value;
 

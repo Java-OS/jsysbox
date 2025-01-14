@@ -13,7 +13,7 @@ public class ArpExpression implements Expression {
     private List<String> values;
     private List<ArpOperation> arpOperations;
 
-    public ArpExpression(Field field, Operation operation, List<String> values) {
+    public ArpExpression(ArpExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -34,18 +34,31 @@ public class ArpExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.ARP;
     }
 
+    public List<ArpOperation> getArpOperations() {
+        return arpOperations;
+    }
+
     public enum ArpOperation {
-        nak("nak"),
-        inreply("inreply"),
-        inrequest("inrequest"),
-        rreply("rreply"),
-        rrequest("rrequest"),
-        reply("reply"),
-        request("request");
+        inreply("inreply"), inrequest("inrequest"), nak("nak"), reply("reply"), request("request"), rreply("rreply"), rrequest("rrequest");
 
         private final String value;
 
@@ -54,10 +67,7 @@ public class ArpExpression implements Expression {
         }
 
         public static ArpOperation fromValue(String value) {
-            return Arrays.stream(ArpOperation.class.getEnumConstants())
-                    .filter(item -> item.value.equals(value))
-                    .findFirst()
-                    .orElse(null);
+            return Arrays.stream(ArpOperation.class.getEnumConstants()).filter(item -> item.value.equals(value)).findFirst().orElse(null);
         }
 
         @JsonValue
@@ -66,13 +76,13 @@ public class ArpExpression implements Expression {
         }
     }
 
-    public enum Field {
-        TYPE("type"),
-        PTYPE("ptype"),
-        HTYPE("htype"),
+    public enum Field implements Expression.Field {
         HLEN("hlen"),
+        HTYPE("htype"),
+        OPERATION("operation"),
         PLEN("plen"),
-        OPERATION("operation");
+        PTYPE("ptype"),
+        TYPE("type");
 
         private final String value;
 
@@ -81,10 +91,7 @@ public class ArpExpression implements Expression {
         }
 
         public static Field fromValue(String value) {
-            return Arrays.stream(Field.class.getEnumConstants())
-                    .filter(item -> item.value.equals(value))
-                    .findFirst()
-                    .orElse(null);
+            return Arrays.stream(Field.class.getEnumConstants()).filter(item -> item.value.equals(value)).findFirst().orElse(null);
         }
 
         @JsonValue

@@ -12,7 +12,7 @@ public class DstExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public DstExpression(Field field, Operation operation, List<String> values) {
+    public DstExpression(DstExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -28,7 +28,22 @@ public class DstExpression implements Expression {
         return MatchType.DST;
     }
 
-    public enum Field {
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public enum Field implements Expression.Field {
         NEXTHDR("nexthdr"),
         HDRLENGTH("hdrlength");
 
@@ -37,12 +52,14 @@ public class DstExpression implements Expression {
         Field(String value) {
             this.value = value;
         }
+
         public static Field fromValue(String value) {
             return Arrays.stream(Field.class.getEnumConstants())
                     .filter(item -> item.value.equals(value))
                     .findFirst()
                     .orElse(null);
         }
+
         @JsonValue
         public String getValue() {
             return value;

@@ -26,20 +26,30 @@ public class NFTablesDeserializer extends JsonDeserializer<NFTables> {
         MetaInfo metaInfo = null;
 
         for (JsonNode node : root) {
-            if (node.has("metaInfo")) {
+            if (node.has("metainfo")) {
                 metaInfo = JFirewall.metaInfo();
-            }
-            if (node.has("table")) {
+            } else if (node.has("table")) {
                 Table table = JFirewall.table(node.get("table").get("handle").asInt());
                 tables.add(table);
             } else if (node.has("chain")) {
-                Chain chain = JFirewall.chain(node.get("chain").get("handle").asInt());
+                String tableName = node.get("chain").get("table").asText();
+                TableType tableType = TableType.fromValue(node.get("chain").get("family").asText());
+                String chainName = node.get("chain").get("name").asText();
+                Chain chain = JFirewall.chain(tableName, tableType, chainName);
                 chains.add(chain);
             } else if (node.has("set")) {
-                Set set = JFirewall.set(node.get("set").get("handle").asInt());
+                String tableName = node.get("set").get("table").asText();
+                TableType tableType = TableType.fromValue(node.get("set").get("family").asText());
+                String setName = node.get("set").get("name").asText();
+                Set set = JFirewall.set(tableName, tableType, setName);
                 sets.add(set);
             } else if (node.has("rule")) {
-                Rule rule = JFirewall.rule(node.get("rule").get("handle").asInt());
+                String tableName = node.get("rule").get("table").asText();
+                TableType tableType = TableType.fromValue(node.get("rule").get("family").asText());
+                String chainName = node.get("rule").get("chain").asText();
+                Chain chain = JFirewall.chain(tableName, tableType, chainName);
+                int ruleHandle = node.get("rule").get("handle").asInt();
+                Rule rule = JFirewall.rule(chain, ruleHandle);
                 rules.add(rule);
             }
 

@@ -12,7 +12,7 @@ public class MetaExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public MetaExpression(Field field, Operation operation, List<String> values) {
+    public MetaExpression(MetaExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -24,43 +24,60 @@ public class MetaExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.META;
     }
 
-    public enum Field {
-        IIFNAME("iifname"),
-        OIFNAME("oifname"),
-        IIF("iif"),
-        OIF("oif"),
-        IIFTYPE("iiftype"),
-        OIFTYPE("oiftype"),
-        LENGTH("length"),
-        PROTOCOL("protocol"),
-        NFPROTO("nfproto"),
-        L4PROTO("l4proto"),
-        MARK("mark"),
-        PRIORITY("priority"),
-        SKUID("skuid"),
-        SKGID("skgid"),
-        RTCLASSID("rtclassid"),
-        PKTTYPE("pkttype"),
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    public enum Field implements Expression.Field {
+        CGROUP("cgroup"),
         CPU("cpu"),
+        IIF("iif"),
         IIFGROUP("iifgroup"),
+        IIFNAME("iifname"),
+        IIFTYPE("iiftype"),
+        L4PROTO("l4proto"),
+        LENGTH("length"),
+        MARK("mark"),
+        NFPROTO("nfproto"),
+        OIF("oif"),
         OIFGROUP("oifgroup"),
-        CGROUP("cgroup");
+        OIFNAME("oifname"),
+        OIFTYPE("oiftype"),
+        PKTTYPE("pkttype"),
+        PRIORITY("priority"),
+        PROTOCOL("protocol"),
+        RTCLASSID("rtclassid"),
+        SKGID("skgid"),
+        SKUID("skuid");
 
         private final String value;
 
         Field(String value) {
             this.value = value;
         }
+
         public static Field fromValue(String value) {
             return Arrays.stream(Field.class.getEnumConstants())
                     .filter(item -> item.value.equals(value))
                     .findFirst()
                     .orElse(null);
         }
+
         @JsonValue
         public String getValue() {
             return value;

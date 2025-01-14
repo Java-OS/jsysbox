@@ -13,7 +13,7 @@ public class DccpExpression implements Expression {
     private List<String> values;
     private List<Type> types;
 
-    public DccpExpression(Field field, Operation operation, List<String> values) {
+    public DccpExpression(DccpExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -21,6 +21,25 @@ public class DccpExpression implements Expression {
 
     public DccpExpression(List<Type> types) {
         this.types = types;
+    }
+
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    public List<Type> getTypes() {
+        return types;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
     }
 
     @Override
@@ -38,7 +57,7 @@ public class DccpExpression implements Expression {
         return MatchType.DCCP;
     }
 
-    public enum Field {
+    public enum Field implements Expression.Field {
         DPORT("dport"),
         SPORT("sport"),
         TYPE("type");
@@ -63,14 +82,14 @@ public class DccpExpression implements Expression {
     }
 
     public enum Type {
-        REQUEST("request"),
-        RESPONSE("response"),
-        DATA("data"),
         ACK("ack"),
-        DATAACK("dataack"),
-        CLOSEREQ("closereq"),
         CLOSE("close"),
+        CLOSEREQ("closereq"),
+        DATA("data"),
+        DATAACK("dataack"),
+        REQUEST("request"),
         RESET("reset"),
+        RESPONSE("response"),
         SYNC("sync"),
         SYNCACK("syncack");
 

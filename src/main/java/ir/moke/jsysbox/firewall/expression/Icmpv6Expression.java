@@ -13,7 +13,7 @@ public class Icmpv6Expression implements Expression {
     private List<String> values;
     private List<Type> types;
 
-    public Icmpv6Expression(Field field, Operation operation, List<String> values) {
+    public Icmpv6Expression(Icmpv6Expression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -38,25 +38,44 @@ public class Icmpv6Expression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.ICMPV6;
     }
 
+    public List<Type> getTypes() {
+        return types;
+    }
+
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
     public enum Type {
         DESTINATION_UNREACHABLE("destination-unreachable"),
-        PACKET_TOO_BIG("packet-too-big"),
-        TIME_EXCEEDED("time-exceeded"),
-        ECHO_REQUEST("echo-request"),
         ECHO_REPLY("echo-reply"),
+        ECHO_REQUEST("echo-request"),
+        MLD2_LISTENER_REPORT("mld2-listener-report"),
         MLD_LISTENER_QUERY("mld-listener-query"),
-        MLD_LISTENER_REPORT("mld-listener-report"),
         MLD_LISTENER_REDUCTION("mld-listener-reduction"),
-        ND_ROUTER_SOLICIT("nd-router-solicit"),
-        ND_ROUTER_ADVERT("nd-router-advert"),
-        ND_NEIGHBOR_SOLICIT("nd-neighbor-solicit"),
+        MLD_LISTENER_REPORT("mld-listener-report"),
         ND_NEIGHBOR_ADVERT("nd-neighbor-advert"),
+        ND_NEIGHBOR_SOLICIT("nd-neighbor-solicit"),
+        ND_ROUTER_ADVERT("nd-router-advert"),
+        ND_ROUTER_SOLICIT("nd-router-solicit"),
+        PACKET_TOO_BIG("packet-too-big"),
         PARAMETER_PROBLEM("parameter-problem"),
-        MLD2_LISTENER_REPORT("mld2-listener-report");
+        TIME_EXCEEDED("time-exceeded");
 
         private final String value;
 
@@ -77,14 +96,14 @@ public class Icmpv6Expression implements Expression {
         }
     }
 
-    public enum Field {
-        TYPE("type"),
-        CODE("code"),
+    public enum Field implements Expression.Field {
         CHECKSUM("checksum"),
+        CODE("code"),
         ID("id"),
-        SEQUENCE("sequence"),
+        MAX_DELAY("max-delay"),
         MTU("mtu"),
-        MAX_DELAY("max-delay");
+        SEQUENCE("sequence"),
+        TYPE("type");
 
         private final String value;
 

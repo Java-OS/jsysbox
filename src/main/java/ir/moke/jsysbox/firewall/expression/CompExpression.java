@@ -12,7 +12,7 @@ public class CompExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public CompExpression(Field field, Operation operation, List<String> values) {
+    public CompExpression(CompExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -24,14 +24,29 @@ public class CompExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.COMP;
     }
 
-    public enum Field {
-        NEXTHDR("nexthdr"),
+    public enum Field implements Expression.Field {
+        CPI("cpi"),
         FLAGS("flags"),
-        CPI("cpi");
+        NEXTHDR("nexthdr");
 
         private final String value;
 

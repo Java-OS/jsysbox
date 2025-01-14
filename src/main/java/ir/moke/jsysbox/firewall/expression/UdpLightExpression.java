@@ -12,7 +12,7 @@ public class UdpLightExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public UdpLightExpression(Field field, Operation operation, List<String> values) {
+    public UdpLightExpression(UdpLightExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -24,14 +24,29 @@ public class UdpLightExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.UDPLITE;
     }
 
-    public enum Field {
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    public enum Field implements Expression.Field {
+        CHECKSUM("checksum"),
         DPORT("dport"),
-        SPORT("sport"),
-        CHECKSUM("checksum");
+        SPORT("sport");
 
         private final String value;
 

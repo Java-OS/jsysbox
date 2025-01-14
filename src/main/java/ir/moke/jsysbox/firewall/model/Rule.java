@@ -1,14 +1,18 @@
 package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ir.moke.jsysbox.firewall.config.deserializer.RuleDeserializer;
+import ir.moke.jsysbox.firewall.config.serializer.RuleSerializer;
 import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.statement.Statement;
 
+import java.io.Serializable;
 import java.util.List;
 
 @JsonDeserialize(using = RuleDeserializer.class)
-public class Rule {
+@JsonSerialize(using = RuleSerializer.class)
+public class Rule implements Serializable {
     private Chain chain;
     private int handle;
     private List<Expression> expr;

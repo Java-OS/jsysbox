@@ -13,7 +13,7 @@ public class IcmpExpression implements Expression {
     private List<String> values;
     private List<Type> types;
 
-    public IcmpExpression(Field field, Operation operation, List<String> values) {
+    public IcmpExpression(IcmpExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.operation = operation;
         this.values = values;
@@ -38,26 +38,45 @@ public class IcmpExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public List<Type> getTypes() {
+        return types;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.ICMP;
     }
 
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
     public enum Type {
-        ECHO_REPLY("echo-reply"),
-        DESTINATION_UNREACHABLE("destination-unreachable"),
-        SOURCE_QUENCH("source-quench"),
-        REDIRECT("redirect"),
-        ECHO_REQUEST("echo-request"),
-        TIME_EXCEEDED("time-exceeded"),
-        PARAMETER_PROBLEM("parameter-problem"),
-        TIMESTAMP_REQUEST("timestamp-request"),
-        TIMESTAMP_REPLY("timestamp-reply"),
-        INFO_REQUEST("info-request"),
-        INFO_REPLY("info-reply"),
-        ADDRESS_MASK_REQUEST("address-mask-request"),
         ADDRESS_MASK_REPLY("address-mask-reply"),
+        ADDRESS_MASK_REQUEST("address-mask-request"),
+        DESTINATION_UNREACHABLE("destination-unreachable"),
+        ECHO_REPLY("echo-reply"),
+        ECHO_REQUEST("echo-request"),
+        INFO_REPLY("info-reply"),
+        INFO_REQUEST("info-request"),
+        PARAMETER_PROBLEM("parameter-problem"),
+        REDIRECT("redirect"),
         ROUTER_ADVERTISEMENT("router-advertisement"),
-        ROUTER_SOLICITATION("router-solicitation");
+        ROUTER_SOLICITATION("router-solicitation"),
+        SOURCE_QUENCH("source-quench"),
+        TIMESTAMP_REPLY("timestamp-reply"),
+        TIMESTAMP_REQUEST("timestamp-request"),
+        TIME_EXCEEDED("time-exceeded");
 
         private final String value;
 
@@ -78,14 +97,14 @@ public class IcmpExpression implements Expression {
         }
     }
 
-    public enum Field {
-        TYPE("type"),
-        CODE("code"),
+    public enum Field implements Expression.Field {
         CHECKSUM("checksum"),
+        CODE("code"),
+        GATEWAY("gateway"),
         ID("id"),
-        SEQUENCE("sequence"),
         MTU("mtu"),
-        GATEWAY("gateway");
+        SEQUENCE("sequence"),
+        TYPE("type");
 
         private final String value;
 

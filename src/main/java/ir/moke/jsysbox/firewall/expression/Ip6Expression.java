@@ -12,7 +12,7 @@ public class Ip6Expression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public Ip6Expression(Field field, Operation operation, List<String> values) {
+    public Ip6Expression(Ip6Expression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -24,18 +24,33 @@ public class Ip6Expression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.IP6;
     }
 
-    public enum Field {
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    public enum Field implements Expression.Field {
+        DADDR("daddr"),
         DSCP("dscp"),
         FLOWLABEL("flowlabel"),
+        HOPLIMIT("hoplimit"),
         LENGTH("length"),
         NEXTHDR("nexthdr"),
-        HOPLIMIT("hoplimit"),
         SADDR("saddr"),
-        DADDR("daddr"),
         VERSION("version");
 
         private final String value;

@@ -1,13 +1,20 @@
 package ir.moke.jsysbox.firewall.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.firewall.config.deserializer.NFTablesDeserializer;
+import ir.moke.jsysbox.firewall.config.serializer.NFTablesSerializer;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonDeserialize(using = NFTablesDeserializer.class)
-public class NFTables {
+@JsonSerialize(using = NFTablesSerializer.class)
+public class NFTables implements Serializable {
     private MetaInfo metaInfo;
     private List<Table> tables = new ArrayList<>();
     private List<Chain> chains = new ArrayList<>();
@@ -43,5 +50,15 @@ public class NFTables {
 
     public List<Set> getSets() {
         return sets;
+    }
+
+    @Override
+    public String toString() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new JSysboxException(e);
+        }
     }
 }

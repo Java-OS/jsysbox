@@ -8,7 +8,7 @@ import java.util.List;
 
 public class VlanExpression implements Expression {
 
-    private final VlanExpression.Field field;
+    private final Field field;
     private final Operation operation;
     private final List<String> values;
 
@@ -24,13 +24,28 @@ public class VlanExpression implements Expression {
     }
 
     @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
     public MatchType matchType() {
         return MatchType.VLAN;
     }
 
-    public enum Field {
-        ID("id"),
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    public enum Field implements Expression.Field {
         CFI("cfi"),
+        ID("id"),
         PCP("pcp");
 
         private final String value;

@@ -15,6 +15,7 @@ import ir.moke.jsysbox.firewall.statement.Statement;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RuleDeserializer extends JsonDeserializer<Rule> {
@@ -23,7 +24,9 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
         List<Expression> expList = new ArrayList<>();
         ArrayNode exprArr = (ArrayNode) jsonNode.get("expr");
         int size = exprArr.size();
-        for (int i = 0; i < size - 2; i++) {
+        if (size == 1) return Collections.emptyList();
+        // last item is statement , (size - 1)
+        for (int i = 0; i < size - 1; i++) {
             JsonNode node = exprArr.get(i);
             Expression expression = Expression.getExpression(node);
             expList.add(expression);

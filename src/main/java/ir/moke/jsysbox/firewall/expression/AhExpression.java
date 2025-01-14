@@ -12,7 +12,7 @@ public class AhExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public AhExpression(Field field, Operation operation, List<String> values) {
+    public AhExpression(AhExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -23,16 +23,30 @@ public class AhExpression implements Expression {
         return "%s %s %s {%s}".formatted(matchType().getValue(), field.getValue(), operation.getValue(), String.join(",", values));
     }
 
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
     @Override
     public MatchType matchType() {
         return MatchType.AH;
     }
 
-    public enum Field {
+    public enum Field implements Expression.Field {
         HDRLENGTH("hdrlength"),
         RESERVED("reserved"),
-        SPI("spi"),
-        SEQUENCE("sequence");
+        SEQUENCE("sequence"),
+        SPI("spi");
 
         private final String value;
 

@@ -12,7 +12,7 @@ public class RtExpression implements Expression {
     private final Operation operation;
     private final List<String> values;
 
-    public RtExpression(Field field, Operation operation, List<String> values) {
+    public RtExpression(RtExpression.Field field, Operation operation, List<String> values) {
         this.field = field;
         this.values = values;
         this.operation = operation;
@@ -28,11 +28,26 @@ public class RtExpression implements Expression {
         return MatchType.RT;
     }
 
-    public enum Field {
-        NEXTHDR("nexthdr"),
+    @Override
+    public Operation getOperation() {
+        return this.operation;
+    }
+
+    @Override
+    public Field getField() {
+        return this.field;
+    }
+
+    @Override
+    public List<String> getValues() {
+        return values;
+    }
+
+    public enum Field implements Expression.Field {
         HDRLENGTH("hdrlength"),
-        TYPE("type"),
-        SEG_LEFT("seg-left");
+        NEXTHDR("nexthdr"),
+        SEG_LEFT("seg-left"),
+        TYPE("type");
 
         private final String value;
 

@@ -13,10 +13,10 @@ import ir.moke.jsysbox.JniNativeLoader;
 import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.statement.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JFirewall {
-
+    private static final Logger logger = LoggerFactory.getLogger(JFirewall.class);
     private static final String VALID_PATTERN = "^[a-zA-Z][a-zA-Z0-9]*$";
     private static final Pattern pattern = Pattern.compile(VALID_PATTERN);
     private static final ObjectMapper om = new ObjectMapper();
@@ -62,12 +62,56 @@ public class JFirewall {
         return exec("list ruleset");
     }
 
-    public static void save(File file) {
+    public static NFTables exportToNFTables() {
+        try {
+            String json = export();
+            return om.readValue(json, NFTables.class);
+        } catch (JsonProcessingException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static void backup(File file) {
         String str = export();
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.write(str);
             fileWriter.flush();
         } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static String serializeJson(NFTables nfTables) {
+        try {
+            return om.writeValueAsString(nfTables);
+        } catch (JsonProcessingException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static NFTables deserializeJson(String json) {
+        try {
+            return om.readValue(json, NFTables.class);
+        } catch (JsonProcessingException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static byte[] serializeByteCode(NFTables nfTables) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream os = new ObjectOutputStream(bos)) {
+            os.writeObject(nfTables);
+            os.flush();
+            return bos.toByteArray();
+        } catch (Exception e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static NFTables deserializeByteCode(byte[] bytes) {
+        try (ObjectInputStream os = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
+            return (NFTables) os.readObject();
+        } catch (Exception e) {
             throw new JSysboxException(e);
         }
     }
@@ -103,7 +147,7 @@ public class JFirewall {
             ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
             for (JsonNode jsonNode : nftablesArray) {
                 if (jsonNode.has("metainfo")) {
-                    return om.readValue(jsonNode.get("metaInfo").toString(), MetaInfo.class);
+                    return om.readValue(jsonNode.get("metainfo").toString(), MetaInfo.class);
                 }
             }
 
@@ -213,7 +257,6 @@ public class JFirewall {
      * @param table {@link Table}
      */
     public static void tableRemove(Table table) {
-        tableCheckExists(table.getName());
         exec("delete table handle %s".formatted(table.getHandle()));
     }
 
@@ -228,25 +271,17 @@ public class JFirewall {
     }
 
     /**
-     * Check table with specific name exists
-     *
-     * @param name table name
-     */
-    public static void tableCheckExists(String name) {
-        boolean exists = tableList().stream().anyMatch(item -> item.getName().equals(name));
-        if (!exists) throw new JSysboxException("Table with name %s does not exists".formatted(name));
-    }
-
-    /**
      * get specific table by id
      *
      * @param handle table handle id
      * @return table {@link Table}
      */
     public static Table table(int handle) {
-        Table table = tableList().stream().filter(item -> item.getHandle() == handle).findFirst().orElse(null);
-        if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(handle));
-        return table;
+        return tableList()
+                .stream()
+                .filter(item -> item.getHandle() == handle)
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -256,14 +291,12 @@ public class JFirewall {
      * @return table {@link Table}
      */
     public static Table table(String name, TableType type) {
-        Table table = tableList()
+        return tableList()
                 .stream()
                 .filter(item -> item.getName().equals(name))
                 .filter(item -> item.getType().equals(type))
                 .findFirst()
                 .orElse(null);
-        if (table == null) throw new JSysboxException("Table with name %s does not exists".formatted(name));
-        return table;
     }
 
     /**
@@ -332,52 +365,30 @@ public class JFirewall {
         }
     }
 
-    /**
-     * check chain exist by handle id
-     *
-     * @param handle handle id
-     */
-    public static void chainCheckExists(int handle) {
-        boolean exists = chainList().stream().anyMatch(item -> item.getHandle() == handle);
-        if (!exists) throw new JSysboxException("Chain with handle %s does not exists".formatted(handle));
-    }
-
-    public static Chain chain(int handle) {
-        Chain chain = chainList().stream().filter(item -> item.getHandle() == handle).findFirst().orElse(null);
-        if (chain == null) throw new JSysboxException("Chain with handle %s does not exists".formatted(handle));
-        return chain;
-    }
-
     public static Chain chain(Table table, String name) {
-        Chain chain = chainList().stream()
+        return chainList().stream()
                 .filter(item -> item.getTable().equals(table))
                 .filter(item -> item.getName().equals(name))
                 .findFirst()
                 .orElse(null);
-        if (chain == null) throw new JSysboxException("Chain with table handle %s and name %s does not exists".formatted(table.getHandle(), name));
-        return chain;
     }
 
-    public static Chain chain(String tableName, String type, String name) {
-        TableType tableType = TableType.fromValue(type);
-        Chain chain = chainList().stream()
+    public static Chain chain(String tableName, TableType tableType, String name) {
+        return chainList().stream()
                 .filter(item -> item.getTable().getName().equals(tableName))
                 .filter(item -> item.getTable().getType().equals(tableType))
                 .filter(item -> item.getName().equals(name))
                 .findFirst()
                 .orElse(null);
-        if (chain == null) throw new JSysboxException("Chain with table %s type %s and name %s does not exists".formatted(tableName, type, name));
-        return chain;
     }
 
     /**
      * Rename chain
      *
-     * @param handle  chain handle id
+     * @param chain   instance of {@link Chain}
      * @param newName new chain name
      */
-    public static synchronized void chainRename(int handle, String newName) {
-        Chain chain = chain(handle);
+    public static synchronized void chainRename(Chain chain, String newName) {
         String oldName = chain.getName();
         Table table = chain.getTable();
         String tableName = table.getName();
@@ -390,7 +401,7 @@ public class JFirewall {
             for (JsonNode node : nftablesArray) {
                 if (node.has("chain")) {
                     ObjectNode chainNode = (ObjectNode) node.get("chain");
-                    if (handle == chainNode.get("handle").asInt() && oldName.equals(chainNode.get("name").asText()) && tableName.equals(chainNode.get("table").asText()) && type.equals(chainNode.get("family").asText())) {
+                    if (chain.getHandle() == chainNode.get("handle").asInt() && oldName.equals(chainNode.get("name").asText()) && tableName.equals(chainNode.get("table").asText()) && type.equals(chainNode.get("family").asText())) {
                         chainNode.put("name", newName);
                     }
                 }
@@ -414,7 +425,6 @@ public class JFirewall {
         int handle = chain.getHandle();
         TableType tableType = chain.getTable().getType();
         String tableName = chain.getTable().getName();
-        chainCheckExists(handle);
         String cmd = "delete chain %s %s handle %s".formatted(tableType.getValue(), tableName, handle);
         exec(cmd);
     }
@@ -446,7 +456,7 @@ public class JFirewall {
         if (flags != null && flags.contains(FlagType.INTERVAL)) sb.append(" auto-merge ").append(";");
         sb.append(" } ");
         exec(sb.toString());
-        return set(tableType, tableName, setName);
+        return set(tableName, tableType, setName);
     }
 
     /**
@@ -457,7 +467,7 @@ public class JFirewall {
      * @param setName   set name
      * @return the set {@link Set}
      */
-    public static Set set(TableType tableType, String tableName, String setName) {
+    public static Set set(String tableName, TableType tableType, String setName) {
         return setList().stream()
                 .filter(item -> item.getTable().getName().equals(tableName))
                 .filter(item -> item.getTable().getType().equals(tableType))
@@ -467,12 +477,7 @@ public class JFirewall {
     }
 
     public static Set set(Table table, String setName) {
-        return setList().stream()
-                .filter(item -> item.getTable().getName().equals(table.getName()))
-                .filter(item -> item.getTable().getType().equals(table.getType()))
-                .filter(item -> item.getName().equals(setName))
-                .findFirst()
-                .orElse(null);
+        return set(table.getName(), table.getType(), setName);
     }
 
     /**
@@ -516,34 +521,12 @@ public class JFirewall {
     }
 
     /**
-     * nftables get special set
-     *
-     * @param handle set handle id
-     * @return {@link Set}
-     */
-    public static Set set(int handle) {
-        return setList().stream().filter(item -> item.getHandle() == handle).findFirst().orElseThrow(() -> new JSysboxException("Set with handle %s does not exists".formatted(handle)));
-    }
-
-    /**
-     * check set with special handle id exists
-     *
-     * @param handle set handle id
-     * @throws JSysboxException return exception if it does not exist
-     */
-    public static void setCheckExists(int handle) throws JSysboxException {
-        boolean exists = setList().stream().anyMatch(item -> item.getHandle() == handle);
-        if (!exists) throw new JSysboxException("Set with handle %s does not exists".formatted(handle));
-    }
-
-    /**
      * rename set
      *
-     * @param handle  set handle id
+     * @param set     instance of {@link Set}
      * @param newName set new name
      */
-    public static synchronized void setRename(int handle, String newName) {
-        Set set = set(handle);
+    public static synchronized void setRename(Set set, String newName) {
         String oldName = set.getName();
         Table table = set.getTable();
         String tableName = table.getName();
@@ -580,7 +563,6 @@ public class JFirewall {
         int handle = set.getHandle();
         TableType tableType = set.getTable().getType();
         String tableName = set.getTable().getName();
-        setCheckExists(handle);
         String cmd = "delete set %s %s handle %s";
         exec(cmd.formatted(tableType.getValue(), tableName, handle));
     }
@@ -592,8 +574,6 @@ public class JFirewall {
      * @param items list of elements
      */
     public static void setAddElement(Set set, List<String> items) {
-        int handle = set.getHandle();
-        setCheckExists(handle);
         String tableType = set.getTable().getType().getValue();
         String tableName = set.getTable().getName();
         String name = set.getName();
@@ -608,8 +588,6 @@ public class JFirewall {
      * @param items list of elements
      */
     public static void setRemoveElement(Set set, List<String> items) {
-        int handle = set.getHandle();
-        setCheckExists(handle);
         String tableType = set.getTable().getType().getValue();
         String tableName = set.getTable().getName();
         String name = set.getName();
@@ -625,37 +603,51 @@ public class JFirewall {
      * add rule filter output ip daddr 192.168.0.0/24 accept
      */
     public static void ruleAdd(Chain chain, List<Expression> expressions, Statement statement, String comment) {
-        chainCheckExists(chain.getHandle());
-        Table table = chain.getTable();
-        String chainName = chain.getName();
-        TableType tableType = table.getType();
-        String tableName = table.getName();
-        String expr = expressions != null ? String.join(" ", expressions.stream().map(Expression::toString).toList()) : "";
-        String sb = "add rule" +
-                " " + tableType.getValue() +
-                " " + tableName +
-                " " + chainName +
-                " " + expr +
-                " " + statement +
-                " comment " + "\"" + comment + "\"";
-        exec(sb);
+        try {
+            Table table = chain.getTable();
+            String chainName = chain.getName();
+            TableType tableType = table.getType();
+            String tableName = table.getName();
+            String expr = expressions != null ? String.join(" ", expressions.stream().map(Expression::toString).toList()) : "";
+            String str = "add rule" +
+                    " " + tableType.getValue() +
+                    " " + tableName +
+                    " " + chainName +
+                    " " + expr +
+                    " " + statement +
+                    " comment " + "\"" + comment + "\"";
+            exec(str);
+        } catch (Exception e) {
+            if (e instanceof JSysboxException jse) {
+                logger.error("nftables syntax error", jse);
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static void ruleInsert(Chain chain, List<Expression> expressions, Statement statement, String comment, int handle) {
-        chainCheckExists(chain.getHandle());
-        Table table = chain.getTable();
-        String chainName = chain.getName();
-        TableType tableType = table.getType();
-        String tableName = table.getName();
-        String sb = "insert rule" +
-                " " + tableType.getValue() +
-                " " + tableName +
-                " " + chainName +
-                " position " + handle +
-                " " + String.join(" ", expressions.stream().map(Expression::toString).toList()) +
-                " " + statement +
-                " comment " + "\"" + comment + "\"";
-        exec(sb);
+        try {
+            Table table = chain.getTable();
+            String chainName = chain.getName();
+            TableType tableType = table.getType();
+            String tableName = table.getName();
+            String sb = "insert rule" +
+                    " " + tableType.getValue() +
+                    " " + tableName +
+                    " " + chainName +
+                    " position " + handle +
+                    " " + String.join(" ", expressions.stream().map(Expression::toString).toList()) +
+                    " " + statement +
+                    " comment " + "\"" + comment + "\"";
+            exec(sb);
+        } catch (Exception e) {
+            if (e instanceof JSysboxException jse) {
+                logger.error("nftables syntax error", jse);
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**
@@ -692,21 +684,17 @@ public class JFirewall {
         }
     }
 
-
-    public static List<Rule> ruleList(Chain chain) {
-        return ruleList().stream()
-                .filter(item -> item.getChain().equals(chain))
-                .toList();
-    }
-
     /**
      * find rules by chain name
      *
      * @param chain name of {@link Chain}
      * @return list of {@link Rule}
      */
-    public static List<Rule> findRulesByChain(Chain chain) {
-        return ruleList().stream().filter(item -> item.getChain().equals(chain)).toList();
+    public static List<Rule> ruleList(Chain chain) {
+        return ruleList()
+                .stream()
+                .filter(item -> item.getChain().equals(chain))
+                .toList();
     }
 
     /**
@@ -714,15 +702,29 @@ public class JFirewall {
      *
      * @param id rule handle id
      */
-    public static void ruleCheckExists(long id) {
-        boolean exists = ruleList().stream().anyMatch(item -> item.getHandle() == id);
+    public static void ruleCheckExists(Chain chain, long id) {
+        boolean exists = ruleList()
+                .stream()
+                .filter(item -> item.getChain().equals(chain))
+                .anyMatch(item -> item.getHandle() == id);
         if (!exists) throw new JSysboxException("rule with handle %s does not exists".formatted(id));
     }
 
-    public static Rule rule(int handle) {
-        Rule rule = ruleList().stream().filter(item -> item.getHandle() == handle).findFirst().orElse(null);
-        if (rule == null) throw new JSysboxException("Rule with handle %s does not exists".formatted(handle));
-        return rule;
+    public static Rule rule(Chain chain, int handle) {
+        return ruleList()
+                .stream()
+                .filter(item -> item.getChain().equals(chain))
+                .filter(item -> item.getHandle() == handle)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public static Rule rule(Chain chain) {
+        return ruleList()
+                .stream()
+                .filter(item -> item.getChain().equals(chain))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -731,9 +733,8 @@ public class JFirewall {
      * @param handle  set handle id
      * @param comment rule comment
      */
-    public static void ruleComment(int handle, String comment) {
-        Rule rule = rule(handle);
-        Chain chain = rule.getChain();
+    public static void ruleComment(Chain chain, int handle, String comment) {
+        Rule rule = rule(chain, handle);
         Table table = chain.getTable();
         String chainName = chain.getName();
         String tableName = table.getName();
@@ -768,7 +769,7 @@ public class JFirewall {
      * @param id    rule handle id
      */
     public static void ruleRemove(Chain chain, long id) {
-        ruleCheckExists(id);
+        ruleCheckExists(chain, id);
         String tableName = chain.getTable().getName();
         String chainName = chain.getName();
         String cmd = "delete rule %s %s handle %s".formatted(tableName, chainName, id);

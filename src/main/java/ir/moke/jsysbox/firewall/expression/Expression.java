@@ -4,20 +4,31 @@ import com.fasterxml.jackson.databind.JsonNode;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.firewall.model.Operation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface Expression {
+public interface Expression extends Serializable {
+    interface Field {
+        String getValue();
+    }
+
+    Operation getOperation();
+
+    Field getField();
+
+    List<String> getValues();
+
     static Expression getExpression(JsonNode node) {
         try {
             Operation operation = null;
             List<String> values = null;
-            MatchType matchType = null;
+            MatchType matchType;
             String field = null;
-            Integer ctCount = null;
+            Long ctCount = null;
             String ctKey = null;
-            boolean isOriginal = false;
-            boolean isOver = false;
+            Boolean isOriginal = null;
+            Boolean isOver = null;
 
             if (node.has("match") && node.get("match").get("left").has("payload")) {
                 operation = Operation.fromValue(node.get("match").get("op").asText());
@@ -25,13 +36,17 @@ public interface Expression {
                 field = node.get("match").get("left").get("payload").get("field").asText();
                 values = getRight(node);
             } else if (node.has("match") && node.get("match").get("left").has("ct")) {
+                matchType = MatchType.CT;
+                operation = Operation.fromValue(node.get("match").get("op").asText());
                 ctKey = node.get("match").get("left").get("ct").get("key").asText();
                 if (node.get("match").get("left").get("ct").has("dir")) {
                     String dir = node.get("match").get("left").get("ct").get("dir").asText();
                     isOriginal = dir.equals("original");
                 }
+                values = getRight(node);
             } else if (node.has("ct count")) {
-                ctCount = node.get("ct count").get("val").asInt();
+                matchType = MatchType.CT;
+                ctCount = node.get("ct count").get("val").asLong();
                 isOver = node.get("ct count").has("inv");
             } else {
                 return null;
@@ -84,13 +99,21 @@ public interface Expression {
         return new MetaExpression(MetaExpression.Field.fromValue(fieldValue), operation, values);
     }
 
-    private static Expression createCtExpression(String fieldValue, Operation operation, List<String> values, boolean isOver, Integer count, String key, Boolean isOriginal) {
-        if (count != null) {
-            return new CtExpression(isOver, count);
-        } else if (key != null) {
-            return new CtExpression(isOriginal, CtExpression.Type.fromValue(key), values);
+    private static Expression createCtExpression(String fieldValue, Operation operation, List<String> values, Boolean isOver, Long count, String key, Boolean isOriginal) {
+        if (operation != null) {
+            if (isOriginal != null) {
+                return new CtExpression(isOriginal, CtExpression.Type.fromValue(key), values);
+            } else {
+                if (key.equals("status")) {
+                    return new CtExpression(CtExpression.Field.STATUS, operation, values);
+                } else if (key.equals("state")) {
+                    return new CtExpression(CtExpression.Field.STATE, operation, values);
+                } else {
+                    return new CtExpression(CtExpression.Field.fromValue(fieldValue), operation, values);
+                }
+            }
         } else {
-            return new CtExpression(CtExpression.Field.fromValue(fieldValue), operation, values);
+            return new CtExpression(isOver, count);
         }
     }
 
@@ -152,7 +175,11 @@ public interface Expression {
     private static Expression createEtherExpression(String fieldValue, List<String> values, Operation operation) {
         EtherExpression.Field field = EtherExpression.Field.fromValue(fieldValue);
         if (field.equals(EtherExpression.Field.TYPE)) {
-            return new EtherExpression(values.stream().map(EtherExpression.Type::fromValue).toList());
+            EtherExpression etherExpression = new EtherExpression(values.stream().map(EtherExpression.Type::fromValue).toList());
+            etherExpression.setOperation(Operation.EQ);
+            etherExpression.setField(EtherExpression.Field.TYPE);
+            etherExpression.setValues(values);
+            return etherExpression;
         } else {
             return new EtherExpression(field, operation, values);
         }
