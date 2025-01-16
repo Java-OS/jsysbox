@@ -338,6 +338,10 @@ public class JFirewall {
         return chainList().stream().filter(item -> item.getTable().equals(table)).toList();
     }
 
+    public static List<Chain> chainList(int tableHandle) {
+        return chainList().stream().filter(item -> item.getTable().getHandle() == tableHandle).toList();
+    }
+
     public static Chain chain(Table table, String name) {
         return chainList().stream()
                 .filter(item -> item.getTable().equals(table))
