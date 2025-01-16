@@ -74,6 +74,22 @@ public class Chain implements Serializable {
         return policy;
     }
 
+    public void setType(ChainType type) {
+        this.type = type;
+    }
+
+    public void setHook(ChainHook hook) {
+        this.hook = hook;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public void setPolicy(ChainPolicy policy) {
+        this.policy = policy;
+    }
+
     @Override
     public String toString() {
         return "Chain{" +
