@@ -26,10 +26,10 @@ public class RuleSerializer extends JsonSerializer<Rule> {
             gen.writeNumberField("handle", rule.getHandle());
             gen.writeStringField("comment", rule.getComment());
 
-            if (rule.getExpr() != null) {
+            if (rule.getExpressions() != null) {
                 // Start expr
                 gen.writeArrayFieldStart("expr");
-                for (Expression expression : rule.getExpr()) {
+                for (Expression expression : rule.getExpressions()) {
                     MatchType matchType = expression.matchType();
                     if (matchType.equals(MatchType.CT)) {
                         parseCtExpression(gen, (CtExpression) expression);

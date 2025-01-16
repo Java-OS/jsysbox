@@ -22,6 +22,7 @@ public class FirewallTest {
 
     @BeforeAll
     public static void init() {
+        System.out.println("Execute <Init>");
         JFirewall.flush(null);
     }
 
@@ -325,6 +326,36 @@ public class FirewallTest {
     }
 
     @Test
+    @Order(201)
+    public void checkTableRename() {
+        logger.info("Execute <checkTableRename>");
+        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        JFirewall.tableRename(table.getHandle(), "NewTableName");
+        Assertions.assertTrue(JFirewall.tableList().stream().anyMatch(item -> item.getName().equals("NewTableName")));
+    }
+
+    @Test
+    @Order(202)
+    public void checkRuleSwitch() {
+        logger.info("Execute <checkRuleSwitch>");
+        Table table = JFirewall.tableAdd("CheckSwitch", TableType.INET);
+        Chain chain = JFirewall.chainAdd(table, "SwitchRules");
+
+        List<Expression> expressionList1 = List.of(new IpExpression(IpExpression.Field.SADDR, Operation.EQ, List.of("20.20.20.12")));
+        Statement statement1 = new VerdictStatement(VerdictStatement.Type.DROP);
+        JFirewall.ruleAdd(chain, expressionList1, statement1, "R1");
+
+        List<Expression> expressionList2 = List.of(new IpExpression(IpExpression.Field.SADDR, Operation.EQ, List.of("30.30.30.55")));
+        Statement statement2 = new VerdictStatement(VerdictStatement.Type.ACCEPT);
+        JFirewall.ruleAdd(chain, expressionList2, statement2, "R2");
+
+        Rule r1 = JFirewall.ruleList(chain).stream().filter(item -> item.getComment().equals("R1")).toList().getFirst();
+        Rule r2 = JFirewall.ruleList(chain).stream().filter(item -> item.getComment().equals("R2")).toList().getFirst();
+
+        JFirewall.ruleSwitch(chain, r2.getHandle(), r1.getHandle());
+    }
+
+    @Test
     @Order(300)
     public void checkSaveFirewall() {
         File file = new File("/tmp/jfirewall.json");
@@ -351,8 +382,7 @@ public class FirewallTest {
     @Order(302)
     public void checkSerializeJson() {
         NFTables nfTables = JFirewall.exportToNFTables();
-        String json = JFirewall.serializeJson(nfTables);
-        System.out.println(json);
+        Assertions.assertDoesNotThrow(() -> JFirewall.serializeJson(nfTables));
     }
 
     @Test
@@ -361,8 +391,7 @@ public class FirewallTest {
         try {
             Path path = Path.of("/tmp/jfirewall.json");
             String json = Files.readString(path);
-            NFTables nfTables = JFirewall.deserializeJson(json);
-            System.out.println(nfTables.getTables());
+            Assertions.assertDoesNotThrow(() -> JFirewall.deserializeJson(json));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -429,7 +458,7 @@ public class FirewallTest {
     @Order(505)
     public void checkRuleRemove() {
         logger.info("Execute <checkRuleRemove>");
-        Table table = JFirewall.table("ThirdTable", TableType.IPv4);
+        Table table = JFirewall.table("NewTableName", TableType.IPv4);
         Chain chain = JFirewall.chain(table, "c1");
 
         Rule rule = JFirewall.ruleList(chain).getFirst();

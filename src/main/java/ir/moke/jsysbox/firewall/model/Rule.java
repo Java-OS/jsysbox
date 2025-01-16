@@ -15,17 +15,17 @@ import java.util.List;
 public class Rule implements Serializable {
     private Chain chain;
     private int handle;
-    private List<Expression> expr;
+    private List<Expression> expressions;
     private String comment;
     private Statement statement;
 
     public Rule() {
     }
 
-    public Rule(Chain chain, List<Expression> expr, Statement statement, String comment, int handle) {
+    public Rule(Chain chain, List<Expression> expressions, Statement statement, String comment, int handle) {
         this.chain = chain;
         this.handle = handle;
-        this.expr = expr;
+        this.expressions = expressions;
         this.comment = comment;
         this.statement = statement;
     }
@@ -46,12 +46,12 @@ public class Rule implements Serializable {
         this.handle = handle;
     }
 
-    public List<Expression> getExpr() {
-        return expr;
+    public List<Expression> getExpressions() {
+        return expressions;
     }
 
-    public void setExpr(List<Expression> expr) {
-        this.expr = expr;
+    public void setExpressions(List<Expression> expressions) {
+        this.expressions = expressions;
     }
 
     public String getComment() {
@@ -75,7 +75,7 @@ public class Rule implements Serializable {
         return "Rule{" +
                 "chain=" + chain +
                 ", handle=" + handle +
-                ", expr=" + expr +
+                ", expr=" + expressions +
                 ", comment='" + comment + '\'' +
                 '}';
     }

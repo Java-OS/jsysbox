@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 import ir.moke.jsysbox.firewall.expression.Expression;
@@ -17,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -166,7 +164,7 @@ public class JFirewall {
     public static Table tableAdd(String name, TableType type) {
         checkCharacters(name);
         exec("add table %s %s".formatted(type.getValue(), name));
-        return JFirewall.table(name, type);
+        return table(name, type);
     }
 
     /**
@@ -201,43 +199,17 @@ public class JFirewall {
      */
     public static synchronized void tableRename(int handle, String newName) {
         Table table = table(handle);
-        String oldName = table.getName();
-        String type = table.getType().getValue();
-        try {
+        List<List<Rule>> chainRules = chainList(table).stream().map(JFirewall::ruleList).toList();
 
-            table.setName(newName);
-
-//            String json = export();
-//            JsonNode root = om.readTree(json);
-//            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
-//            for (JsonNode node : nftablesArray) {
-//                if (node.has("table")) {
-//                    ObjectNode tableNode = (ObjectNode) node.get("table");
-//                    // Match both table name and family
-//                    if (oldName.equals(tableNode.get("name").asText()) && type.equals(tableNode.get("family").asText())) {
-//                        tableNode.put("name", newName);
-//                    }
-//                } else if (node.has("chain")) {
-//                    ObjectNode chainNode = (ObjectNode) node.get("chain");
-//                    // Match chains referencing the table by both name and family
-//                    if (oldName.equals(chainNode.get("table").asText()) && type.equals(chainNode.get("family").asText())) {
-//                        chainNode.put("table", newName);
-//                    }
-//                } else if (node.has("set")) {
-//                    ObjectNode setNode = (ObjectNode) node.get("set");
-//                    // Match chains referencing the table by both name and family
-//                    if (oldName.equals(setNode.get("table").asText()) && type.equals(setNode.get("family").asText())) {
-//                        setNode.put("table", newName);
-//                    }
-//                }
-//            }
-//
-//            String path = "/tmp/jfirewall.rules";
-//            File file = new File(path);
-//            om.writeValue(file, root);
-//            restore(path);
-        } catch (Exception e) {
-            throw new JSysboxException(e);
+        tableRemove(handle);
+        Table newTable = tableAdd(newName, table.getType());
+        for (List<Rule> ruleList : chainRules) {
+            for (Rule rule : ruleList) {
+                Chain chain = rule.getChain();
+                chain.setTable(newTable);
+                Chain newChain = chainAdd(chain);
+                ruleAdd(newChain, rule.getExpressions(), rule.getStatement(), rule.getComment());
+            }
         }
     }
 
@@ -330,6 +302,14 @@ public class JFirewall {
         return chain(table, name);
     }
 
+    public static Chain chainAdd(Chain chain) throws JSysboxException {
+        if (chain.getType() != null) {
+            return chainAdd(chain.getTable(), chain.getName(), chain.getType(), chain.getHook(), chain.getPolicy(), chain.getPriority());
+        } else {
+            return chainAdd(chain.getTable(), chain.getName());
+        }
+    }
+
     /**
      * fetch list current chains
      *
@@ -343,26 +323,19 @@ public class JFirewall {
             JsonNode nftablesNode = jsonNode.get("nftables");
             for (JsonNode node : nftablesNode) {
                 if (node.has("chain")) {
-                    JsonNode chainNode = node.get("chain");
-//                    TableType tableType = TableType.fromValue(chainNode.get("family").asText());
-//                    String tableName = chainNode.get("table").asText();
-//                    String name = chainNode.get("name").asText();
-//                    int handle = chainNode.get("handle").asInt();
-//                    ChainType type = chainNode.has("type") ? ChainType.fromValue(chainNode.get("type").asText()) : null;
-//                    ChainHook hook = chainNode.has("hook") ? ChainHook.fromValue(chainNode.get("hook").asText()) : null;
-//                    Integer priority = chainNode.has("prio") ? chainNode.get("prio").asInt() : null;
-//                    ChainPolicy policy = chainNode.has("hook") ? ChainPolicy.fromValue(chainNode.get("policy").asText()) : null;
-//
-//                    Table table = table(tableName, tableType);
-//                    Chain chain = new Chain(table, name, handle, type, hook, priority, policy);
-                    Chain chain = om.readValue(chainNode.toString(), Chain.class);
+                    Chain chain = om.readValue(node.get("chain").toString(), Chain.class);
                     chains.add(chain);
                 }
             }
+
             return chains;
         } catch (JsonProcessingException e) {
             throw new JSysboxException(e);
         }
+    }
+
+    public static List<Chain> chainList(Table table) {
+        return chainList().stream().filter(item -> item.getTable().equals(table)).toList();
     }
 
     public static Chain chain(Table table, String name) {
@@ -389,30 +362,16 @@ public class JFirewall {
      * @param newName new chain name
      */
     public static synchronized void chainRename(Chain chain, String newName) {
-        String oldName = chain.getName();
-        Table table = chain.getTable();
-        String tableName = table.getName();
-        String type = table.getType().getValue();
+        List<Rule> rules = ruleList(chain);
 
-        try {
-            String json = export();
-            JsonNode root = om.readTree(json);
-            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
-            for (JsonNode node : nftablesArray) {
-                if (node.has("chain")) {
-                    ObjectNode chainNode = (ObjectNode) node.get("chain");
-                    if (chain.getHandle() == chainNode.get("handle").asInt() && oldName.equals(chainNode.get("name").asText()) && tableName.equals(chainNode.get("table").asText()) && type.equals(chainNode.get("family").asText())) {
-                        chainNode.put("name", newName);
-                    }
-                }
-            }
+        // remove old chain
+        chainRemove(chain);
 
-            String path = "/tmp/jfirewall.rules";
-            File file = new File(path);
-            om.writeValue(file, root);
-            restore(path);
-        } catch (Exception e) {
-            throw new JSysboxException(e);
+        // set new name and apply on firewall
+        chain.setName(newName);
+        Chain newChain = chainAdd(chain);
+        for (Rule rule : rules) {
+            ruleAdd(newChain, rule.getExpressions(), rule.getStatement(), rule.getComment());
         }
     }
 
@@ -480,6 +439,19 @@ public class JFirewall {
         return set(table.getName(), table.getType(), setName);
     }
 
+    public static Set set(Table table, int handle) {
+        return setList().stream()
+                .filter(item -> item.getTable().equals(table))
+                .filter(item -> item.getHandle() == handle)
+                .findFirst().orElse(null);
+    }
+
+    public static List<Set> set(Table table) {
+        return setList().stream()
+                .filter(item -> item.getTable().equals(table))
+                .toList();
+    }
+
     /**
      * nftables add new set
      *
@@ -520,38 +492,10 @@ public class JFirewall {
         }
     }
 
-    /**
-     * rename set
-     *
-     * @param set     instance of {@link Set}
-     * @param newName set new name
-     */
-    public static synchronized void setRename(Set set, String newName) {
-        String oldName = set.getName();
-        Table table = set.getTable();
-        String tableName = table.getName();
-        String type = table.getType().getValue();
-
-        try {
-            String json = export();
-            JsonNode root = om.readTree(json);
-            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
-            for (JsonNode node : nftablesArray) {
-                if (node.has("set")) {
-                    ObjectNode setNode = (ObjectNode) node.get("set");
-                    if (oldName.equals(setNode.get("name").asText()) && tableName.equals(setNode.get("table").asText()) && type.equals(setNode.get("family").asText())) {
-                        setNode.put("name", newName);
-                    }
-                }
-            }
-
-            String path = "/tmp/jfirewall.rules";
-            File file = new File(path);
-            om.writeValue(file, root);
-            restore(path);
-        } catch (Exception e) {
-            throw new JSysboxException(e);
-        }
+    public static synchronized void setRename(int tableHandle, int setHandle, String newName) {
+        Table table = table(tableHandle);
+        Set set = set(table, setHandle);
+        //TODO: Implement me
     }
 
     /**
@@ -626,6 +570,10 @@ public class JFirewall {
         }
     }
 
+    public static void ruleAdd(Rule rule) {
+        ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatement(), rule.getComment());
+    }
+
     public static void ruleInsert(Chain chain, List<Expression> expressions, Statement statement, String comment, int handle) {
         try {
             Table table = chain.getTable();
@@ -647,18 +595,6 @@ public class JFirewall {
             } else {
                 throw new RuntimeException(e);
             }
-        }
-    }
-
-    /**
-     * Update current rule
-     * old rule removed and new rule inserted
-     */
-    public static void ruleUpdate(Chain chain, List<Expression> expressions, Statement statement, String comment, Integer handle) {
-        if (handle == null) {
-            ruleAdd(chain, expressions, statement, comment);
-        } else {
-            ruleInsert(chain, expressions, statement, comment, handle);
         }
     }
 
@@ -719,50 +655,30 @@ public class JFirewall {
                 .orElse(null);
     }
 
-    public static Rule rule(Chain chain) {
-        return ruleList()
-                .stream()
-                .filter(item -> item.getChain().equals(chain))
-                .findFirst()
-                .orElse(null);
+    /**
+     * Update rule
+     */
+    public static void ruleUpdate(Chain chain, int handle, List<Expression> expressions, Statement statement, String comment) {
+        ruleRemove(chain, handle);
+        ruleAdd(chain, expressions, statement, comment);
     }
 
     /**
-     * Update rule comment
+     * Change priority of rule higher and lower .
+     * this method try to execute higher before lower .
      *
-     * @param handle  set handle id
-     * @param comment rule comment
+     * @param chain  Target chain
+     * @param higher first rule
+     * @param lower  second rule
      */
-    public static void ruleComment(Chain chain, int handle, String comment) {
-        Rule rule = rule(chain, handle);
-        Table table = chain.getTable();
-        String chainName = chain.getName();
-        String tableName = table.getName();
-        String type = table.getType().getValue();
-
-        try {
-            String json = export();
-            JsonNode root = om.readTree(json);
-            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
-            for (JsonNode node : nftablesArray) {
-                if (node.has("rule")) {
-                    ObjectNode ruleNode = (ObjectNode) node.get("rule");
-                    if (handle == ruleNode.get("handle").asInt() && chainName.equals(ruleNode.get("chain").asText()) && tableName.equals(ruleNode.get("table").asText()) && type.equals(ruleNode.get("family").asText())) {
-                        ruleNode.put("comment", comment);
-                    }
-                }
-            }
-
-            String path = "/tmp/jfirewall.rules";
-            File file = new File(path);
-            om.writeValue(file, root);
-            restore(path);
-            Files.delete(file.toPath());
-        } catch (Exception e) {
-            throw new JSysboxException(e);
-        }
+    public static void ruleSwitch(Chain chain, int higher, int lower) {
+        List<Rule> rules = new ArrayList<>(ruleList(chain));
+        rules.stream()
+                .filter(item -> item.getHandle() == higher)
+                .peek(item -> ruleRemove(chain, higher))
+                .findFirst()
+                .ifPresent(item -> ruleInsert(chain, item.getExpressions(), item.getStatement(), item.getComment(), lower));
     }
-
 
     /**
      * @param chain nftables {@link Chain}
@@ -771,8 +687,9 @@ public class JFirewall {
     public static void ruleRemove(Chain chain, long id) {
         ruleCheckExists(chain, id);
         String tableName = chain.getTable().getName();
+        TableType tableType = chain.getTable().getType();
         String chainName = chain.getName();
-        String cmd = "delete rule %s %s handle %s".formatted(tableName, chainName, id);
+        String cmd = "delete rule %s %s %s handle %s".formatted(tableType.getValue(), tableName, chainName, id);
         exec(cmd);
     }
 }
