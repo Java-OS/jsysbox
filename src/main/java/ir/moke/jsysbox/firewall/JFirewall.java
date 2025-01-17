@@ -281,13 +281,26 @@ public class JFirewall {
      * @param priority chain priority
      * @return {@link Chain}
      */
-    public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, int priority) throws JSysboxException {
+    public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
+        priority = calculatePriority(type, priority);
         String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
         exec(cmd.formatted(table.getType().getValue(), table.getName(), name, type.getValue(), hook.getValue(), priority, policy.getValue()));
         return chain(table, name);
     }
 
-    public static Chain chainAdd(int tableHandle, String name, ChainType type, ChainHook hook, ChainPolicy policy, int priority) throws JSysboxException {
+    private static Integer calculatePriority(ChainType type, Integer priority) {
+        if (priority == null) {
+            priority = switch (type) {
+                case FILTER -> 0;
+                case NAT -> -100;
+                case ROUTE -> -200;
+            };
+        }
+        return priority;
+    }
+
+    public static Chain chainAdd(int tableHandle, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
+        priority = calculatePriority(type,priority);
         Table table = table(tableHandle);
         if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(tableHandle));
         String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
@@ -391,6 +404,7 @@ public class JFirewall {
      * @param name  new chain name
      */
     public static synchronized void chainUpdate(Chain chain, String name, ChainPolicy policy, ChainHook hook, ChainType type, Integer priority) {
+        priority = calculatePriority(type,priority);
         List<Rule> rules = ruleList(chain);
 
         // remove old chain
