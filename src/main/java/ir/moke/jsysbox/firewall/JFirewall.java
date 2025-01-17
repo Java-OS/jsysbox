@@ -368,6 +368,14 @@ public class JFirewall {
                 .orElse(null);
     }
 
+    public static Chain chain(Table table, int handle) {
+        return chainList().stream()
+                .filter(item -> item.getTable().equals(table))
+                .filter(item -> item.getHandle() == handle)
+                .findFirst()
+                .orElse(null);
+    }
+
     public static Chain chain(String tableName, TableType tableType, String name) {
         return chainList().stream()
                 .filter(item -> item.getTable().getName().equals(tableName))
