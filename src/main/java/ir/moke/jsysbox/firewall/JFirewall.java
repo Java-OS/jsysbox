@@ -288,6 +288,14 @@ public class JFirewall {
         return chain(table, name);
     }
 
+    public static Chain chainAdd(int tableHandle, String name, ChainType type, ChainHook hook, ChainPolicy policy, int priority) throws JSysboxException {
+        Table table = table(tableHandle);
+        if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(tableHandle));
+        String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
+        exec(cmd.formatted(table.getType().getValue(), table.getName(), name, type.getValue(), hook.getValue(), priority, policy.getValue()));
+        return chain(table, name);
+    }
+
     /**
      * nftables add new chain
      *
@@ -296,6 +304,16 @@ public class JFirewall {
      * @return {@link Chain}
      */
     public static Chain chainAdd(Table table, String name) throws JSysboxException {
+        checkCharacters(name);
+        String cmd = "add chain %s %s %s";
+        exec(cmd.formatted(table.getType().getValue(), table.getName(), name));
+        return chain(table, name);
+    }
+
+    public static Chain chainAdd(int tableHandle, String name) throws JSysboxException {
+        Table table = table(tableHandle);
+        if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(tableHandle));
+
         checkCharacters(name);
         String cmd = "add chain %s %s %s";
         exec(cmd.formatted(table.getType().getValue(), table.getName(), name));
