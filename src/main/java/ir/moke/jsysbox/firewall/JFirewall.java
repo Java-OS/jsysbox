@@ -380,6 +380,14 @@ public class JFirewall {
                 .orElse(null);
     }
 
+    public static Chain chain(int tableHandle, int chainHandle) {
+        return chainList().stream()
+                .filter(item -> item.getTable().getHandle() == tableHandle)
+                .filter(item -> item.getHandle() == chainHandle)
+                .findFirst()
+                .orElse(null);
+    }
+
     public static Chain chain(Table table, int handle) {
         return chainList().stream()
                 .filter(item -> item.getTable().equals(table))
