@@ -391,17 +391,18 @@ public class JFirewall {
      * @param chain instance of {@link Chain}
      * @param name  new chain name
      */
-    public static synchronized void chainUpdate(Chain chain, String name, ChainPolicy policy, ChainHook hook, ChainType type, int priority) {
+    public static synchronized void chainUpdate(Chain chain, String name, ChainPolicy policy, ChainHook hook, ChainType type, Integer priority) {
         List<Rule> rules = ruleList(chain);
 
         // remove old chain
         chainRemove(chain);
 
         // set new name and apply on firewall
-        chain.setName(name);
-        chain.setPolicy(policy);
-        chain.setHook(hook);
-        chain.setType(type);
+        Optional.ofNullable(name).ifPresent(chain::setName);
+        Optional.ofNullable(policy).ifPresent(chain::setPolicy);
+        Optional.ofNullable(hook).ifPresent(chain::setHook);
+        Optional.ofNullable(type).ifPresent(chain::setType);
+        Optional.ofNullable(priority).ifPresent(chain::setPriority);
         chain.setPriority(priority);
         Chain newChain = chainAdd(chain);
         for (Rule rule : rules) {
