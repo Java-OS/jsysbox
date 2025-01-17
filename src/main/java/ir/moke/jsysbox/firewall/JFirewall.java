@@ -289,7 +289,7 @@ public class JFirewall {
     }
 
     private static Integer calculatePriority(ChainType type, Integer priority) {
-        if (priority == null) {
+        if (priority == null && type != null) {
             priority = switch (type) {
                 case FILTER -> 0;
                 case NAT -> -100;
@@ -300,7 +300,7 @@ public class JFirewall {
     }
 
     public static Chain chainAdd(int tableHandle, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
-        priority = calculatePriority(type,priority);
+        priority = calculatePriority(type, priority);
         Table table = table(tableHandle);
         if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(tableHandle));
         String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
@@ -403,8 +403,8 @@ public class JFirewall {
      * @param chain instance of {@link Chain}
      * @param name  new chain name
      */
-    public static synchronized void chainUpdate(Chain chain, String name, ChainPolicy policy, ChainHook hook, ChainType type, Integer priority) {
-        priority = calculatePriority(type,priority);
+    public static synchronized void chainUpdate(Chain chain, String name, ChainType type, ChainPolicy policy, ChainHook hook, Integer priority) {
+        priority = calculatePriority(type, priority);
         List<Rule> rules = ruleList(chain);
 
         // remove old chain
@@ -416,7 +416,7 @@ public class JFirewall {
         Optional.ofNullable(hook).ifPresent(chain::setHook);
         Optional.ofNullable(type).ifPresent(chain::setType);
         Optional.ofNullable(priority).ifPresent(chain::setPriority);
-        chain.setPriority(priority);
+
         Chain newChain = chainAdd(chain);
         for (Rule rule : rules) {
             ruleAdd(newChain, rule.getExpressions(), rule.getStatement(), rule.getComment());
