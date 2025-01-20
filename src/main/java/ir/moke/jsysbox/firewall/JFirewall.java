@@ -685,6 +685,7 @@ public class JFirewall {
     public static List<Rule> ruleList(Chain chain) {
         return ruleList()
                 .stream()
+                .filter(item -> item.getChain().getTable().equals(chain.getTable()))
                 .filter(item -> item.getChain().equals(chain))
                 .toList();
     }
@@ -697,6 +698,7 @@ public class JFirewall {
     public static void ruleCheckExists(Chain chain, long id) {
         boolean exists = ruleList()
                 .stream()
+                .filter(item -> item.getChain().getTable().equals(chain.getTable()))
                 .filter(item -> item.getChain().equals(chain))
                 .anyMatch(item -> item.getHandle() == id);
         if (!exists) throw new JSysboxException("rule with handle %s does not exists".formatted(id));

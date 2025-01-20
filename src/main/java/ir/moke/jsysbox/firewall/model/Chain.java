@@ -108,7 +108,7 @@ public class Chain implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Chain chain = (Chain) o;
-        return handle == chain.handle && chain.name.equals(name);
+        return this.table.equals(chain.table) && handle == chain.handle;
     }
 
     @Override
