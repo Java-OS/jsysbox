@@ -12,6 +12,7 @@ import ir.moke.jsysbox.firewall.model.Rule;
 import ir.moke.jsysbox.firewall.statement.*;
 
 import java.io.IOException;
+import java.util.List;
 
 public class RuleSerializer extends JsonSerializer<Rule> {
 
@@ -26,7 +27,7 @@ public class RuleSerializer extends JsonSerializer<Rule> {
             gen.writeNumberField("handle", rule.getHandle());
             gen.writeStringField("comment", rule.getComment());
 
-            if (rule.getExpressions() != null) {
+            if (rule.getExpressions() != null && !rule.getExpressions().isEmpty()) {
                 // Start expr
                 gen.writeArrayFieldStart("expr");
                 for (Expression expression : rule.getExpressions()) {
@@ -41,19 +42,21 @@ public class RuleSerializer extends JsonSerializer<Rule> {
                 // Start statement
                 gen.writeStartObject();
 
-                Statement statement = rule.getStatement();
-                if (statement instanceof VerdictStatement verdictStatement) {
-                    parseVerdictStatement(gen, verdictStatement);
-                } else if (statement instanceof LogStatement logStatement) {
-                    parseLogStatement(gen, logStatement);
-                } else if (statement instanceof RejectStatement rejectStatement) {
-                    parseRejectStatement(gen, rejectStatement);
-                } else if (statement instanceof CounterStatement counterStatement) {
-                    parseCounterStatement(gen, counterStatement);
-                } else if (statement instanceof LimitStatement limitStatement) {
-                    parseLimitStatement(gen, limitStatement);
-                } else if (statement instanceof NatStatement natStatement) {
-                    parseNatStatement(gen, natStatement);
+                List<Statement> statements = rule.getStatements();
+                for (Statement statement : statements) {
+                    if (statement instanceof VerdictStatement verdictStatement) {
+                        parseVerdictStatement(gen, verdictStatement);
+                    } else if (statement instanceof LogStatement logStatement) {
+                        parseLogStatement(gen, logStatement);
+                    } else if (statement instanceof RejectStatement rejectStatement) {
+                        parseRejectStatement(gen, rejectStatement);
+                    } else if (statement instanceof CounterStatement counterStatement) {
+                        parseCounterStatement(gen, counterStatement);
+                    } else if (statement instanceof LimitStatement limitStatement) {
+                        parseLimitStatement(gen, limitStatement);
+                    } else if (statement instanceof NatStatement natStatement) {
+                        parseNatStatement(gen, natStatement);
+                    }
                 }
 
                 // End statement

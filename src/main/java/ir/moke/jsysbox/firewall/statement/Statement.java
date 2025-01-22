@@ -15,8 +15,10 @@ public interface Statement extends Serializable {
             if (jsonNode.has("log")) {
                 if (jsonNode.get("log").has("level")) {
                     return new LogStatement(LogStatement.LogLevel.valueOf(jsonNode.get("log").get("level").asText().toUpperCase()));
-                } else {
+                } else if (jsonNode.get("log").has("prefix")){
                     return new LogStatement(jsonNode.get("log").get("prefix").asText());
+                } else {
+                    return new LogStatement();
                 }
             } else if (jsonNode.has("limit")) {
                 Long rate = jsonNode.get("limit").has("rate") ? jsonNode.get("limit").get("rate").asLong() : null;

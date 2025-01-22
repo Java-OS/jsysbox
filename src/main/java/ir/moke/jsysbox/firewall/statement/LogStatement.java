@@ -5,6 +5,9 @@ public class LogStatement implements Statement {
     private LogLevel level;
     private String prefix;
 
+    public LogStatement() {
+    }
+
     public LogStatement(LogLevel level) {
         this.level = level;
     }
@@ -16,9 +19,12 @@ public class LogStatement implements Statement {
     @Override
     public String toString() {
         if (prefix != null) {
-            return "log prefix " + prefix;
-        } else
+            return "log prefix \"%s\" ".formatted(prefix);
+        } else if (level != null) {
             return "log level " + level.name().toLowerCase();
+        } else {
+            return "log ";
+        }
     }
 
     public LogLevel getLevel() {

@@ -15,7 +15,6 @@ import ir.moke.jsysbox.firewall.statement.Statement;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class RuleDeserializer extends JsonDeserializer<Rule> {
@@ -24,21 +23,28 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
         List<Expression> expList = new ArrayList<>();
         ArrayNode exprArr = (ArrayNode) jsonNode.get("expr");
         int size = exprArr.size();
-        if (size == 1) return Collections.emptyList();
-        // last item is statement , (size - 1)
-        for (int i = 0; i < size - 1; i++) {
+        for (int i = 0; i < size; i++) {
             JsonNode node = exprArr.get(i);
-            Expression expression = Expression.getExpression(node);
-            expList.add(expression);
+            if (node.has("match")) {
+                Expression expression = Expression.getExpression(node);
+                expList.add(expression);
+            }
         }
         return expList;
     }
 
-    private static Statement parseStatement(JsonNode jsonNode) {
+    private static List<Statement> parseStatement(JsonNode jsonNode) {
+        List<Statement> sttList = new ArrayList<>();
         ArrayNode exprArr = (ArrayNode) jsonNode.get("expr");
         int size = exprArr.size();
-        JsonNode sttNode = exprArr.get(size - 1);
-        return Statement.getStatement(sttNode);
+        for (int i = 0; i < size; i++) {
+            JsonNode node = exprArr.get(i);
+            if (!node.has("match")) {
+                Statement statement = Statement.getStatement(node);
+                sttList.add(statement);
+            }
+        }
+        return sttList;
     }
 
     @Override
@@ -48,14 +54,14 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
         String tableName = jsonNode.get("table").asText();
         String chainName = jsonNode.get("chain").asText();
         int handle = jsonNode.get("handle").asInt();
-        String comment = jsonNode.get("comment") != null ? jsonNode.get("comment").asText() : null;
+        String comment = (jsonNode.get("comment") != null || !jsonNode.get("comment").isEmpty()) ? jsonNode.get("comment").asText() : null;
 
         Table table = JFirewall.table(tableName, TableType.fromValue(tableType));
         Chain chain = JFirewall.chain(table, chainName);
 
         List<Expression> expList = parseExpressions(jsonNode);
-        Statement statement = parseStatement(jsonNode);
+        List<Statement> sttList = parseStatement(jsonNode);
 
-        return new Rule(chain, expList, statement, comment, handle);
+        return new Rule(chain, expList, sttList, comment, handle);
     }
 }

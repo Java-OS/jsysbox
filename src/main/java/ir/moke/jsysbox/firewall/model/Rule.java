@@ -17,17 +17,17 @@ public class Rule implements Serializable {
     private int handle;
     private List<Expression> expressions;
     private String comment;
-    private Statement statement;
+    private List<Statement> statements;
 
     public Rule() {
     }
 
-    public Rule(Chain chain, List<Expression> expressions, Statement statement, String comment, int handle) {
+    public Rule(Chain chain, List<Expression> expressions, List<Statement> statements, String comment, int handle) {
         this.chain = chain;
         this.handle = handle;
         this.expressions = expressions;
         this.comment = comment;
-        this.statement = statement;
+        this.statements = statements;
     }
 
     public Chain getChain() {
@@ -62,12 +62,12 @@ public class Rule implements Serializable {
         this.comment = comment;
     }
 
-    public Statement getStatement() {
-        return statement;
+    public List<Statement> getStatements() {
+        return statements;
     }
 
-    public void setStatement(Statement statement) {
-        this.statement = statement;
+    public void setStatements(List<Statement> statements) {
+        this.statements = statements;
     }
 
     @Override

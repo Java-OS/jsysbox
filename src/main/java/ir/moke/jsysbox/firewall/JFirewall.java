@@ -13,6 +13,7 @@ import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.model.Set;
 import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.statement.Statement;
+import ir.moke.jsysbox.firewall.statement.VerdictStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,7 +208,7 @@ public class JFirewall {
                 Chain chain = rule.getChain();
                 chain.setTable(newTable);
                 Chain newChain = chainAdd(chain);
-                ruleAdd(newChain, rule.getExpressions(), rule.getStatement(), rule.getComment());
+                ruleAdd(newChain, rule.getExpressions(), rule.getStatements(), rule.getComment());
             }
         }
     }
@@ -427,7 +428,7 @@ public class JFirewall {
 
         Chain newChain = chainAdd(chain);
         for (Rule rule : rules) {
-            ruleAdd(newChain, rule.getExpressions(), rule.getStatement(), rule.getComment());
+            ruleAdd(newChain, rule.getExpressions(), rule.getStatements(), rule.getComment());
         }
     }
 
@@ -602,19 +603,20 @@ public class JFirewall {
      * example :
      * add rule filter output ip daddr 192.168.0.0/24 accept
      */
-    public static void ruleAdd(Chain chain, List<Expression> expressions, Statement statement, String comment) {
+    public static void ruleAdd(Chain chain, List<Expression> expressions, List<Statement> statements, String comment) {
         try {
             Table table = chain.getTable();
             String chainName = chain.getName();
             TableType tableType = table.getType();
             String tableName = table.getName();
-            String expr = expressions != null ? String.join(" ", expressions.stream().map(Expression::toString).toList()) : "";
+            String expr = expressions != null && !expressions.isEmpty() ? String.join(" ", expressions.stream().map(Expression::toString).toList()) : "";
+            String stt = statements != null && !statements.isEmpty() ? String.join(" ", statements.stream().sorted(sortStatements()).map(Statement::toString).toList()) : "";
             String str = "add rule" +
                     " " + tableType.getValue() +
                     " " + tableName +
                     " " + chainName +
                     " " + expr +
-                    " " + statement +
+                    " " + stt +
                     " comment " + "\"" + comment + "\"";
             exec(str);
         } catch (Exception e) {
@@ -627,10 +629,10 @@ public class JFirewall {
     }
 
     public static void ruleAdd(Rule rule) {
-        ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatement(), rule.getComment());
+        ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatements(), rule.getComment());
     }
 
-    public static void ruleInsert(Chain chain, List<Expression> expressions, Statement statement, String comment, int handle) {
+    public static void ruleInsert(Chain chain, List<Expression> expressions, List<Statement> statements, String comment, int handle) {
         try {
             Table table = chain.getTable();
             String chainName = chain.getName();
@@ -642,7 +644,7 @@ public class JFirewall {
                     " " + chainName +
                     " position " + handle +
                     " " + String.join(" ", expressions.stream().map(Expression::toString).toList()) +
-                    " " + statement +
+                    " " + String.join(" ", statements.stream().sorted(sortStatements()).map(Statement::toString).toList()) +
                     " comment " + "\"" + comment + "\"";
             exec(sb);
         } catch (Exception e) {
@@ -716,9 +718,9 @@ public class JFirewall {
     /**
      * Update rule
      */
-    public static synchronized void ruleUpdate(Chain chain, int handle, List<Expression> expressions, Statement statement, String comment) {
+    public static synchronized void ruleUpdate(Chain chain, int handle, List<Expression> expressions, List<Statement> statements, String comment) {
         ruleRemove(chain, handle);
-        ruleAdd(chain, expressions, statement, comment);
+        ruleAdd(chain, expressions, statements, comment);
     }
 
     /**
@@ -761,7 +763,7 @@ public class JFirewall {
                 .filter(item -> item.getHandle() == higher)
                 .peek(item -> ruleRemove(chain, higher))
                 .findFirst()
-                .ifPresent(item -> ruleInsert(chain, item.getExpressions(), item.getStatement(), item.getComment(), lower));
+                .ifPresent(item -> ruleInsert(chain, item.getExpressions(), item.getStatements(), item.getComment(), lower));
     }
 
     /**
@@ -775,5 +777,17 @@ public class JFirewall {
         String chainName = chain.getName();
         String cmd = "delete rule %s %s %s handle %s".formatted(tableType.getValue(), tableName, chainName, id);
         exec(cmd);
+    }
+
+    private static Comparator<Statement> sortStatements() {
+        return (stt1, stt2) -> {
+            if (stt1 instanceof VerdictStatement && !(stt2 instanceof VerdictStatement)) {
+                return 1;
+            } else if (!(stt1 instanceof VerdictStatement) && stt2 instanceof VerdictStatement) {
+                return -1;
+            } else {
+                return 0;
+            }
+        };
     }
 }

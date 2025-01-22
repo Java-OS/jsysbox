@@ -152,8 +152,10 @@ public class FirewallTest {
         expressionList.add(ipExpression);
         expressionList.add(tcpExpression);
 
-        Statement statement = new VerdictStatement(VerdictStatement.Type.DROP);
-        JFirewall.ruleAdd(c1Chain, expressionList, statement, "Drop any request on protocol ip and port 54");
+        Statement verdictStatement = new VerdictStatement(VerdictStatement.Type.DROP);
+        Statement logStatement = new LogStatement("First log");
+        Statement counterStatement = new CounterStatement();
+        JFirewall.ruleAdd(c1Chain, expressionList, List.of(verdictStatement, logStatement, counterStatement), "Drop any request on protocol ip and port 54");
         Assertions.assertFalse(JFirewall.ruleList().isEmpty());
     }
 
@@ -184,7 +186,7 @@ public class FirewallTest {
         expressionList.add(ctExpression5);
 
         Statement statement = new VerdictStatement(VerdictStatement.Type.CONTINUE);
-        JFirewall.ruleAdd(c1Chain, expressionList, statement, "Check first rule");
+        JFirewall.ruleAdd(c1Chain, expressionList, List.of(statement), "Check first rule");
         Assertions.assertFalse(JFirewall.ruleList().isEmpty());
     }
 
@@ -196,7 +198,7 @@ public class FirewallTest {
         {
             Chain logAndDropChain = JFirewall.chainAdd(table, "logging");
             Statement logStatement = new LogStatement(LogStatement.LogLevel.ALERT);
-            JFirewall.ruleAdd(logAndDropChain, null, logStatement, "Log traffic");
+            JFirewall.ruleAdd(logAndDropChain, null, List.of(logStatement), "Log traffic");
         }
 
         {
@@ -207,7 +209,7 @@ public class FirewallTest {
             expressionList.add(tcpExpression);
 
             Statement statement = new VerdictStatement(VerdictStatement.Type.JUMP, "logging");
-            JFirewall.ruleAdd(c1Chain, expressionList, statement, "Check first rule");
+            JFirewall.ruleAdd(c1Chain, expressionList, List.of(statement), "Check first rule");
             Assertions.assertFalse(JFirewall.ruleList().isEmpty());
         }
     }
@@ -220,7 +222,7 @@ public class FirewallTest {
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("123"));
         Statement natStatement = new NatStatement(NatStatement.Type.SNAT, "10.10.10.12", 25, List.of(NatStatement.Flag.PERSISTENT, NatStatement.Flag.FULLY_RANDOM));
-        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Source NAT");
+        JFirewall.ruleAdd(translateChain, List.of(expression), List.of(natStatement), "Source NAT");
     }
 
     @Test
@@ -231,7 +233,7 @@ public class FirewallTest {
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("125"));
         Statement natStatement = new NatStatement(NatStatement.Type.REDIRECT, 26, List.of(NatStatement.Flag.PERSISTENT, NatStatement.Flag.FULLY_RANDOM));
-        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Redirect");
+        JFirewall.ruleAdd(translateChain, List.of(expression), List.of(natStatement), "Redirect");
     }
 
     @Test
@@ -242,7 +244,7 @@ public class FirewallTest {
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("220"));
         Statement natStatement = new NatStatement(List.of(NatStatement.Flag.PERSISTENT, NatStatement.Flag.FULLY_RANDOM));
-        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Masquerade");
+        JFirewall.ruleAdd(translateChain, List.of(expression), List.of(natStatement), "Masquerade");
     }
 
     @Test
@@ -253,7 +255,7 @@ public class FirewallTest {
         Chain counterChain = JFirewall.chainAdd(table, "count");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("443"));
         Statement statement = new CounterStatement();
-        JFirewall.ruleAdd(counterChain, List.of(expression), statement, "Counter");
+        JFirewall.ruleAdd(counterChain, List.of(expression), List.of(statement), "Counter");
     }
 
     @Test
@@ -264,7 +266,7 @@ public class FirewallTest {
         Chain rejectChain = JFirewall.chainAdd(table, "rejectRequest");
         Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
         Statement statement = new RejectStatement(RejectStatement.Type.ICMP, RejectStatement.Reason.ADMIN_PROHIBITED);
-        JFirewall.ruleAdd(rejectChain, List.of(expression), statement, "reject packets on sport 1100");
+        JFirewall.ruleAdd(rejectChain, List.of(expression), List.of(statement), "reject packets on sport 1100");
     }
 
     @Test
@@ -275,7 +277,7 @@ public class FirewallTest {
         Chain limitChain = JFirewall.chainAdd(table, "rejectRequest");
         Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
         Statement statement = new LimitStatement(12L, LimitStatement.TimeUnit.MINUTE, LimitStatement.ByteUnit.MBYTES, true, 12L, LimitStatement.ByteUnit.KBYTES);
-        JFirewall.ruleAdd(limitChain, List.of(expression), statement, "Limit statement 1");
+        JFirewall.ruleAdd(limitChain, List.of(expression), List.of(statement), "Limit statement 1");
     }
 
     @Test
@@ -286,7 +288,7 @@ public class FirewallTest {
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("220"));
         Statement natStatement = new NatStatement(null);
-        JFirewall.ruleAdd(translateChain, List.of(expression), natStatement, "Masquerade2");
+        JFirewall.ruleAdd(translateChain, List.of(expression), List.of(natStatement), "Masquerade2");
     }
 
     @Test
@@ -301,8 +303,8 @@ public class FirewallTest {
         List<Expression> expressionList = new ArrayList<>();
         IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue(), Protocols.MOBILITY_HEADER.getValue(), Protocols.VRRP.getValue(), Protocols.RDP.getValue()));
         TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("114", "80", "24"));
-        EtherExpression etherExpression = new EtherExpression(EtherExpression.Field.SADDR, Operation.EQ, List.of("00:0f:54:0c:11:04", "00:0f:54:0c:11:12"));
-        EtherExpression etherExpression2 = new EtherExpression(List.of(EtherExpression.Type.VLAN, EtherExpression.Type.IP));
+        Expression etherExpression = new EtherExpression(EtherExpression.Field.SADDR, Operation.EQ, List.of("00:0f:54:0c:11:04", "00:0f:54:0c:11:12"));
+        Expression etherExpression2 = new EtherExpression(List.of(EtherExpression.Type.VLAN, EtherExpression.Type.IP));
 
         expressionList.add(ipExpression);
         expressionList.add(tcpExpression);
@@ -311,7 +313,7 @@ public class FirewallTest {
 
         Statement statement = new VerdictStatement(VerdictStatement.Type.ACCEPT);
         Assertions.assertNotNull(currentRule);
-        JFirewall.ruleInsert(chain, expressionList, statement, "Check Insert rule", currentRule.getHandle());
+        JFirewall.ruleInsert(chain, expressionList, List.of(statement), "Check Insert rule", currentRule.getHandle());
         Assertions.assertFalse(JFirewall.ruleList().isEmpty());
     }
 
@@ -343,11 +345,11 @@ public class FirewallTest {
 
         List<Expression> expressionList1 = List.of(new IpExpression(IpExpression.Field.SADDR, Operation.EQ, List.of("20.20.20.12")));
         Statement statement1 = new VerdictStatement(VerdictStatement.Type.DROP);
-        JFirewall.ruleAdd(chain, expressionList1, statement1, "R1");
+        JFirewall.ruleAdd(chain, expressionList1, List.of(statement1), "R1");
 
         List<Expression> expressionList2 = List.of(new IpExpression(IpExpression.Field.SADDR, Operation.EQ, List.of("30.30.30.55")));
         Statement statement2 = new VerdictStatement(VerdictStatement.Type.ACCEPT);
-        JFirewall.ruleAdd(chain, expressionList2, statement2, "R2");
+        JFirewall.ruleAdd(chain, expressionList2, List.of(statement2), "R2");
 
         Rule r1 = JFirewall.ruleList(chain).stream().filter(item -> item.getComment().equals("R1")).toList().getFirst();
         Rule r2 = JFirewall.ruleList(chain).stream().filter(item -> item.getComment().equals("R2")).toList().getFirst();
