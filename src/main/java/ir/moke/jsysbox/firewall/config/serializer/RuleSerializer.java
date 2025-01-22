@@ -27,9 +27,11 @@ public class RuleSerializer extends JsonSerializer<Rule> {
             gen.writeNumberField("handle", rule.getHandle());
             gen.writeStringField("comment", rule.getComment());
 
+            // Start expr
+            gen.writeArrayFieldStart("expr");
+
+            // fill expressions
             if (rule.getExpressions() != null && !rule.getExpressions().isEmpty()) {
-                // Start expr
-                gen.writeArrayFieldStart("expr");
                 for (Expression expression : rule.getExpressions()) {
                     MatchType matchType = expression.matchType();
                     if (matchType.equals(MatchType.CT)) {
@@ -38,33 +40,28 @@ public class RuleSerializer extends JsonSerializer<Rule> {
                         parsePayloadExpression(gen, expression);
                     }
                 }
-
-                // Start statement
-                gen.writeStartObject();
-
-                List<Statement> statements = rule.getStatements();
-                for (Statement statement : statements) {
-                    if (statement instanceof VerdictStatement verdictStatement) {
-                        parseVerdictStatement(gen, verdictStatement);
-                    } else if (statement instanceof LogStatement logStatement) {
-                        parseLogStatement(gen, logStatement);
-                    } else if (statement instanceof RejectStatement rejectStatement) {
-                        parseRejectStatement(gen, rejectStatement);
-                    } else if (statement instanceof CounterStatement counterStatement) {
-                        parseCounterStatement(gen, counterStatement);
-                    } else if (statement instanceof LimitStatement limitStatement) {
-                        parseLimitStatement(gen, limitStatement);
-                    } else if (statement instanceof NatStatement natStatement) {
-                        parseNatStatement(gen, natStatement);
-                    }
-                }
-
-                // End statement
-                gen.writeEndObject();
-
-                // End expr
-                gen.writeEndArray();
             }
+
+            // fill statement
+            List<Statement> statements = rule.getStatements();
+            for (Statement statement : statements) {
+                if (statement instanceof VerdictStatement verdictStatement) {
+                    parseVerdictStatement(gen, verdictStatement);
+                } else if (statement instanceof LogStatement logStatement) {
+                    parseLogStatement(gen, logStatement);
+                } else if (statement instanceof RejectStatement rejectStatement) {
+                    parseRejectStatement(gen, rejectStatement);
+                } else if (statement instanceof CounterStatement counterStatement) {
+                    parseCounterStatement(gen, counterStatement);
+                } else if (statement instanceof LimitStatement limitStatement) {
+                    parseLimitStatement(gen, limitStatement);
+                } else if (statement instanceof NatStatement natStatement) {
+                    parseNatStatement(gen, natStatement);
+                }
+            }
+
+            // End expr
+            gen.writeEndArray();
 
             gen.writeEndObject();
             gen.writeEndObject();
@@ -74,6 +71,7 @@ public class RuleSerializer extends JsonSerializer<Rule> {
     }
 
     private static void parseNatStatement(JsonGenerator gen, NatStatement natStatement) throws IOException {
+        gen.writeStartObject();
         NatStatement.Type type = natStatement.getType();
         if (natStatement.getFlag() == null) {
             gen.writeStartObject();
@@ -111,9 +109,11 @@ public class RuleSerializer extends JsonSerializer<Rule> {
             }
             gen.writeEndObject();
         }
+        gen.writeEndObject();
     }
 
     private static void parseLimitStatement(JsonGenerator gen, LimitStatement limitStatement) throws IOException {
+        gen.writeStartObject();
         gen.writeObjectFieldStart("limit");
 
         Long rate = limitStatement.getRate();
@@ -131,25 +131,31 @@ public class RuleSerializer extends JsonSerializer<Rule> {
         if (burstUnit != null) gen.writeStringField("burst_unit", burstUnit.name().toLowerCase());
 
         gen.writeEndObject();
+        gen.writeEndObject();
     }
 
     private static void parseCounterStatement(JsonGenerator gen, CounterStatement counterStatement) throws IOException {
+        gen.writeStartObject();
         gen.writeObjectFieldStart("counter");
         gen.writeNumberField("packets", counterStatement.getPackets());
         gen.writeNumberField("bytes", counterStatement.getBytes());
         gen.writeEndObject();
+        gen.writeEndObject();
     }
 
     private static void parseRejectStatement(JsonGenerator gen, RejectStatement rejectStatement) throws IOException {
+        gen.writeStartObject();
         gen.writeObjectFieldStart("reject");
         gen.writeStringField("type", rejectStatement.getType().getValue().toLowerCase());
         if (rejectStatement.getReason() != null) {
             gen.writeStringField("expr", rejectStatement.getReason().getValue().toLowerCase());
         }
         gen.writeEndObject();
+        gen.writeEndObject();
     }
 
     private static void parseLogStatement(JsonGenerator gen, LogStatement logStatement) throws IOException {
+        gen.writeStartObject();
         gen.writeObjectFieldStart("log");
         if (logStatement.getLevel() != null) {
             gen.writeStringField("level", logStatement.getLevel().name().toLowerCase());
@@ -157,9 +163,11 @@ public class RuleSerializer extends JsonSerializer<Rule> {
             gen.writeStringField("prefix", logStatement.getPrefix());
         }
         gen.writeEndObject();
+        gen.writeEndObject();
     }
 
     private static void parseVerdictStatement(JsonGenerator gen, VerdictStatement verdictStatement) throws IOException {
+        gen.writeStartObject();
         VerdictStatement.Type type = verdictStatement.getType();
         switch (type) {
             case ACCEPT -> gen.writeStringField("accept", null);
@@ -178,6 +186,7 @@ public class RuleSerializer extends JsonSerializer<Rule> {
                 gen.writeEndObject();
             }
         }
+        gen.writeEndObject();
     }
 
     private static void parsePayloadExpression(JsonGenerator gen, Expression expression) throws IOException {
