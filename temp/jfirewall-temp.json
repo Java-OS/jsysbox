@@ -1,1 +1,681 @@
-{"nftables": [{"metainfo": {"version": "1.0.9", "release_name": "Old Doc Yak #3", "json_schema_version": 1}}, {"table": {"family": "ip", "name": "FirstTable", "handle": 338}}, {"set": {"family": "ip", "name": "localNetworkSet", "table": "FirstTable", "type": "ipv4_addr", "handle": 3, "comment": "My Local Network", "policy": "memory", "size": 30, "flags": ["interval"], "elem": ["20.20.20.127", "127.0.0.1", "192.168.1.10"]}}, {"chain": {"family": "ip", "table": "FirstTable", "name": "c1", "handle": 1, "type": "filter", "hook": "input", "prio": 1, "policy": "accept"}}, {"chain": {"family": "ip", "table": "FirstTable", "name": "c2", "handle": 2}}, {"rule": {"family": "ip", "table": "FirstTable", "chain": "c1", "handle": 4, "comment": "Drop any request on protocol ip and port 54", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "protocol"}}, "right": "ip"}}, {"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "sport"}}, "right": 54}}, {"drop": null}]}}, {"table": {"family": "inet", "name": "SecondTable", "handle": 339}}, {"chain": {"family": "inet", "table": "SecondTable", "name": "c1", "handle": 1, "type": "filter", "hook": "input", "prio": 1, "policy": "accept"}}, {"rule": {"family": "inet", "table": "SecondTable", "chain": "c1", "handle": 3, "comment": "Check first rule", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "protocol"}}, "right": "ip"}}, {"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "sport"}}, "right": 54}}, {"match": {"op": "==", "left": {"ct": {"key": "state"}}, "right": "established"}}, {"match": {"op": "==", "left": {"ct": {"key": "status"}}, "right": "confirmed"}}, {"match": {"op": "==", "left": {"ct": {"key": "proto-src", "dir": "original"}}, "right": {"set": [54, 120]}}}, {"match": {"op": "==", "left": {"ct": {"key": "ip daddr", "dir": "reply"}}, "right": "10.10.10.12"}}, {"ct count": {"val": 30, "inv": true}}, {"continue": null}]}}, {"table": {"family": "ip", "name": "ThirdTable", "handle": 340}}, {"chain": {"family": "ip", "table": "ThirdTable", "name": "logging", "handle": 1}}, {"chain": {"family": "ip", "table": "ThirdTable", "name": "c1", "handle": 3, "type": "filter", "hook": "input", "prio": 1, "policy": "accept"}}, {"chain": {"family": "ip", "table": "ThirdTable", "name": "translate", "handle": 5}}, {"chain": {"family": "ip", "table": "ThirdTable", "name": "count", "handle": 9}}, {"chain": {"family": "ip", "table": "ThirdTable", "name": "rejectRequest", "handle": 11}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "logging", "handle": 2, "comment": "Log traffic", "expr": [{"log": {"level": "alert"}}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "c1", "handle": 19, "comment": "Check Insert rule", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "protocol"}}, "right": {"set": ["ip", "rdp", "vrrp", "mobility-header"]}}}, {"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "sport"}}, "right": {"set": [24, 80, 114]}}}, {"match": {"op": "==", "left": {"payload": {"protocol": "ether", "field": "saddr"}}, "right": {"set": ["00:0f:54:0c:11:04", "00:0f:54:0c:11:12"]}}}, {"match": {"op": "==", "left": {"payload": {"protocol": "ether", "field": "type"}}, "right": {"set": ["ip", "8021q"]}}}, {"accept": null}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "c1", "handle": 4, "comment": "Check first rule", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "sport"}}, "right": 443}}, {"jump": {"target": "logging"}}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "translate", "handle": 6, "comment": "Source NAT", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 123}}, {"snat": {"addr": "10.10.10.12", "port": 25, "flags": ["fully-random", "persistent"]}}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "translate", "handle": 7, "comment": "Redirect", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 125}}, {"redirect": {"port": 26, "flags": ["fully-random", "persistent"]}}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "translate", "handle": 8, "comment": "Masquerade", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 220}}, {"masquerade": {"flags": ["fully-random", "persistent"]}}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "translate", "handle": 14, "comment": "Masquerade2", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 220}}, {"masquerade": null}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "count", "handle": 10, "comment": "Counter", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 443}}, {"counter": {"packets": 0, "bytes": 0}}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "rejectRequest", "handle": 12, "comment": "reject packets on sport 1100", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "sport"}}, "right": 1100}}, {"reject": {"type": "icmp", "expr": "admin-prohibited"}}]}}, {"rule": {"family": "ip", "table": "ThirdTable", "chain": "rejectRequest", "handle": 13, "comment": "Limit statement 1", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "sport"}}, "right": 1100}}, {"limit": {"rate": 12, "burst": 12, "per": "minute", "inv": true, "rate_unit": "mbytes", "burst_unit": "kbytes"}}]}}]}
+{
+  "nftables": [
+    {
+      "metainfo": {
+        "version": "1.0.9",
+        "release_name": "Old Doc Yak #3",
+        "json_schema_version": 1
+      }
+    },
+    {
+      "table": {
+        "family": "ip",
+        "name": "FirstTable",
+        "handle": 114
+      }
+    },
+    {
+      "set": {
+        "family": "ip",
+        "name": "localNetworkSet",
+        "table": "FirstTable",
+        "type": "ipv4_addr",
+        "handle": 3,
+        "comment": "My Local Network",
+        "policy": "memory",
+        "size": 30,
+        "flags": [
+          "interval"
+        ],
+        "elem": [
+          "20.20.20.127",
+          "127.0.0.1",
+          "192.168.1.10"
+        ]
+      }
+    },
+    {
+      "chain": {
+        "family": "ip",
+        "table": "FirstTable",
+        "name": "c1",
+        "handle": 1,
+        "type": "filter",
+        "hook": "input",
+        "prio": 1,
+        "policy": "accept"
+      }
+    },
+    {
+      "chain": {
+        "family": "ip",
+        "table": "FirstTable",
+        "name": "c2",
+        "handle": 2
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "FirstTable",
+        "chain": "c1",
+        "handle": 4,
+        "comment": "Drop any request on protocol ip and port 54",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "protocol"
+                }
+              },
+              "right": "ip"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "sport"
+                }
+              },
+              "right": 54
+            }
+          },
+          {
+            "log": {
+              "prefix": "First log"
+            }
+          },
+          {
+            "counter": {
+              "packets": 0,
+              "bytes": 0
+            }
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "table": {
+        "family": "inet",
+        "name": "SecondTable",
+        "handle": 115
+      }
+    },
+    {
+      "chain": {
+        "family": "inet",
+        "table": "SecondTable",
+        "name": "c1",
+        "handle": 1,
+        "type": "filter",
+        "hook": "input",
+        "prio": 1,
+        "policy": "accept"
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "SecondTable",
+        "chain": "c1",
+        "handle": 3,
+        "comment": "Check first rule",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "protocol"
+                }
+              },
+              "right": "ip"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "sport"
+                }
+              },
+              "right": 54
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "ct": {
+                  "key": "state"
+                }
+              },
+              "right": "established"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "ct": {
+                  "key": "status"
+                }
+              },
+              "right": "confirmed"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "ct": {
+                  "key": "proto-src",
+                  "dir": "original"
+                }
+              },
+              "right": {
+                "set": [
+                  54,
+                  120
+                ]
+              }
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "ct": {
+                  "key": "ip daddr",
+                  "dir": "reply"
+                }
+              },
+              "right": "10.10.10.12"
+            }
+          },
+          {
+            "ct count": {
+              "val": 30,
+              "inv": true
+            }
+          },
+          {
+            "continue": null
+          }
+        ]
+      }
+    },
+    {
+      "table": {
+        "family": "ip",
+        "name": "NewTableName",
+        "handle": 117
+      }
+    },
+    {
+      "chain": {
+        "family": "ip",
+        "table": "NewTableName",
+        "name": "logging",
+        "handle": 1
+      }
+    },
+    {
+      "chain": {
+        "family": "ip",
+        "table": "NewTableName",
+        "name": "c1",
+        "handle": 3,
+        "type": "filter",
+        "hook": "input",
+        "prio": 1,
+        "policy": "accept"
+      }
+    },
+    {
+      "chain": {
+        "family": "ip",
+        "table": "NewTableName",
+        "name": "translate",
+        "handle": 10
+      }
+    },
+    {
+      "chain": {
+        "family": "ip",
+        "table": "NewTableName",
+        "name": "count",
+        "handle": 15
+      }
+    },
+    {
+      "chain": {
+        "family": "ip",
+        "table": "NewTableName",
+        "name": "rejectRequest",
+        "handle": 17
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "logging",
+        "handle": 2,
+        "comment": "Log traffic",
+        "expr": [
+          {
+            "log": {
+              "level": "alert"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "c1",
+        "handle": 8,
+        "comment": "Check Insert rule",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "protocol"
+                }
+              },
+              "right": {
+                "set": [
+                  "ip",
+                  "rdp",
+                  "vrrp",
+                  "mobility-header"
+                ]
+              }
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "sport"
+                }
+              },
+              "right": {
+                "set": [
+                  24,
+                  80,
+                  114
+                ]
+              }
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ether",
+                  "field": "saddr"
+                }
+              },
+              "right": {
+                "set": [
+                  "00:0f:54:0c:11:04",
+                  "00:0f:54:0c:11:12"
+                ]
+              }
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ether",
+                  "field": "type"
+                }
+              },
+              "right": {
+                "set": [
+                  "ip",
+                  "8021q"
+                ]
+              }
+            }
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "c1",
+        "handle": 9,
+        "comment": "Check first rule",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "sport"
+                }
+              },
+              "right": 443
+            }
+          },
+          {
+            "jump": {
+              "target": "logging"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "translate",
+        "handle": 11,
+        "comment": "Source NAT",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "dport"
+                }
+              },
+              "right": 123
+            }
+          },
+          {
+            "snat": {
+              "addr": "10.10.10.12",
+              "port": 25,
+              "flags": [
+                "fully-random",
+                "persistent"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "translate",
+        "handle": 12,
+        "comment": "Redirect",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "dport"
+                }
+              },
+              "right": 125
+            }
+          },
+          {
+            "redirect": {
+              "port": 26,
+              "flags": [
+                "fully-random",
+                "persistent"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "translate",
+        "handle": 13,
+        "comment": "Masquerade",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "dport"
+                }
+              },
+              "right": 220
+            }
+          },
+          {
+            "masquerade": {
+              "flags": [
+                "fully-random",
+                "persistent"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "translate",
+        "handle": 14,
+        "comment": "Masquerade2",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "dport"
+                }
+              },
+              "right": 220
+            }
+          },
+          {
+            "masquerade": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "count",
+        "handle": 16,
+        "comment": "Counter",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "dport"
+                }
+              },
+              "right": 443
+            }
+          },
+          {
+            "counter": {
+              "packets": 0,
+              "bytes": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "rejectRequest",
+        "handle": 18,
+        "comment": "reject packets on sport 1100",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "sport"
+                }
+              },
+              "right": 1100
+            }
+          },
+          {
+            "reject": {
+              "type": "icmp",
+              "expr": "admin-prohibited"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "ip",
+        "table": "NewTableName",
+        "chain": "rejectRequest",
+        "handle": 19,
+        "comment": "Limit statement 1",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "sport"
+                }
+              },
+              "right": 1100
+            }
+          },
+          {
+            "limit": {
+              "rate": 12,
+              "burst": 12,
+              "per": "minute",
+              "inv": true,
+              "rate_unit": "mbytes",
+              "burst_unit": "kbytes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "table": {
+        "family": "inet",
+        "name": "CheckSwitch",
+        "handle": 118
+      }
+    },
+    {
+      "chain": {
+        "family": "inet",
+        "table": "CheckSwitch",
+        "name": "SwitchRules",
+        "handle": 1
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "CheckSwitch",
+        "chain": "SwitchRules",
+        "handle": 4,
+        "comment": "R2",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "saddr"
+                }
+              },
+              "right": "30.30.30.55"
+            }
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "CheckSwitch",
+        "chain": "SwitchRules",
+        "handle": 2,
+        "comment": "R1",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "saddr"
+                }
+              },
+              "right": "20.20.20.12"
+            }
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    }
+  ]
+}
