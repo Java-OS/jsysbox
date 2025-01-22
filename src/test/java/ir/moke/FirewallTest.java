@@ -156,7 +156,7 @@ public class FirewallTest {
         Statement logStatement = new LogStatement("First log");
         Statement counterStatement = new CounterStatement();
         JFirewall.ruleAdd(c1Chain, expressionList, List.of(verdictStatement, logStatement, counterStatement), "Drop any request on protocol ip and port 54");
-        Assertions.assertFalse(JFirewall.ruleList().isEmpty());
+        Assertions.assertFalse(JFirewall.ruleList("FirstTable", "c1").isEmpty());
     }
 
     @Test
@@ -187,7 +187,7 @@ public class FirewallTest {
 
         Statement statement = new VerdictStatement(VerdictStatement.Type.CONTINUE);
         JFirewall.ruleAdd(c1Chain, expressionList, List.of(statement), "Check first rule");
-        Assertions.assertFalse(JFirewall.ruleList().isEmpty());
+        Assertions.assertFalse(JFirewall.ruleList("SecondTable", "c1").isEmpty());
     }
 
     @Test
@@ -210,7 +210,7 @@ public class FirewallTest {
 
             Statement statement = new VerdictStatement(VerdictStatement.Type.JUMP, "logging");
             JFirewall.ruleAdd(c1Chain, expressionList, List.of(statement), "Check first rule");
-            Assertions.assertFalse(JFirewall.ruleList().isEmpty());
+            Assertions.assertFalse(JFirewall.ruleList("ThirdTable", "c1").isEmpty());
         }
     }
 
@@ -298,7 +298,7 @@ public class FirewallTest {
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain chain = JFirewall.chain(table, "c1");
 
-        Rule currentRule = JFirewall.ruleList().stream().filter(item -> item.getChain().equals(chain)).findFirst().orElse(null);
+        Rule currentRule = JFirewall.ruleList("ThirdTable", "c1").stream().filter(item -> item.getChain().equals(chain)).findFirst().orElse(null);
 
         List<Expression> expressionList = new ArrayList<>();
         IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue(), Protocols.MOBILITY_HEADER.getValue(), Protocols.VRRP.getValue(), Protocols.RDP.getValue()));
@@ -314,7 +314,7 @@ public class FirewallTest {
         Statement statement = new VerdictStatement(VerdictStatement.Type.ACCEPT);
         Assertions.assertNotNull(currentRule);
         JFirewall.ruleInsert(chain, expressionList, List.of(statement), "Check Insert rule", currentRule.getHandle());
-        Assertions.assertFalse(JFirewall.ruleList().isEmpty());
+        Assertions.assertFalse(JFirewall.ruleList("ThirdTable", "c1").isEmpty());
     }
 
     @Test

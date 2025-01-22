@@ -659,8 +659,8 @@ public class JFirewall {
     /**
      * @return List of {@link Rule}
      */
-    public static List<Rule> ruleList() {
-        String result = exec("list ruleset");
+    public static List<Rule> ruleList(String tableName, String chainName) {
+        String result = exec("list ruleset %s %s".formatted(tableName,chainName));
         try {
             List<Rule> rules = new ArrayList<>();
             JsonNode jsonNode = om.readValue(result, JsonNode.class);
@@ -685,7 +685,7 @@ public class JFirewall {
      * @return list of {@link Rule}
      */
     public static List<Rule> ruleList(Chain chain) {
-        return ruleList()
+        return ruleList(chain.getTable().getName(),chain.getName())
                 .stream()
                 .filter(item -> item.getChain().getTable().equals(chain.getTable()))
                 .filter(item -> item.getChain().equals(chain))
@@ -698,7 +698,7 @@ public class JFirewall {
      * @param id rule handle id
      */
     public static void ruleCheckExists(Chain chain, long id) {
-        boolean exists = ruleList()
+        boolean exists = ruleList(chain.getTable().getName(),chain.getName())
                 .stream()
                 .filter(item -> item.getChain().getTable().equals(chain.getTable()))
                 .filter(item -> item.getChain().equals(chain))
@@ -707,7 +707,7 @@ public class JFirewall {
     }
 
     public static Rule rule(Chain chain, int handle) {
-        return ruleList()
+        return ruleList(chain.getTable().getName(),chain.getName())
                 .stream()
                 .filter(item -> item.getChain().equals(chain))
                 .filter(item -> item.getHandle() == handle)
