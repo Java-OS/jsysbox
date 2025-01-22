@@ -143,7 +143,7 @@ public class FirewallTest {
     public void checkRuleAdd() {
         logger.info("Execute <checkRuleAdd>");
         Table table = JFirewall.table("FirstTable", TableType.IPv4);
-        Chain c1Chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+        Chain chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
 
         List<Expression> expressionList = new ArrayList<>();
         IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
@@ -155,16 +155,16 @@ public class FirewallTest {
         Statement verdictStatement = new VerdictStatement(VerdictStatement.Type.DROP);
         Statement logStatement = new LogStatement("First log");
         Statement counterStatement = new CounterStatement();
-        JFirewall.ruleAdd(c1Chain, expressionList, List.of(verdictStatement, logStatement, counterStatement), "Drop any request on protocol ip and port 54");
-        Assertions.assertFalse(JFirewall.ruleList("FirstTable", "c1").isEmpty());
+        JFirewall.ruleAdd(chain, expressionList, List.of(verdictStatement, logStatement, counterStatement), "Drop any request on protocol ip and port 54");
+        Assertions.assertFalse(JFirewall.ruleList(chain).isEmpty());
     }
 
     @Test
     @Order(101)
-    public void checkRuleAdd2() {
-        logger.info("Execute <checkRuleAdd2>");
+    public void checkRuleAdd1() {
+        logger.info("Execute <checkRuleAdd1>");
         Table table = JFirewall.table("SecondTable", TableType.INET);
-        Chain c1Chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+        Chain chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
 
         List<Expression> expressionList = new ArrayList<>();
         Expression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
@@ -186,14 +186,14 @@ public class FirewallTest {
         expressionList.add(ctExpression5);
 
         Statement statement = new VerdictStatement(VerdictStatement.Type.CONTINUE);
-        JFirewall.ruleAdd(c1Chain, expressionList, List.of(statement), "Check first rule");
-        Assertions.assertFalse(JFirewall.ruleList("SecondTable", "c1").isEmpty());
+        JFirewall.ruleAdd(chain, expressionList, List.of(statement), "Check first rule");
+        Assertions.assertFalse(JFirewall.ruleList(chain).isEmpty());
     }
 
     @Test
     @Order(102)
-    public void checkRuleAdd3() {
-        logger.info("Execute <checkRuleAdd3>");
+    public void checkRuleAdd2() {
+        logger.info("Execute <checkRuleAdd2>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         {
             Chain logAndDropChain = JFirewall.chainAdd(table, "logging");
@@ -202,22 +202,22 @@ public class FirewallTest {
         }
 
         {
-            Chain c1Chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
+            Chain chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
             List<Expression> expressionList = new ArrayList<>();
             TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("443"));
 
             expressionList.add(tcpExpression);
 
             Statement statement = new VerdictStatement(VerdictStatement.Type.JUMP, "logging");
-            JFirewall.ruleAdd(c1Chain, expressionList, List.of(statement), "Check first rule");
-            Assertions.assertFalse(JFirewall.ruleList("ThirdTable", "c1").isEmpty());
+            JFirewall.ruleAdd(chain, expressionList, List.of(statement), "Check first rule");
+            Assertions.assertFalse(JFirewall.ruleList(chain).isEmpty());
         }
     }
 
     @Test
     @Order(103)
-    public void checkRuleAdd4() {
-        logger.info("Execute <checkRuleAdd4>");
+    public void checkRuleAdd3() {
+        logger.info("Execute <checkRuleAdd3>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("123"));
@@ -227,8 +227,8 @@ public class FirewallTest {
 
     @Test
     @Order(104)
-    public void checkRuleAdd5() {
-        logger.info("Execute <checkRuleAdd5>");
+    public void checkRuleAdd4() {
+        logger.info("Execute <checkRuleAdd4>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("125"));
@@ -238,8 +238,8 @@ public class FirewallTest {
 
     @Test
     @Order(105)
-    public void checkRuleAdd6() {
-        logger.info("Execute <checkRuleAdd6>");
+    public void checkRuleAdd5() {
+        logger.info("Execute <checkRuleAdd5>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("220"));
@@ -249,8 +249,8 @@ public class FirewallTest {
 
     @Test
     @Order(106)
-    public void checkRuleAdd7() {
-        logger.info("Execute <checkRuleAdd7>");
+    public void checkRuleAdd6() {
+        logger.info("Execute <checkRuleAdd6>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain counterChain = JFirewall.chainAdd(table, "count");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("443"));
@@ -260,8 +260,8 @@ public class FirewallTest {
 
     @Test
     @Order(107)
-    public void checkRuleAdd8() {
-        logger.info("Execute <checkRuleAdd8>");
+    public void checkRuleAdd7() {
+        logger.info("Execute <checkRuleAdd7>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain rejectChain = JFirewall.chainAdd(table, "rejectRequest");
         Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
@@ -271,8 +271,8 @@ public class FirewallTest {
 
     @Test
     @Order(108)
-    public void checkRuleAdd9() {
-        logger.info("Execute <checkRuleAdd9>");
+    public void checkRuleAdd8() {
+        logger.info("Execute <checkRuleAdd8>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain limitChain = JFirewall.chainAdd(table, "rejectRequest");
         Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
@@ -282,8 +282,8 @@ public class FirewallTest {
 
     @Test
     @Order(109)
-    public void checkRuleAdd10() {
-        logger.info("Execute <checkRuleAdd10>");
+    public void checkRuleAdd9() {
+        logger.info("Execute <checkRuleAdd9>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain translateChain = JFirewall.chainAdd(table, "translate");
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("220"));
@@ -298,7 +298,7 @@ public class FirewallTest {
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain chain = JFirewall.chain(table, "c1");
 
-        Rule currentRule = JFirewall.ruleList("ThirdTable", "c1").stream().filter(item -> item.getChain().equals(chain)).findFirst().orElse(null);
+        Rule currentRule = JFirewall.ruleList(chain).stream().filter(item -> item.getChain().equals(chain)).findFirst().orElse(null);
 
         List<Expression> expressionList = new ArrayList<>();
         IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue(), Protocols.MOBILITY_HEADER.getValue(), Protocols.VRRP.getValue(), Protocols.RDP.getValue()));
@@ -314,7 +314,7 @@ public class FirewallTest {
         Statement statement = new VerdictStatement(VerdictStatement.Type.ACCEPT);
         Assertions.assertNotNull(currentRule);
         JFirewall.ruleInsert(chain, expressionList, List.of(statement), "Check Insert rule", currentRule.getHandle());
-        Assertions.assertFalse(JFirewall.ruleList("ThirdTable", "c1").isEmpty());
+        Assertions.assertFalse(JFirewall.ruleList(chain).isEmpty());
     }
 
     @Test

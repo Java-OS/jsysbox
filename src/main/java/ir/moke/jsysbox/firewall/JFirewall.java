@@ -659,8 +659,8 @@ public class JFirewall {
     /**
      * @return List of {@link Rule}
      */
-    public static List<Rule> ruleList(String tableName, String chainName) {
-        String result = exec("list ruleset %s %s".formatted(tableName,chainName));
+    public static List<Rule> ruleList(Chain chain) {
+        String result = exec(chain != null ? "list chain %s %s %s".formatted(chain.getTable().getType().getValue(), chain.getTable().getName(), chain.getName()) : "list ruleset");
         try {
             List<Rule> rules = new ArrayList<>();
             JsonNode jsonNode = om.readValue(result, JsonNode.class);
@@ -679,26 +679,12 @@ public class JFirewall {
     }
 
     /**
-     * find rules by chain name
-     *
-     * @param chain name of {@link Chain}
-     * @return list of {@link Rule}
-     */
-    public static List<Rule> ruleList(Chain chain) {
-        return ruleList(chain.getTable().getName(),chain.getName())
-                .stream()
-                .filter(item -> item.getChain().getTable().equals(chain.getTable()))
-                .filter(item -> item.getChain().equals(chain))
-                .toList();
-    }
-
-    /**
      * Check rule exists
      *
      * @param id rule handle id
      */
     public static void ruleCheckExists(Chain chain, long id) {
-        boolean exists = ruleList(chain.getTable().getName(),chain.getName())
+        boolean exists = ruleList(chain)
                 .stream()
                 .filter(item -> item.getChain().getTable().equals(chain.getTable()))
                 .filter(item -> item.getChain().equals(chain))
@@ -707,7 +693,7 @@ public class JFirewall {
     }
 
     public static Rule rule(Chain chain, int handle) {
-        return ruleList(chain.getTable().getName(),chain.getName())
+        return ruleList(chain)
                 .stream()
                 .filter(item -> item.getChain().equals(chain))
                 .filter(item -> item.getHandle() == handle)
