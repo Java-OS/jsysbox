@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 import ir.moke.jsysbox.firewall.expression.Expression;
-import ir.moke.jsysbox.firewall.model.Set;
 import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.statement.Statement;
 import ir.moke.jsysbox.firewall.statement.VerdictStatement;
@@ -18,7 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -707,32 +709,6 @@ public class JFirewall {
     public static synchronized void ruleUpdate(Chain chain, int handle, List<Expression> expressions, List<Statement> statements, String comment) {
         ruleRemove(chain, handle);
         ruleAdd(chain, expressions, statements, comment);
-    }
-
-    /**
-     * Update chain priority
-     *
-     * @param tableHandle  table of chain
-     * @param chainHandles List of new chain handles order
-     */
-    public static synchronized void chainSwitch(int tableHandle, List<Integer> chainHandles) {
-        List<Chain> currentChains = chainList(tableHandle);
-        Map<Chain, List<Rule>> map = new LinkedHashMap<>();
-        for (Integer chainHandle : chainHandles) {
-            for (int i = 0; i < currentChains.size(); i++) {
-                Chain currentChain = currentChains.get(i);
-                if (currentChain.getHandle() == chainHandle) {
-                    currentChain.setPriority(i);
-                    map.put(currentChain, ruleList(currentChain));
-                }
-            }
-        }
-
-        currentChains.forEach(JFirewall::chainRemove);
-        for (Chain chain : map.keySet()) {
-            chainAdd(chain);
-            map.get(chain).forEach(JFirewall::ruleAdd);
-        }
     }
 
     /**
