@@ -285,29 +285,15 @@ public class JFirewall {
      * @return {@link Chain}
      */
     public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
-        priority = calculatePriority(type, priority);
-        String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
-        exec(cmd.formatted(table.getType().getValue(), table.getName(), name, type.getValue(), hook.getValue(), priority, policy.getValue()));
-        return chain(table, name);
-    }
+        String cmd = "add chain %s %s %s {type %s hook %s priority %s ; %s }";
 
-    private static Integer calculatePriority(ChainType type, Integer priority) {
-        if (priority == null && type != null) {
-            priority = switch (type) {
-                case FILTER -> 0;
-                case NAT -> -100;
-                case ROUTE -> -200;
-            };
-        }
-        return priority;
-    }
+        String tableType = table.getType().getValue();
+        String tableName = table.getName();
+        String chainType = type.getValue();
+        String chainHook = hook.getValue();
+        String chainPolicy = type == ChainType.NAT ? "policy " + policy.getValue() : "";
+        exec(cmd.formatted(tableType, tableName, name, chainType, chainHook, priority, chainPolicy));
 
-    public static Chain chainAdd(int tableHandle, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
-        priority = calculatePriority(type, priority);
-        Table table = table(tableHandle);
-        if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(tableHandle));
-        String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
-        exec(cmd.formatted(table.getType().getValue(), table.getName(), name, type.getValue(), hook.getValue(), priority, policy.getValue()));
         return chain(table, name);
     }
 
@@ -415,7 +401,6 @@ public class JFirewall {
      * @param name  new chain name
      */
     public static synchronized void chainUpdate(Chain chain, String name, ChainType type, ChainPolicy policy, ChainHook hook, Integer priority) {
-        priority = calculatePriority(type, priority);
         List<Rule> rules = ruleList(chain);
 
         // remove old chain
@@ -613,14 +598,14 @@ public class JFirewall {
             String tableName = table.getName();
             String expr = expressions != null && !expressions.isEmpty() ? String.join(" ", expressions.stream().map(Expression::toString).toList()) : "";
             String stt = statements != null && !statements.isEmpty() ? String.join(" ", statements.stream().sorted(sortStatements()).map(Statement::toString).toList()) : "";
-            String str = "add rule" +
-                    " " + tableType.getValue() +
-                    " " + tableName +
-                    " " + chainName +
-                    " " + expr +
-                    " " + stt +
-                    " comment " + "\"" + comment + "\"";
-            exec(str);
+            StringBuilder sb = new StringBuilder("add rule");
+            sb.append(" ").append(tableType.getValue());
+            sb.append(" ").append(tableName);
+            sb.append(" ").append(chainName);
+            sb.append(" ").append(expr);
+            sb.append(" ").append(stt);
+            Optional.ofNullable(comment).ifPresent(item -> sb.append(" comment ").append("\"").append(comment).append("\""));
+            exec(sb.toString());
         } catch (Exception e) {
             if (e instanceof JSysboxException jse) {
                 logger.error("nftables syntax error", jse);

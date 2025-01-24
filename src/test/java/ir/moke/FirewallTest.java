@@ -219,7 +219,7 @@ public class FirewallTest {
     public void checkRuleAdd3() {
         logger.info("Execute <checkRuleAdd3>");
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
-        Chain translateChain = JFirewall.chainAdd(table, "translate");
+        Chain translateChain = JFirewall.chainAdd(table, "translate",ChainType.NAT,ChainHook.PREROUTING,null,null);
         Expression expression = new TcpExpression(TcpExpression.Field.DPORT, Operation.EQ, List.of("123"));
         Statement natStatement = new NatStatement(NatStatement.Type.SNAT, "10.10.10.12", 25, List.of(NatStatement.Flag.PERSISTENT, NatStatement.Flag.FULLY_RANDOM));
         JFirewall.ruleAdd(translateChain, List.of(expression), List.of(natStatement), "Source NAT");
@@ -353,8 +353,8 @@ public class FirewallTest {
         Statement statement2 = new VerdictStatement(VerdictStatement.Type.ACCEPT);
         JFirewall.ruleAdd(chain, expressionList2, List.of(statement2), "R2");
 
-        Rule r1 = JFirewall.ruleList(chain).stream().filter(item -> item.getComment().equals("R1")).toList().getFirst();
-        Rule r2 = JFirewall.ruleList(chain).stream().filter(item -> item.getComment().equals("R2")).toList().getFirst();
+        Rule r1 = JFirewall.ruleList(chain).getFirst();
+        Rule r2 = JFirewall.ruleList(chain).getLast();
 
         JFirewall.ruleSwitch(chain, r2.getHandle(), r1.getHandle());
     }
