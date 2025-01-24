@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 import ir.moke.jsysbox.firewall.expression.Expression;
-import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.model.Set;
+import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.statement.Statement;
 import ir.moke.jsysbox.firewall.statement.VerdictStatement;
 import org.slf4j.Logger;
@@ -284,13 +284,13 @@ public class JFirewall {
      */
     public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
         priority = calculatePriority(type, priority);
-        String cmd = "add chain %s %s %s {type %s hook %s priority %s ; %s }";
+        String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
 
         String tableType = table.getType().getValue();
         String tableName = table.getName();
         String chainType = type.getValue();
         String chainHook = hook.getValue();
-        String chainPolicy = type == ChainType.NAT ? "policy " + policy.getValue() : "";
+        String chainPolicy = policy.getValue();
         exec(cmd.formatted(tableType, tableName, name, chainType, chainHook, priority, chainPolicy));
 
         return chain(table, name);
@@ -635,13 +635,14 @@ public class JFirewall {
             String tableName = table.getName();
             String expr = expressions != null && !expressions.isEmpty() ? String.join(" ", expressions.stream().map(Expression::toString).toList()) : "";
             String stt = statements != null && !statements.isEmpty() ? String.join(" ", statements.stream().sorted(sortStatements()).map(Statement::toString).toList()) : "";
+
             StringBuilder sb = new StringBuilder("add rule");
             sb.append(" ").append(tableType.getValue());
             sb.append(" ").append(tableName);
             sb.append(" ").append(chainName);
             sb.append(" ").append(expr);
             sb.append(" ").append(stt);
-            Optional.ofNullable(comment).ifPresent(item -> sb.append(" comment ").append("\"").append(comment).append("\""));
+            Optional.ofNullable(comment).ifPresent(item -> sb.append(" comment ").append("\"").append(item).append("\""));
             exec(sb.toString());
         } catch (Exception e) {
             if (e instanceof JSysboxException jse) {
