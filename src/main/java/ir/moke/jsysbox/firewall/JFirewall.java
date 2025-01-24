@@ -743,24 +743,21 @@ public class JFirewall {
      * @param lower  second rule
      */
     public static void ruleSwitch(Chain chain, int higher, int lower) {
-        List<Rule> rules = new ArrayList<>(ruleList(chain));
-        rules.stream()
-                .filter(item -> item.getHandle() == higher)
-                .peek(item -> ruleRemove(chain, higher))
-                .findFirst()
-                .ifPresent(item -> ruleInsert(chain, item.getExpressions(), item.getStatements(), item.getComment(), lower));
+        Rule r2 = rule(chain, higher);
+        ruleRemove(chain,higher);
+        ruleInsert(chain,r2.getExpressions(),r2.getStatements(),r2.getComment(),lower);
     }
 
     /**
      * @param chain nftables {@link Chain}
-     * @param id    rule handle id
+     * @param handleId    rule handle handleId
      */
-    public static void ruleRemove(Chain chain, long id) {
-        ruleCheckExists(chain, id);
+    public static void ruleRemove(Chain chain, long handleId) {
+        ruleCheckExists(chain, handleId);
         String tableName = chain.getTable().getName();
         TableType tableType = chain.getTable().getType();
         String chainName = chain.getName();
-        String cmd = "delete rule %s %s %s handle %s".formatted(tableType.getValue(), tableName, chainName, id);
+        String cmd = "delete rule %s %s %s handle %s".formatted(tableType.getValue(), tableName, chainName, handleId);
         exec(cmd);
     }
 
