@@ -7,6 +7,7 @@ import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.firewall.expression.CtExpression;
 import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.expression.MatchType;
+import ir.moke.jsysbox.firewall.expression.MetaExpression;
 import ir.moke.jsysbox.firewall.model.Operation;
 import ir.moke.jsysbox.firewall.model.Rule;
 import ir.moke.jsysbox.firewall.statement.*;
@@ -199,10 +200,17 @@ public class RuleSerializer extends JsonSerializer<Rule> {
 
         // Left
         gen.writeObjectFieldStart("left");
-        gen.writeObjectFieldStart("payload");
-        gen.writeStringField("protocol", expression.matchType().getValue());
-        gen.writeStringField("field", expression.getField().getValue());
-        gen.writeEndObject();
+        if (expression.matchType().equals(MatchType.META)) {
+            MetaExpression metaExpression = (MetaExpression) expression;
+            gen.writeObjectFieldStart("meta");
+            gen.writeStringField("key", metaExpression.getField().getValue());
+            gen.writeEndObject();
+        } else {
+            gen.writeObjectFieldStart("payload");
+            gen.writeStringField("protocol", expression.matchType().getValue());
+            gen.writeStringField("field", expression.getField().getValue());
+            gen.writeEndObject();
+        }
         gen.writeEndObject();
 
         // Right

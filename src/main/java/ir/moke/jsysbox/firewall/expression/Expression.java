@@ -35,6 +35,11 @@ public interface Expression extends Serializable {
                 matchType = MatchType.fromValue(node.get("match").get("left").get("payload").get("protocol").asText());
                 field = node.get("match").get("left").get("payload").get("field").asText();
                 values = getRight(node);
+            } else if (node.has("match") && node.get("match").get("left").has("meta")) {
+                matchType = MatchType.META;
+                operation = Operation.fromValue(node.get("match").get("op").asText());
+                field = node.get("match").get("left").get("meta").get("key").asText();
+                values = getRight(node);
             } else if (node.has("match") && node.get("match").get("left").has("ct")) {
                 matchType = MatchType.CT;
                 operation = Operation.fromValue(node.get("match").get("op").asText());
@@ -49,7 +54,7 @@ public interface Expression extends Serializable {
                 ctCount = node.get("ct count").get("val").asLong();
                 isOver = node.get("ct count").has("inv");
             } else {
-                return null;
+                throw new JSysboxException("Unsupported match type");
             }
 
             return switch (matchType) {
