@@ -290,7 +290,7 @@ public class JFirewall {
         String tableName = table.getName();
         String chainType = type.getValue();
         String chainHook = hook.getValue();
-        String chainPolicy = policy.getValue();
+        String chainPolicy = type.equals(ChainType.NAT) ? ChainPolicy.ACCEPT.getValue() :  policy.getValue();
         exec(cmd.formatted(tableType, tableName, name, chainType, chainHook, priority, chainPolicy));
 
         return chain(table, name);
