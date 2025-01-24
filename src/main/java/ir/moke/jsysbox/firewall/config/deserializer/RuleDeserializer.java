@@ -27,7 +27,7 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
             JsonNode node = exprArr.get(i);
             if (node.has("match")) {
                 Expression expression = Expression.getExpression(node);
-                expList.add(expression);
+                if (expression != null) expList.add(expression);
             }
         }
         return expList;
@@ -41,7 +41,7 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
             JsonNode node = exprArr.get(i);
             if (!node.has("match")) {
                 Statement statement = Statement.getStatement(node);
-                sttList.add(statement);
+                if (statement != null) sttList.add(statement);
             }
         }
         return sttList;
@@ -54,7 +54,7 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
         String tableName = jsonNode.get("table").asText();
         String chainName = jsonNode.get("chain").asText();
         int handle = jsonNode.get("handle").asInt();
-        String comment = (jsonNode.get("comment") != null || !jsonNode.get("comment").isEmpty()) ? jsonNode.get("comment").asText() : null;
+        String comment = (jsonNode.has("comment") && !jsonNode.get("comment").isEmpty()) ? jsonNode.get("comment").asText() : null;
 
         Table table = JFirewall.table(tableName, TableType.fromValue(tableType));
         Chain chain = JFirewall.chain(table, chainName);

@@ -276,8 +276,10 @@ public class FirewallTest {
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain limitChain = JFirewall.chainAdd(table, "rejectRequest");
         Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
-        Statement statement = new LimitStatement(12L, LimitStatement.TimeUnit.MINUTE, LimitStatement.ByteUnit.MBYTES, true, 12L, LimitStatement.ByteUnit.KBYTES);
-        JFirewall.ruleAdd(limitChain, List.of(expression), List.of(statement), "Limit statement 1");
+//        Statement statement1 = new LimitStatement(12L, LimitStatement.TimeUnit.MINUTE, LimitStatement.ByteUnit.MBYTES, true, 12L, LimitStatement.ByteUnit.KBYTES);
+        Statement statement2 = new LimitStatement(12L, LimitStatement.TimeUnit.MINUTE, LimitStatement.ByteUnit.MBYTES, true);
+//        Statement statement3 = new LimitStatement(34L, LimitStatement.TimeUnit.MINUTE, true);
+        JFirewall.ruleAdd(limitChain, List.of(expression), List.of(statement2), "Limit statement 1");
     }
 
     @Test
