@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 
 public class JFirewall {
     private static final Logger logger = LoggerFactory.getLogger(JFirewall.class);
-    private static final String VALID_PATTERN = "^[a-zA-Z][a-zA-Z0-9]*$";
+    private static final String VALID_PATTERN = "^[a-zA-Z][a-zA-Z0-9._/-]*$";
     private static final Pattern pattern = Pattern.compile(VALID_PATTERN);
     private static final ObjectMapper om = new ObjectMapper();
 
