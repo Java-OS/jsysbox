@@ -13,13 +13,13 @@ public interface Statement extends Serializable {
     static Statement getStatement(JsonNode jsonNode) {
         try {
             if (jsonNode.has("log")) {
-                if (jsonNode.get("log").has("level")) {
-                    return new LogStatement(LogStatement.LogLevel.valueOf(jsonNode.get("log").get("level").asText().toUpperCase()));
-                } else if (jsonNode.get("log").has("prefix")){
-                    return new LogStatement(jsonNode.get("log").get("prefix").asText());
-                } else {
-                    return new LogStatement();
-                }
+                boolean hasLevel = jsonNode.get("log").has("level");
+                boolean hasPrefix = jsonNode.get("log").has("prefix");
+
+                LogStatement.LogLevel level = hasLevel ? LogStatement.LogLevel.valueOf(jsonNode.get("log").get("level").asText().toUpperCase()) : null;
+                String prefix = hasPrefix ? jsonNode.get("log").get("prefix").asText() : null;
+
+                return new LogStatement(level, prefix);
             } else if (jsonNode.has("limit")) {
                 Long rate = jsonNode.get("limit").has("rate") ? jsonNode.get("limit").get("rate").asLong() : null;
                 Long burst = jsonNode.get("limit").has("burst") ? jsonNode.get("limit").get("burst").asLong() : null;

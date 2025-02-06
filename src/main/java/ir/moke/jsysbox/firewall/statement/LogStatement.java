@@ -12,6 +12,11 @@ public class LogStatement implements Statement {
         this.level = level;
     }
 
+    public LogStatement(LogLevel level, String prefix) {
+        this.level = level;
+        this.prefix = prefix;
+    }
+
     public LogStatement(String prefix) {
         this.prefix = prefix;
     }
