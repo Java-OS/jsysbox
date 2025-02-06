@@ -53,7 +53,7 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
         String tableType = jsonNode.get("family").asText();
         String tableName = jsonNode.get("table").asText();
         String chainName = jsonNode.get("chain").asText();
-        int handle = jsonNode.get("handle").asInt();
+        Integer handle = jsonNode.has("handle") ? jsonNode.get("handle").asInt() : null;
         String comment = (jsonNode.has("comment") && !jsonNode.get("comment").asText().isEmpty()) ? jsonNode.get("comment").asText() : null;
 
         Table table = JFirewall.table(tableName, TableType.fromValue(tableType));

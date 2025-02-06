@@ -14,7 +14,7 @@ import java.util.List;
 @JsonSerialize(using = RuleSerializer.class)
 public class Rule implements Serializable {
     private Chain chain;
-    private int handle;
+    private Integer handle;
     private List<Expression> expressions;
     private String comment;
     private List<Statement> statements;
@@ -22,7 +22,7 @@ public class Rule implements Serializable {
     public Rule() {
     }
 
-    public Rule(Chain chain, List<Expression> expressions, List<Statement> statements, String comment, int handle) {
+    public Rule(Chain chain, List<Expression> expressions, List<Statement> statements, String comment, Integer handle) {
         this.chain = chain;
         this.handle = handle;
         this.expressions = expressions;
@@ -38,11 +38,11 @@ public class Rule implements Serializable {
         this.chain = chain;
     }
 
-    public int getHandle() {
+    public Integer getHandle() {
         return handle;
     }
 
-    public void setHandle(int handle) {
+    public void setHandle(Integer handle) {
         this.handle = handle;
     }
 
