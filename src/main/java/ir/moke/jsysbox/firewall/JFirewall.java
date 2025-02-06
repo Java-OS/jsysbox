@@ -777,7 +777,7 @@ public class JFirewall {
     }
 
     public static void ruleRemove(Rule rule) {
-        ruleRemove(rule.getChain(), rule.hashCode());
+        ruleRemove(rule.getChain(), rule.getHandle());
     }
 
     private static Comparator<Statement> sortStatements() {
