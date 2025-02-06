@@ -723,6 +723,7 @@ public class JFirewall {
      * @param id rule handle id
      */
     public static void ruleCheckExists(Chain chain, long id) {
+        if (chain == null) throw new JSysboxException("Empty chain");
         boolean exists = ruleList(chain)
                 .stream()
                 .filter(item -> item.getChain().getTable().equals(chain.getTable()))
@@ -773,6 +774,10 @@ public class JFirewall {
         String chainName = chain.getName();
         String cmd = "delete rule %s %s %s handle %s".formatted(tableType.getValue(), tableName, chainName, handleId);
         exec(cmd);
+    }
+
+    public static void ruleRemove(Rule rule) {
+        ruleRemove(rule.getChain(), rule.hashCode());
     }
 
     private static Comparator<Statement> sortStatements() {
