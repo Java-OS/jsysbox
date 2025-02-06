@@ -290,7 +290,7 @@ public class JFirewall {
         String tableName = table.getName();
         String chainType = type.getValue();
         String chainHook = hook.getValue();
-        String chainPolicy = type.equals(ChainType.NAT) ? ChainPolicy.ACCEPT.getValue() :  policy.getValue();
+        String chainPolicy = type.equals(ChainType.NAT) ? ChainPolicy.ACCEPT.getValue() : policy.getValue();
         exec(cmd.formatted(tableType, tableName, name, chainType, chainHook, priority, chainPolicy));
 
         return chain(table, name);
@@ -657,6 +657,20 @@ public class JFirewall {
         ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatements(), rule.getComment());
     }
 
+    /**
+     * Add rule from json of {@link Rule} structure
+     *
+     * @param json json structure
+     */
+    public static void ruleAdd(String json) {
+        try {
+            Rule rule = om.readValue(json, Rule.class);
+            ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatements(), rule.getComment());
+        } catch (JsonProcessingException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
     public static void ruleInsert(Chain chain, List<Expression> expressions, List<Statement> statements, String comment, int handle) {
         try {
             Table table = chain.getTable();
@@ -744,13 +758,13 @@ public class JFirewall {
      */
     public static void ruleSwitch(Chain chain, int higher, int lower) {
         Rule r2 = rule(chain, higher);
-        ruleRemove(chain,higher);
-        ruleInsert(chain,r2.getExpressions(),r2.getStatements(),r2.getComment(),lower);
+        ruleRemove(chain, higher);
+        ruleInsert(chain, r2.getExpressions(), r2.getStatements(), r2.getComment(), lower);
     }
 
     /**
-     * @param chain nftables {@link Chain}
-     * @param handleId    rule handle handleId
+     * @param chain    nftables {@link Chain}
+     * @param handleId rule handle handleId
      */
     public static void ruleRemove(Chain chain, long handleId) {
         ruleCheckExists(chain, handleId);
