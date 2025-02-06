@@ -23,7 +23,9 @@ public class LogStatement implements Statement {
 
     @Override
     public String toString() {
-        if (prefix != null) {
+        if (prefix != null && level != null) {
+            return "log prefix \"%s\" log level %s ".formatted(level.name().toLowerCase(), prefix);
+        } else if (prefix != null) {
             return "log prefix \"%s\" ".formatted(prefix);
         } else if (level != null) {
             return "log level " + level.name().toLowerCase();
