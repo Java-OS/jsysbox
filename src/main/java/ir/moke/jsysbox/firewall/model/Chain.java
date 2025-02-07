@@ -22,6 +22,11 @@ public class Chain implements Serializable {
     public Chain() {
     }
 
+    public Chain(Table table, String name) {
+        this.table = table;
+        this.name = name;
+    }
+
     public Chain(Table table, String name, int handle) {
         this.table = table;
         this.name = name;
@@ -88,19 +93,6 @@ public class Chain implements Serializable {
 
     public void setPolicy(ChainPolicy policy) {
         this.policy = policy;
-    }
-
-    @Override
-    public String toString() {
-        return "Chain{" +
-                "table=" + table.toString() +
-                ", name='" + name + '\'' +
-                ", handle=" + handle +
-                ", type=" + type +
-                ", hook=" + hook +
-                ", priority=" + priority +
-                ", policy=" + policy +
-                '}';
     }
 
     @Override

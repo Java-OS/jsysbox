@@ -69,14 +69,4 @@ public class Rule implements Serializable {
     public void setStatements(List<Statement> statements) {
         this.statements = statements;
     }
-
-    @Override
-    public String toString() {
-        return "Rule{" +
-                "chain=" + chain +
-                ", handle=" + handle +
-                ", expr=" + expressions +
-                ", comment='" + comment + '\'' +
-                '}';
-    }
 }

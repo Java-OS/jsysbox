@@ -1,14 +1,10 @@
 package ir.moke.jsysbox.firewall;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
+import ir.moke.jsysbox.JsonUtils;
 import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.model.Set;
 import ir.moke.jsysbox.firewall.model.*;
@@ -26,19 +22,9 @@ public class JFirewall {
     private static final Logger logger = LoggerFactory.getLogger(JFirewall.class);
     private static final String VALID_PATTERN = "^[a-zA-Z][a-zA-Z0-9._/-]*$";
     private static final Pattern pattern = Pattern.compile(VALID_PATTERN);
-    private static final ObjectMapper om = new ObjectMapper();
 
     static {
         JniNativeLoader.load("jfirewall");
-
-        om.setVisibility(om.getSerializationConfig().getDefaultVisibilityChecker()
-                .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        om.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, false);
-        om.configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, false);
-        om.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, false);
-        om.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     /**
@@ -61,12 +47,15 @@ public class JFirewall {
     }
 
     public static NFTables exportToNFTables() {
-        try {
-            String json = export();
-            return om.readValue(json, NFTables.class);
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
-        }
+        String json = export();
+        return JsonUtils.toObject(json, NFTables.class);
+    }
+
+    public static void apply(NFTables nfTables) {
+        nfTables.getTables().forEach(JFirewall::tableAdd);
+        nfTables.getChains().forEach(JFirewall::chainAdd);
+        nfTables.getSets().forEach(JFirewall::setAdd);
+        nfTables.getRules().forEach(JFirewall::ruleAdd);
     }
 
     public static void backup(File file) {
@@ -80,19 +69,11 @@ public class JFirewall {
     }
 
     public static String serializeJson(NFTables nfTables) {
-        try {
-            return om.writeValueAsString(nfTables);
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
-        }
+        return JsonUtils.toJson(nfTables);
     }
 
     public static NFTables deserializeJson(String json) {
-        try {
-            return om.readValue(json, NFTables.class);
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
-        }
+        return JsonUtils.toObject(json, NFTables.class);
     }
 
     public static byte[] serializeByteCode(NFTables nfTables) {
@@ -131,28 +112,19 @@ public class JFirewall {
 
     public static NFTables nfTables() {
         String json = export();
-        try {
-            return om.readValue(json, NFTables.class);
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
-        }
+        return JsonUtils.toObject(json, NFTables.class);
     }
 
     public static MetaInfo metaInfo() {
         String json = export();
-        try {
-            JsonNode root = om.readTree(json);
-            ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
-            for (JsonNode jsonNode : nftablesArray) {
-                if (jsonNode.has("metainfo")) {
-                    return om.readValue(jsonNode.get("metainfo").toString(), MetaInfo.class);
-                }
+        JsonNode root = JsonUtils.toObject(json, JsonNode.class);
+        ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
+        for (JsonNode jsonNode : nftablesArray) {
+            if (jsonNode.has("metainfo")) {
+                return JsonUtils.toObject(jsonNode.get("metainfo").toString(), MetaInfo.class);
             }
-
-            return null;
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
         }
+        return null;
     }
 
     /**
@@ -167,6 +139,12 @@ public class JFirewall {
         return table(name, type);
     }
 
+    public static Table tableAdd(Table table) {
+        checkCharacters(table.getName());
+        exec("add table %s %s".formatted(table.getType().getValue(), table.getName()));
+        return table(table.getName(), table.getType());
+    }
+
     /**
      * fetch list current tables
      *
@@ -174,21 +152,16 @@ public class JFirewall {
      */
     public static List<Table> tableList() {
         String result = exec("list tables");
-        try {
-            List<Table> tables = new ArrayList<>();
-            JsonNode jsonNode = om.readValue(result, JsonNode.class);
-            JsonNode nftablesNode = jsonNode.get("nftables");
-            for (JsonNode node : nftablesNode) {
-                if (node.has("table")) {
-                    Table table = om.readValue(node.get("table").toString(), Table.class);
-                    tables.add(table);
-                }
+        List<Table> tables = new ArrayList<>();
+        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+        JsonNode nftablesNode = jsonNode.get("nftables");
+        for (JsonNode node : nftablesNode) {
+            if (node.has("table")) {
+                Table table = JsonUtils.toObject(node.get("table").toString(), Table.class);
+                tables.add(table);
             }
-
-            return tables;
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
         }
+        return tables;
     }
 
     /**
@@ -335,21 +308,17 @@ public class JFirewall {
      */
     public static List<Chain> chainList() {
         String result = exec("list chains");
-        try {
-            List<Chain> chains = new ArrayList<>();
-            JsonNode jsonNode = om.readValue(result, JsonNode.class);
-            JsonNode nftablesNode = jsonNode.get("nftables");
-            for (JsonNode node : nftablesNode) {
-                if (node.has("chain")) {
-                    Chain chain = om.readValue(node.get("chain").toString(), Chain.class);
-                    chains.add(chain);
-                }
+        List<Chain> chains = new ArrayList<>();
+        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+        JsonNode nftablesNode = jsonNode.get("nftables");
+        for (JsonNode node : nftablesNode) {
+            if (node.has("chain")) {
+                Chain chain = JsonUtils.toObject(node.get("chain").toString(), Chain.class);
+                chains.add(chain);
             }
-
-            return chains;
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
         }
+
+        return chains;
     }
 
     public static List<Chain> chainList(Table table) {
@@ -550,6 +519,10 @@ public class JFirewall {
         setAdd(table.getType(), table.getName(), setName, setType, flags, timeout, gcInterval, size, comment, policy);
     }
 
+    public static void setAdd(Set set) {
+        setAdd(set.getTable(), set.getName(), set.getType(), set.getFlags(), set.getTimeout(), set.getGcInterval(), set.getSize(), set.getComment(), set.getPolicy());
+    }
+
     /**
      * nftables list of current sets
      *
@@ -557,20 +530,16 @@ public class JFirewall {
      */
     public static List<Set> setList() {
         String result = exec("list sets");
-        try {
-            List<Set> sets = new ArrayList<>();
-            JsonNode jsonNode = om.readValue(result, JsonNode.class);
-            JsonNode nftablesNode = jsonNode.get("nftables");
-            for (JsonNode node : nftablesNode) {
-                if (node.has("set")) {
-                    Set set = om.readValue(node.get("set").toString(), Set.class);
-                    sets.add(set);
-                }
+        List<Set> sets = new ArrayList<>();
+        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+        JsonNode nftablesNode = jsonNode.get("nftables");
+        for (JsonNode node : nftablesNode) {
+            if (node.has("set")) {
+                Set set = JsonUtils.toObject(node.get("set").toString(), Set.class);
+                sets.add(set);
             }
-            return sets;
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
         }
+        return sets;
     }
 
     public static synchronized void setRename(int tableHandle, int setHandle, String newName) {
@@ -663,12 +632,8 @@ public class JFirewall {
      * @param json json structure
      */
     public static void ruleAdd(String json) {
-        try {
-            Rule rule = om.readValue(json, Rule.class);
-            ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatements(), rule.getComment());
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
-        }
+        Rule rule = JsonUtils.toObject(json, Rule.class);
+        ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatements(), rule.getComment());
     }
 
     public static void ruleInsert(Chain chain, List<Expression> expressions, List<Statement> statements, String comment, int handle) {
@@ -700,21 +665,17 @@ public class JFirewall {
      */
     public static List<Rule> ruleList(Chain chain) {
         String result = exec(chain != null ? "list chain %s %s %s".formatted(chain.getTable().getType().getValue(), chain.getTable().getName(), chain.getName()) : "list ruleset");
-        try {
-            List<Rule> rules = new ArrayList<>();
-            JsonNode jsonNode = om.readValue(result, JsonNode.class);
-            JsonNode nftablesNode = jsonNode.get("nftables");
-            for (JsonNode node : nftablesNode) {
-                if (node.has("rule")) {
-                    JsonNode ruleNode = node.get("rule");
-                    Rule rule = om.readValue(ruleNode.toString(), Rule.class);
-                    rules.add(rule);
-                }
+        List<Rule> rules = new ArrayList<>();
+        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+        JsonNode nftablesNode = jsonNode.get("nftables");
+        for (JsonNode node : nftablesNode) {
+            if (node.has("rule")) {
+                JsonNode ruleNode = node.get("rule");
+                Rule rule = JsonUtils.toObject(ruleNode.toString(), Rule.class);
+                rules.add(rule);
             }
-            return rules;
-        } catch (JsonProcessingException e) {
-            throw new JSysboxException(e);
         }
+        return rules;
     }
 
     /**

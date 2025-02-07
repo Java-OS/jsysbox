@@ -400,7 +400,8 @@ public class FirewallTest {
         try {
             Path path = Path.of("/tmp/jfirewall.json");
             String json = Files.readString(path);
-            Assertions.assertDoesNotThrow(() -> JFirewall.deserializeJson(json));
+            NFTables nfTables = JFirewall.deserializeJson(json);
+            Assertions.assertDoesNotThrow(() -> JFirewall.apply(nfTables));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

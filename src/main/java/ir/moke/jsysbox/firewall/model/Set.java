@@ -85,18 +85,7 @@ public class Set implements Serializable {
         return policy;
     }
 
-    @Override
-    public String toString() {
-        return "Set{" +
-                "table=" + table.toString() +
-                ", name='" + name + '\'' +
-                ", type=" + type +
-                ", handle=" + handle +
-                ", size=" + size +
-                ", flags=" + flags +
-                ", timeout=" + timeout +
-                ", gcInterval=" + gcInterval +
-                ", elements=" + elements +
-                '}';
+    public void setTable(Table table) {
+        this.table = table;
     }
 }
