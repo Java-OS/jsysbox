@@ -23,6 +23,7 @@ public class RejectStatement implements Statement {
     @Override
     public String toString() {
         return switch (type) {
+            case TCP_RESET -> "reject with tcp reset";
             case REJECT -> "reject";
             case ICMP -> "reject with icmp type %s".formatted(reason.getValue());
             case ICMPV6 -> "reject with icmpv6 type %s".formatted(reason.getValue());
@@ -31,6 +32,7 @@ public class RejectStatement implements Statement {
     }
 
     public enum Type {
+        TCP_RESET("tcp reset"),
         REJECT("reject"),
         ICMP("icmp"),
         ICMPV6("icmpv6"),

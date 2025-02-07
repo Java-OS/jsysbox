@@ -265,7 +265,8 @@ public class FirewallTest {
         Table table = JFirewall.table("ThirdTable", TableType.IPv4);
         Chain rejectChain = JFirewall.chainAdd(table, "rejectRequest");
         Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
-        Statement statement = new RejectStatement(RejectStatement.Type.ICMP, RejectStatement.Reason.ADMIN_PROHIBITED);
+//        Statement statement = new RejectStatement(RejectStatement.Type.ICMP, RejectStatement.Reason.ADMIN_PROHIBITED);
+        Statement statement = new RejectStatement(RejectStatement.Type.TCP_RESET, null);
         JFirewall.ruleAdd(rejectChain, List.of(expression), List.of(statement), "reject packets on sport 1100");
     }
 
@@ -362,6 +363,7 @@ public class FirewallTest {
     @Test
     @Order(300)
     public void checkSaveFirewall() {
+        logger.info("Execute <checkSaveFirewall>");
         File file = new File("/tmp/jfirewall.json");
         JFirewall.backup(file);
         Assertions.assertTrue(file.exists());
@@ -370,6 +372,7 @@ public class FirewallTest {
     @Test
     @Order(301)
     public void checkSerializeByteCode() {
+        logger.info("Execute <checkSerializeByteCode>");
         try {
             NFTables nfTables = JFirewall.exportToNFTables();
             byte[] bytes = JFirewall.serializeByteCode(nfTables);
@@ -385,13 +388,15 @@ public class FirewallTest {
     @Test
     @Order(302)
     public void checkSerializeJson() {
+        logger.info("Execute <checkSerializeJson>");
         NFTables nfTables = JFirewall.exportToNFTables();
         Assertions.assertDoesNotThrow(() -> JFirewall.serializeJson(nfTables));
     }
 
     @Test
     @Order(302)
-    public void checkLoadSerializedJson() {
+    public void checkDeserializeJson() {
+        logger.info("Execute <checkDeserializeJson>");
         try {
             Path path = Path.of("/tmp/jfirewall.json");
             String json = Files.readString(path);
@@ -404,6 +409,7 @@ public class FirewallTest {
     @Test
     @Order(400)
     public void checkNFTablesObject() {
+        logger.info("Execute <checkNFTablesObject>");
         NFTables nfTables = JFirewall.nfTables();
         Assertions.assertNotNull(nfTables);
         Assertions.assertFalse(nfTables.getTables().isEmpty());
