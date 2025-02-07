@@ -256,7 +256,7 @@ public class JFirewall {
      * @return {@link Chain}
      */
     public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
-        priority = calculatePriority(type, priority);
+        priority = calculatePriority(table, priority);
         String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
 
         String tableType = table.getType().getValue();
@@ -318,7 +318,9 @@ public class JFirewall {
             }
         }
 
-        return chains;
+        return chains.stream()
+                .sorted(Comparator.comparingInt(Chain::getPriority))
+                .toList();
     }
 
     public static List<Chain> chainList(Table table) {
@@ -369,7 +371,6 @@ public class JFirewall {
      * @param name  new chain name
      */
     public static synchronized void chainUpdate(Chain chain, String name, ChainType type, ChainPolicy policy, ChainHook hook, Integer priority) {
-        priority = calculatePriority(type, priority);
         List<Rule> rules = ruleList(chain);
 
         // remove old chain
@@ -427,15 +428,11 @@ public class JFirewall {
         }
     }
 
-    private static Integer calculatePriority(ChainType type, Integer priority) {
-        if (priority == null && type != null) {
-            priority = switch (type) {
-                case FILTER -> 0;
-                case NAT -> -100;
-                case ROUTE -> -200;
-            };
-        }
-        return priority;
+    private static Integer calculatePriority(Table table, Integer priority) {
+        return chainList(table).stream()
+                .mapToInt(Chain::getPriority)
+                .max()
+                .orElse(priority);
     }
 
     /**
