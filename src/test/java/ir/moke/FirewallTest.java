@@ -357,7 +357,7 @@ public class FirewallTest {
         Rule r1 = JFirewall.ruleList(chain).getFirst();
         Rule r2 = JFirewall.ruleList(chain).getLast();
 
-        JFirewall.ruleSwitch(chain, r2.getHandle(), r1.getHandle());
+        JFirewall.ruleSwitch(chain, List.of(r2.getHandle(), r1.getHandle()));
     }
 
     @Test

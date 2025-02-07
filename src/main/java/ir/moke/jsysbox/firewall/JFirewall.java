@@ -708,17 +708,18 @@ public class JFirewall {
     }
 
     /**
-     * Change priority of rule higher and lower .
-     * this method try to execute higher before lower .
+     * Change priority of rule r1 and r2 .
      *
-     * @param chain  Target chain
-     * @param higher first rule
-     * @param lower  second rule
+     * @param chain       Target chain
+     * @param ruleHandles new order list of rule handles
      */
-    public static void ruleSwitch(Chain chain, int higher, int lower) {
-        Rule r2 = rule(chain, higher);
-        ruleRemove(chain, higher);
-        ruleInsert(chain, r2.getExpressions(), r2.getStatements(), r2.getComment(), lower);
+    public static void ruleSwitch(Chain chain, List<Integer> ruleHandles) {
+        List<Rule> rules = ruleList(chain);
+        rules.forEach(JFirewall::ruleRemove);
+
+        for (Integer handle : ruleHandles) {
+            rules.stream().filter(item -> item.getHandle().equals(handle)).findFirst().ifPresent(JFirewall::ruleAdd);
+        }
     }
 
     /**
