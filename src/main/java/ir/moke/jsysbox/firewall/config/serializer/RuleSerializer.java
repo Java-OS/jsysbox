@@ -147,7 +147,7 @@ public class RuleSerializer extends JsonSerializer<Rule> {
     private static void parseRejectStatement(JsonGenerator gen, RejectStatement rejectStatement) throws IOException {
         gen.writeStartObject();
         gen.writeObjectFieldStart("reject");
-        gen.writeStringField("type", rejectStatement.getType().getValue().toLowerCase());
+        gen.writeStringField("type", rejectStatement.getReason().equals(RejectStatement.Reason.TCP_RESET) ? "tcp reset" : "icmp");
         if (rejectStatement.getReason() != null) {
             gen.writeStringField("expr", rejectStatement.getReason().getValue().toLowerCase());
         }

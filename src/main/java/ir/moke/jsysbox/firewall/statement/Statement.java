@@ -89,8 +89,13 @@ public interface Statement extends Serializable {
                 return new CounterStatement(packets, bytes);
             } else if (jsonNode.has("reject")) {
                 String type = jsonNode.get("reject").get("type").asText();
-                String reason = jsonNode.get("reject").has("expr") ? jsonNode.get("reject").get("expr").asText() : null;
-                return new RejectStatement(RejectStatement.Type.fromValue(type.toLowerCase()), reason != null ? RejectStatement.Reason.fromValue(reason.toLowerCase()) : null);
+                RejectStatement.Reason reason;
+                if (type.equals("tcp reset")) {
+                    reason = RejectStatement.Reason.TCP_RESET;
+                } else {
+                    reason = RejectStatement.Reason.fromValue(jsonNode.get("reject").get("expr").asText().toLowerCase());
+                }
+                return new RejectStatement(reason);
             }
             return null;
         } catch (Exception e) {

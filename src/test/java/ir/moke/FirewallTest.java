@@ -266,7 +266,7 @@ public class FirewallTest {
         Chain rejectChain = JFirewall.chainAdd(table, "rejectRequest");
         Expression expression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("1100"));
 //        Statement statement = new RejectStatement(RejectStatement.Type.ICMP, RejectStatement.Reason.ADMIN_PROHIBITED);
-        Statement statement = new RejectStatement(RejectStatement.Type.TCP_RESET, null);
+        Statement statement = new RejectStatement(RejectStatement.Reason.TCP_RESET);
         JFirewall.ruleAdd(rejectChain, List.of(expression), List.of(statement), "reject packets on sport 1100");
     }
 
