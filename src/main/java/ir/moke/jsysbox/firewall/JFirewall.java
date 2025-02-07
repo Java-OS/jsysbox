@@ -408,7 +408,7 @@ public class JFirewall {
      * @param tableHandle  table of chain
      * @param chainHandles List of new chain handles order
      */
-    public static synchronized void chainSwitch(int tableHandle, List<Integer> chainHandles) {
+    public static synchronized List<Chain> chainSwitch(int tableHandle, List<Integer> chainHandles) {
         List<Chain> currentChains = chainList(tableHandle);
         Map<Chain, List<Rule>> map = new LinkedHashMap<>();
         for (Integer chainHandle : chainHandles) {
@@ -426,6 +426,7 @@ public class JFirewall {
             chainAdd(chain);
             map.get(chain).forEach(JFirewall::ruleAdd);
         }
+        return chainList(tableHandle);
     }
 
     private static Integer calculatePriority(Table table, Integer priority) {
@@ -713,13 +714,14 @@ public class JFirewall {
      * @param chain       Target chain
      * @param ruleHandles new order list of rule handles
      */
-    public static void ruleSwitch(Chain chain, List<Integer> ruleHandles) {
+    public static synchronized List<Rule> ruleSwitch(Chain chain, List<Integer> ruleHandles) {
         List<Rule> rules = ruleList(chain);
         rules.forEach(JFirewall::ruleRemove);
 
         for (Integer handle : ruleHandles) {
             rules.stream().filter(item -> item.getHandle().equals(handle)).findFirst().ifPresent(JFirewall::ruleAdd);
         }
+        return ruleList(chain);
     }
 
     /**
