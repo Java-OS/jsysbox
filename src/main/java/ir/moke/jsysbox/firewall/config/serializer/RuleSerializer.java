@@ -82,7 +82,7 @@ public class RuleSerializer extends JsonSerializer<Rule> {
             gen.writeObjectFieldStart(type.name().toLowerCase());
             if (type.equals(NatStatement.Type.SNAT) || type.equals(NatStatement.Type.DNAT)) {
                 gen.writeStringField("addr", natStatement.getAddress());
-                gen.writeNumberField("port", natStatement.getPort());
+                if (natStatement.getPort() != null) gen.writeNumberField("port", natStatement.getPort());
                 if (natStatement.getFlag() != null) {
                     gen.writeArrayFieldStart("flags");
                     for (NatStatement.Flag flag : natStatement.getFlag()) {
