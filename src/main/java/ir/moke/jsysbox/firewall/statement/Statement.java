@@ -52,7 +52,7 @@ public interface Statement extends Serializable {
                 return new VerdictStatement(VerdictStatement.Type.GOTO, target);
             } else if (jsonNode.has("snat")) {
                 String addr = jsonNode.get("snat").get("addr").asText();
-                Integer port = jsonNode.get("snat").has("port") ? jsonNode.get("snat").get("port").asInt() : null;
+                Integer port = jsonNode.get("snat").has("port") && jsonNode.get("snat").isNull() ? jsonNode.get("snat").get("port").asInt() : null;
                 List<NatStatement.Flag> flags = new ArrayList<>();
                 if (jsonNode.get("snat").has("flags")) {
                     ArrayNode arr = (ArrayNode) jsonNode.get("snat").get("flags");
@@ -61,7 +61,7 @@ public interface Statement extends Serializable {
                 return new NatStatement(NatStatement.Type.SNAT, addr, port, flags);
             } else if (jsonNode.has("dnat")) {
                 String addr = jsonNode.get("dnat").get("addr").asText();
-                Integer port = jsonNode.get("dnat").has("port") ? jsonNode.get("dnat").get("port").asInt() : null;
+                Integer port = jsonNode.get("dnat").has("port") && !jsonNode.get("dnat").isNull() ? jsonNode.get("dnat").get("port").asInt() : null;
                 List<NatStatement.Flag> flags = new ArrayList<>();
                 if (jsonNode.get("dnat").has("flags")) {
                     ArrayNode arr = (ArrayNode) jsonNode.get("dnat").get("flags");
@@ -69,7 +69,7 @@ public interface Statement extends Serializable {
                 }
                 return new NatStatement(NatStatement.Type.DNAT, addr, port, flags);
             } else if (jsonNode.has("redirect")) {
-                int port = jsonNode.get("redirect").get("port").asInt();
+                Integer port = jsonNode.get("redirect").get("port").asInt();
                 List<NatStatement.Flag> flags = new ArrayList<>();
                 if (jsonNode.get("redirect").has("flags")) {
                     ArrayNode arr = (ArrayNode) jsonNode.get("redirect").get("flags");
