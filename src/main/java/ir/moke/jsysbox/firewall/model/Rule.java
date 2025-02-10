@@ -9,6 +9,7 @@ import ir.moke.jsysbox.firewall.statement.Statement;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 @JsonDeserialize(using = RuleDeserializer.class)
 @JsonSerialize(using = RuleSerializer.class)
@@ -68,5 +69,17 @@ public class Rule implements Serializable {
 
     public void setStatements(List<Statement> statements) {
         this.statements = statements;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Rule rule = (Rule) o;
+        return Objects.equals(chain, rule.chain) && Objects.equals(handle, rule.handle);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(chain, handle);
     }
 }

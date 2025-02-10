@@ -704,13 +704,20 @@ public class JFirewall {
      * Update rule
      */
     public static synchronized void ruleUpdate(Chain chain, int handle, List<Expression> expressions, List<Statement> statements, String comment) {
-        ruleRemove(chain, handle);
-        ruleAdd(chain, expressions, statements, comment);
+        Rule rule = rule(chain, handle);
+        rule.setExpressions(expressions);
+        rule.setStatements(statements);
+        rule.setComment(comment);
+        ruleUpdate(rule);
     }
 
     public static synchronized void ruleUpdate(Rule rule) {
-        ruleRemove(rule);
-        ruleAdd(rule);
+        List<Rule> ruleList = ruleList(rule.getChain());
+        ruleList.forEach(JFirewall::ruleRemove);
+
+        int index = ruleList.indexOf(rule);
+        if (index != -1) ruleList.set(index, rule);
+        ruleList.forEach(JFirewall::ruleAdd);
     }
 
     /**
