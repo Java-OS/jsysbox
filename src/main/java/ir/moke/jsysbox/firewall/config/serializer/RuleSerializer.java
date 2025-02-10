@@ -158,11 +158,9 @@ public class RuleSerializer extends JsonSerializer<Rule> {
     private static void parseLogStatement(JsonGenerator gen, LogStatement logStatement) throws IOException {
         gen.writeStartObject();
         gen.writeObjectFieldStart("log");
-        if (logStatement.getLevel() != null) {
-            gen.writeStringField("level", logStatement.getLevel().name().toLowerCase());
-        } else {
-            gen.writeStringField("prefix", logStatement.getPrefix());
-        }
+        if (logStatement.getLevel() != null) gen.writeStringField("level", logStatement.getLevel().name().toLowerCase());
+        if (logStatement.getPrefix() != null) gen.writeStringField("prefix", logStatement.getPrefix());
+
         gen.writeEndObject();
         gen.writeEndObject();
     }
