@@ -708,6 +708,11 @@ public class JFirewall {
         ruleAdd(chain, expressions, statements, comment);
     }
 
+    public static synchronized void ruleUpdate(Rule rule) {
+        ruleRemove(rule);
+        ruleAdd(rule);
+    }
+
     /**
      * Change priority of rule r1 and r2 .
      *
