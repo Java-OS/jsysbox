@@ -3,6 +3,7 @@ package ir.moke.jsysbox.firewall.statement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
+import ir.moke.jsysbox.JsonUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public interface Statement extends Serializable {
                 return new VerdictStatement(VerdictStatement.Type.GOTO, target);
             } else if (jsonNode.has("snat")) {
                 String addr = jsonNode.get("snat").get("addr").asText();
-                Integer port = jsonNode.get("snat").has("port") && !jsonNode.get("snat").get("port").isEmpty() ? jsonNode.get("snat").get("port").asInt() : null;
+                Integer port = jsonNode.get("snat").has("port") && !JsonUtils.isNullOrEmpty(jsonNode.get("snat").get("port")) ? jsonNode.get("snat").get("port").asInt() : null;
                 List<NatStatement.Flag> flags = new ArrayList<>();
                 if (jsonNode.get("snat").has("flags")) {
                     ArrayNode arr = (ArrayNode) jsonNode.get("snat").get("flags");
@@ -61,7 +62,7 @@ public interface Statement extends Serializable {
                 return new NatStatement(NatStatement.Type.SNAT, addr, port, flags);
             } else if (jsonNode.has("dnat")) {
                 String addr = jsonNode.get("dnat").get("addr").asText();
-                Integer port = jsonNode.get("dnat").has("port") && !jsonNode.get("dnat").get("port").isEmpty() ? jsonNode.get("dnat").get("port").asInt() : null;
+                Integer port = jsonNode.get("dnat").has("port") && !JsonUtils.isNullOrEmpty(jsonNode.get("dnat").get("port")) ? jsonNode.get("dnat").get("port").asInt() : null;
                 List<NatStatement.Flag> flags = new ArrayList<>();
                 if (jsonNode.get("dnat").has("flags")) {
                     ArrayNode arr = (ArrayNode) jsonNode.get("dnat").get("flags");
