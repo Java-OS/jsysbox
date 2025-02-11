@@ -317,12 +317,7 @@ public class JFirewall {
                 chains.add(chain);
             }
         }
-
-        if (chains.isEmpty()) return List.of();
-
-        return chains.stream()
-                .sorted(Comparator.comparingInt(Chain::getPriority))
-                .toList();
+        return chains;
     }
 
     public static List<Chain> chainList(Table table) {
