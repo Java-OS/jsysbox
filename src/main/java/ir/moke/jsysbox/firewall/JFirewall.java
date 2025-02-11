@@ -318,6 +318,8 @@ public class JFirewall {
             }
         }
 
+        if (chains.isEmpty()) return List.of();
+
         return chains.stream()
                 .sorted(Comparator.comparingInt(Chain::getPriority))
                 .toList();
