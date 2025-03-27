@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,4 +120,64 @@ public class JSystem {
     public native static void rmmod(String name);
 
     public native static Map<String, String> modinfo(String name);
+
+    public static CpuInfo cpuInfo() {
+        try {
+            List<String> lines = Files.readAllLines(Path.of("/proc/cpuinfo"));
+            long processors = lines.stream().filter(item -> item.startsWith("processor")).count();
+            String vendorId = lines.stream().filter(item -> item.startsWith("vendor_id")).map(item -> item.split(":")[1]).findFirst().get();
+            int cpuFamily = lines.stream().filter(item -> item.startsWith("cpu family")).map(item -> Integer.parseInt(item.split(":")[1])).findFirst().get();
+            String modelName = lines.stream().filter(item -> item.startsWith("model name")).map(item -> item.split(":")[1]).findFirst().get();
+            int cpuCores = lines.stream().filter(item -> item.startsWith("cpu cores")).map(item -> Integer.parseInt(item.split(":")[1])).findFirst().get();
+            return new CpuInfo(processors, vendorId, cpuFamily, modelName, cpuCores);
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static MemoryInfo memoryInfo() {
+        try {
+            List<String> lines = Files.readAllLines(Path.of("/proc/cpuinfo"));
+            long total = lines.stream().filter(item -> item.startsWith("MemTotal")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long free = lines.stream().filter(item -> item.startsWith("MemFree")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long available = lines.stream().filter(item -> item.startsWith("MemAvailable")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long buffers = lines.stream().filter(item -> item.startsWith("Buffers")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long cached = lines.stream().filter(item -> item.startsWith("Cached")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long swapCached = lines.stream().filter(item -> item.startsWith("SwapCached")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long active = lines.stream().filter(item -> item.startsWith("Active")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long inactive = lines.stream().filter(item -> item.startsWith("Inactive")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long swapTotal = lines.stream().filter(item -> item.startsWith("SwapTotal")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long swapFree = lines.stream().filter(item -> item.startsWith("SwapFree")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            long shmem = lines.stream().filter(item -> item.startsWith("Shmem")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
+            return new MemoryInfo(total, free, available, buffers, cached, swapCached, active, inactive, swapTotal, swapFree, shmem);
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static List<CpuStat> cpuStats() {
+        try {
+            List<CpuStat> cpuStatList = new ArrayList<>();
+            List<String> lines = Files.readAllLines(Path.of("/proc/stat"));
+            List<String> cpuLines = lines.stream().filter(item -> item.startsWith("cpu")).toList();
+            for (String line : cpuLines) {
+                String core = line.split("\\s+")[0];
+                long user = Long.parseLong(line.split("\\s+")[1]);
+                long nice = Long.parseLong(line.split("\\s+")[2]);
+                long system = Long.parseLong(line.split("\\s+")[3]);
+                long idle = Long.parseLong(line.split("\\s+")[4]);
+                long ioWait = Long.parseLong(line.split("\\s+")[5]);
+                long irq = Long.parseLong(line.split("\\s+")[6]);
+                long softIrq = Long.parseLong(line.split("\\s+")[7]);
+                long steal = Long.parseLong(line.split("\\s+")[8]);
+                long guest = Long.parseLong(line.split("\\s+")[9]);
+                long guestNice = Long.parseLong(line.split("\\s+")[10]);
+                CpuStat cpuStat = new CpuStat(core, user, nice, system, idle, ioWait, irq, softIrq, steal, guest, guestNice);
+                cpuStatList.add(cpuStat);
+            }
+            return cpuStatList;
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
 }
