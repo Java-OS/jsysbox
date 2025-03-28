@@ -263,9 +263,13 @@ public class JNetwork {
                 } else {
                     reachable = addr.isReachable(timeout);
                 }
-                if (reachable) reachableCount++;
-                long diff = Duration.between(startTime, Instant.now()).toMillis();
-                System.out.printf("%d: from %s time=%d ms\n", reachableCount, destination, diff);
+                if (reachable) {
+                    reachableCount++;
+                    long diff = Duration.between(startTime, Instant.now()).toMillis();
+                    System.out.printf("%d: from %s time=%d ms\n", reachableCount, destination, diff);
+                } else {
+                    System.out.println("ping: unreachable host");
+                }
                 sleep(interval);
             }
         } catch (IOException e) {
