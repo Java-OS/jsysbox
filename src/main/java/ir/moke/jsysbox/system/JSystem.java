@@ -137,7 +137,7 @@ public class JSystem {
 
     public static MemoryInfo memoryInfo() {
         try {
-            List<String> lines = Files.readAllLines(Path.of("/proc/cpuinfo"));
+            List<String> lines = Files.readAllLines(Path.of("/proc/meminfo"));
             long total = lines.stream().filter(item -> item.startsWith("MemTotal")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
             long free = lines.stream().filter(item -> item.startsWith("MemFree")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
             long available = lines.stream().filter(item -> item.startsWith("MemAvailable")).map(item -> Long.parseLong(item.split("\\s+")[1])).findFirst().get();
