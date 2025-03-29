@@ -14,11 +14,13 @@
 
 package ir.moke.jsysbox.system;
 
+import com.sun.management.OperatingSystemMXBean;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -31,7 +33,7 @@ import java.util.stream.Stream;
 
 public class JSystem {
     private static final Path SYSCTL_BASE_PATH = Path.of("/proc/sys");
-
+    private static final OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     static {
         JniNativeLoader.load("jsystem");
     }
@@ -179,5 +181,13 @@ public class JSystem {
         } catch (IOException e) {
             throw new JSysboxException(e);
         }
+    }
+
+    public static double cpuLoad() {
+        return osBean.getCpuLoad();
+    }
+
+    public static double jvmCpuLoad() {
+        return osBean.getProcessCpuLoad();
     }
 }
