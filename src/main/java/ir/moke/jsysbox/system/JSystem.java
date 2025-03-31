@@ -196,8 +196,8 @@ public class JSystem {
         try {
             String content = Files.readString(Path.of("/proc/loadavg"));
             double oneMinute = Double.parseDouble(content.split("\\s+")[0]);
-            double fiveMinute = Double.parseDouble(content.split("\\s+")[0]);
-            double fifteenMinute = Double.parseDouble(content.split("\\s+")[0]);
+            double fiveMinute = Double.parseDouble(content.split("\\s+")[1]);
+            double fifteenMinute = Double.parseDouble(content.split("\\s+")[2]);
             return new LoadAverage(oneMinute, fiveMinute, fifteenMinute);
         } catch (IOException e) {
             throw new JSysboxException(e);
