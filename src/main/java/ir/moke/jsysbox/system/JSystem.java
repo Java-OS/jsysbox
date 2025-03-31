@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 public class JSystem {
     private static final Path SYSCTL_BASE_PATH = Path.of("/proc/sys");
     private static final OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+
     static {
         JniNativeLoader.load("jsystem");
     }
@@ -189,5 +190,17 @@ public class JSystem {
 
     public static double jvmCpuLoad() {
         return osBean.getProcessCpuLoad();
+    }
+
+    public static LoadAverage loadAverage() {
+        try {
+            String content = Files.readString(Path.of("/proc/loadavg"));
+            double oneMinute = Double.parseDouble(content.split("\\s+")[0]);
+            double fiveMinute = Double.parseDouble(content.split("\\s+")[0]);
+            double fifteenMinute = Double.parseDouble(content.split("\\s+")[0]);
+            return new LoadAverage(oneMinute, fiveMinute, fifteenMinute);
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
     }
 }
