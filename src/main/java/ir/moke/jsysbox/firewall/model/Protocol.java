@@ -2,7 +2,7 @@ package ir.moke.jsysbox.firewall.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum Protocols {
+public enum Protocol {
     IP(0, "ip"),
     HOPOPT(0, "hopopt"),
     ICMP(1, "icmp"),
@@ -61,7 +61,7 @@ public enum Protocols {
     private final int code;
     private final String value;
 
-    Protocols(int code, String value) {
+    Protocol(int code, String value) {
         this.code = code;
         this.value = value;
     }

@@ -146,7 +146,7 @@ public class FirewallTest {
         Chain chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
 
         List<Expression> expressionList = new ArrayList<>();
-        IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
+        IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocol.IP.getValue()));
         TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("54"));
 
         expressionList.add(ipExpression);
@@ -167,7 +167,7 @@ public class FirewallTest {
         Chain chain = JFirewall.chainAdd(table, "c1", ChainType.FILTER, ChainHook.INPUT, ChainPolicy.ACCEPT, 1);
 
         List<Expression> expressionList = new ArrayList<>();
-        Expression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue()));
+        Expression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocol.IP.getValue()));
         Expression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("54"));
 
         /* CT Expression */
@@ -304,7 +304,7 @@ public class FirewallTest {
         Rule currentRule = JFirewall.ruleList(chain).stream().filter(item -> item.getChain().equals(chain)).findFirst().orElse(null);
 
         List<Expression> expressionList = new ArrayList<>();
-        IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocols.IP.getValue(), Protocols.MOBILITY_HEADER.getValue(), Protocols.VRRP.getValue(), Protocols.RDP.getValue()));
+        IpExpression ipExpression = new IpExpression(IpExpression.Field.PROTOCOL, Operation.EQ, List.of(Protocol.IP.getValue(), Protocol.MOBILITY_HEADER.getValue(), Protocol.VRRP.getValue(), Protocol.RDP.getValue()));
         TcpExpression tcpExpression = new TcpExpression(TcpExpression.Field.SPORT, Operation.EQ, List.of("114", "80", "24"));
         Expression etherExpression = new EtherExpression(EtherExpression.Field.SADDR, Operation.EQ, List.of("00:0f:54:0c:11:04", "00:0f:54:0c:11:12"));
         Expression etherExpression2 = new EtherExpression(List.of(EtherExpression.Type.VLAN, EtherExpression.Type.IP));

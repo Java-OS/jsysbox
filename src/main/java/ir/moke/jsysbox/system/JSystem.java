@@ -203,4 +203,12 @@ public class JSystem {
             throw new JSysboxException(e);
         }
     }
+
+    public static String getCommandFromPid(Integer pid) {
+        try {
+            return Files.readString(Path.of("/proc").resolve(String.valueOf(pid)).resolve("comm")).trim();
+        } catch (IOException e) {
+            return null;
+        }
+    }
 }

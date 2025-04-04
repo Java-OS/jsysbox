@@ -91,4 +91,11 @@ public class NetworkTest {
         JNetwork.flush("eth0");
         Assertions.assertNull(JNetwork.ethernet("eth0").ip());
     }
+
+    @Test
+    @Order(8)
+    public void checkNetstat() {
+        logger.info("Execute <checkNetstat>");
+        JNetwork.netstatIpv4().forEach(System.out::println);
+    }
 }

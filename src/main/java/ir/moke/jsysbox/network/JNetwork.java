@@ -16,6 +16,7 @@ package ir.moke.jsysbox.network;
 
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
+import ir.moke.jsysbox.system.JSystem;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class JNetwork {
@@ -302,6 +304,10 @@ public class JNetwork {
         return ip.deleteCharAt(ip.length() - 1).toString();
     }
 
+    public static int hexToPort(String hex) {
+        return Integer.parseInt(hex, 16);
+    }
+
     private static void sleep(int mills) {
         try {
             Thread.sleep(mills);
@@ -418,6 +424,85 @@ public class JNetwork {
         } catch (IOException e) {
             throw new JSysboxException(e.getMessage());
         }
+    }
+
+    public static List<Netstat> netstatIpv4() {
+        try {
+            List<Netstat> netstatList = new ArrayList<>();
+            Files.readAllLines(Path.of("/proc/net/tcp"))
+                    .stream()
+                    .skip(1)
+                    .map(String::trim)
+                    .map(item -> item.split("\\s+"))
+                    .map(item -> mapToNetstat(item, Netstat.Protocol.TCP))
+                    .forEach(netstatList::add);
+
+            Files.readAllLines(Path.of("/proc/net/udp"))
+                    .stream()
+                    .skip(1)
+                    .map(String::trim)
+                    .map(item -> item.split("\\s+"))
+                    .map(item -> mapToNetstat(item, Netstat.Protocol.UDP))
+                    .forEach(netstatList::add);
+
+            Files.readAllLines(Path.of("/proc/net/udplite"))
+                    .stream()
+                    .skip(1)
+                    .map(String::trim)
+                    .map(item -> item.split("\\s+"))
+                    .map(item -> mapToNetstat(item, Netstat.Protocol.UDP_LITE))
+                    .forEach(netstatList::add);
+
+            return netstatList;
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    private static Netstat mapToNetstat(String[] parts, Netstat.Protocol protocol) {
+        int index = Integer.parseInt(parts[0].replaceAll(":", ""));
+        String sourceAddress = hexToIp(parts[1].split(":")[0]);
+        int sourcePort = hexToPort(parts[1].split(":")[1]);
+        String dstAddress = hexToIp(parts[2].split(":")[0]);
+        int dstPort = hexToPort(parts[2].split(":")[1]);
+        Netstat.Status status = protocol != Netstat.Protocol.TCP ? null : Netstat.Status.getFromHex(Integer.parseInt(parts[3], 16));
+        Integer pid = findPidByInode(parts[9]);
+        String command = pid != null ? JSystem.getCommandFromPid(pid) : null;
+
+        return new Netstat(index, protocol, sourceAddress, sourcePort, dstAddress, dstPort, status, pid, command);
+    }
+
+    private static Integer findPidByInode(String targetInode) {
+        Path procDir = Paths.get("/proc");
+        try {
+            Predicate<Path> check = path -> {
+                try {
+                    for (Path fd : Files.list(path).toList()) {
+                        boolean founded = Files.readSymbolicLink(fd).toString().equals("socket:[" + targetInode + "]");
+                        if (founded) return true;
+                    }
+                    return false;
+                } catch (Exception ignore) {
+                    return false;
+                }
+            };
+
+            Path path = Files.list(procDir)
+                    .toList()
+                    .stream()
+                    .filter(item -> item.toFile().isDirectory())
+                    .filter(item -> item.getFileName().toString().matches("\\d+"))
+                    .map(item -> item.resolve("fd"))
+                    .filter(Files::isReadable)
+                    .filter(check)
+                    .findFirst()
+                    .orElse(null);
+
+            if (path != null) return Integer.parseInt(path.getParent().getFileName().toString());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     public static String calculateNetwork(String ip, int cidr) {
