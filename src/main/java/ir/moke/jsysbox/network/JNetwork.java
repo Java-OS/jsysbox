@@ -255,6 +255,7 @@ public class JNetwork {
             System.out.printf("Ping %s\n", destination);
             int reachableCount = 0;
             for (int i = 0; i < count; i++) {
+                if (Thread.currentThread().isInterrupted()) break;
                 Instant startTime = Instant.now();
                 boolean reachable;
                 if (iface != null && !iface.isEmpty()) {
