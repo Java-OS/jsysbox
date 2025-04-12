@@ -101,7 +101,7 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartiti
         env->SetObjectField(partitionInfoObj, typeField, env->NewStringUTF(partitionInfos[i].type.c_str()));
         env->SetLongField(partitionInfoObj, totalSizeField, partitionInfos[i].totalSize);
 
-        if (partitionInfos[i].freeSize) {
+        if (partitionInfos[i].freeSize >= 0) {
             // Create a java/lang/Long object for freeSize and set it
             jclass longClass = env->FindClass("java/lang/Long");
             jmethodID longConstructor = env->GetMethodID(longClass, "<init>", "(J)V");
