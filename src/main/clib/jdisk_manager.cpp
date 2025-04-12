@@ -390,3 +390,6 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getDisks(J
   return result ;
 }
 
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_sync(JNIEnv *env, jclass clazz) {
+  sync();
+}

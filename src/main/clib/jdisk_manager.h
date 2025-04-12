@@ -109,6 +109,13 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_deletePartition
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_bootable
   (JNIEnv *, jclass, jstring, jint);
 
+/*
+ * Class:     ir_moke_jsysbox_disk_JDiskManager
+ * Method:    sync
+ * Signature: ()V;
+ */
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_sync
+  (JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }

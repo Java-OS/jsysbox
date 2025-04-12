@@ -139,6 +139,11 @@ public class JDiskManager {
     public native static void bootable(String blkDisk, int partitionNumber);
 
     /**
+     * Synchronize cached writes to persistent storage
+     */
+    public static native void sync() ;
+
+    /**
      * Content of /proc/mounts
      *
      * @return return list of mount information
