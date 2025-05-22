@@ -202,7 +202,7 @@ public class JNetwork {
      * @param gateway ip address
      */
     public static void setDefaultGateway(String gateway) throws JSysboxException {
-        updateRoute("0.0.0.0", "0.0.0.0", gateway, null, 0, false, false);
+        updateRoute("0.0.0.0", "0.0.0.0", gateway, null, 600, false, false);
     }
 
     public static void deleteRoute(int id) throws JSysboxException {

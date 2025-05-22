@@ -29,7 +29,9 @@ public class Route {
     private int window;
     private int irtt;
     private int refcnt;
-    private boolean locked = false;
+
+    public Route() {
+    }
 
     public Route(int id, String destination, String netmask, String gateway, String iface, int flags, int use, int metrics, int mtu, int window, int irtt, int refcnt) {
         this.id = id;
@@ -104,14 +106,6 @@ public class Route {
 
     public int getRefcnt() {
         return refcnt;
-    }
-
-    public boolean isLocked() {
-        return locked;
-    }
-
-    public void setLocked(boolean locked) {
-        this.locked = locked;
     }
 
     public String getFlagStr() {
