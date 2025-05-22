@@ -20,13 +20,14 @@ import ir.moke.jsysbox.system.JSystem;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.*;
+import java.net.Inet4Address;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +42,6 @@ public class JNetwork {
     private static final Path ETHERNET_STATISTICS_PATH = Paths.get("/proc/net/dev");
     private static final Path SYS_NET_PATH = Paths.get("/sys/class/net");
     private static final int DEFAULT_METRICS = 600;
-    private static final int DEFAULT_TTL = 96;
 
     static {
         JniNativeLoader.load("jnetwork");
@@ -247,39 +247,6 @@ public class JNetwork {
                 .map(Route::getIface).findFirst().orElse(null);
     }
 
-    public static void ping(String destination, String iface, Integer ttl, Integer count, Integer timeout, Integer interval) {
-        if (count == null || count < 1) count = 4;
-        if (timeout == null || timeout <= 1000) timeout = 1000;
-        if (ttl == null || ttl <= 0) ttl = DEFAULT_TTL;
-        if (interval == null || interval < 800) interval = 800;
-        try {
-            InetAddress addr = InetAddress.getByName(destination);
-            System.out.printf("Ping %s\n", destination);
-            int reachableCount = 0;
-            for (int i = 0; i < count; i++) {
-                if (Thread.currentThread().isInterrupted()) break;
-                Instant startTime = Instant.now();
-                boolean reachable;
-                if (iface != null && !iface.isEmpty()) {
-                    NetworkInterface networkInterface = NetworkInterface.getByName(iface);
-                    reachable = addr.isReachable(networkInterface, ttl, timeout);
-                } else {
-                    reachable = addr.isReachable(timeout);
-                }
-                if (reachable) {
-                    reachableCount++;
-                    long diff = Duration.between(startTime, Instant.now()).toMillis();
-                    System.out.printf("%d: from %s time=%d ms\n", reachableCount, destination, diff);
-                } else {
-                    System.out.println("ping: unreachable host");
-                }
-                sleep(interval);
-            }
-        } catch (IOException e) {
-            System.out.println("ping: " + e.getMessage());
-        }
-    }
-
     private static Route getRoute(String line, int id) {
         String[] s = line.split("\\s+");
         String iface = s[0];
@@ -306,14 +273,6 @@ public class JNetwork {
 
     public static int hexToPort(String hex) {
         return Integer.parseInt(hex, 16);
-    }
-
-    private static void sleep(int mills) {
-        try {
-            Thread.sleep(mills);
-        } catch (InterruptedException e) {
-            throw new JSysboxException(e);
-        }
     }
 
     public static String bytesToMac(byte[] bytes) {
@@ -344,6 +303,15 @@ public class JNetwork {
         }
 
         initResolve();
+    }
+
+    public static List<String> getDnsNameServers() throws JSysboxException {
+        try {
+            Path path = Path.of("/etc/resolv.conf");
+            return Files.readAllLines(path);
+        } catch (IOException e) {
+            throw new JSysboxException(e.getMessage());
+        }
     }
 
     public static ConcurrentMap<String, String> hosts() {
