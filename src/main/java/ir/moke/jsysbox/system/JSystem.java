@@ -211,4 +211,12 @@ public class JSystem {
             return null;
         }
     }
+
+    public static String getKernelVersion() {
+        try {
+            return Files.readString(Path.of("/proc/sys/kernel/osrelease")).trim();
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot detect kernel version", e);
+        }
+    }
 }
