@@ -444,29 +444,33 @@ public class JNetwork {
         Path procDir = Paths.get("/proc");
         try {
             Predicate<Path> check = path -> {
-                try {
-                    for (Path fd : Files.list(path).toList()) {
-                        boolean founded = Files.readSymbolicLink(fd).toString().equals("socket:[" + targetInode + "]");
-                        if (founded) return true;
-                    }
-                    return false;
-                } catch (Exception ignore) {
+                try (Stream<Path> fds = Files.list(path)) {
+                    return fds.anyMatch(fd -> {
+                        try {
+                            return Files.readSymbolicLink(fd).toString().equals("socket:[" + targetInode + "]");
+                        } catch (IOException ignore) {
+                            return false;
+                        }
+                    });
+                } catch (IOException ignore) {
                     return false;
                 }
             };
 
-            Path path = Files.list(procDir)
-                    .toList()
-                    .stream()
-                    .filter(item -> item.toFile().isDirectory())
-                    .filter(item -> item.getFileName().toString().matches("\\d+"))
-                    .map(item -> item.resolve("fd"))
-                    .filter(Files::isReadable)
-                    .filter(check)
-                    .findFirst()
-                    .orElse(null);
+            try (Stream<Path> stream = Files.list(procDir)) {
+                Path path = stream
+                        .filter(item -> item.toFile().isDirectory())
+                        .filter(item -> item.getFileName().toString().matches("\\d+"))
+                        .map(item -> item.resolve("fd"))
+                        .filter(Files::isReadable)
+                        .filter(check)
+                        .findFirst()
+                        .orElse(null);
 
-            if (path != null) return Integer.parseInt(path.getParent().getFileName().toString());
+                if (path != null) {
+                    return Integer.parseInt(path.getParent().getFileName().toString());
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
