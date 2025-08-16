@@ -171,7 +171,7 @@
                 <version>0.8.0</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <deploymentName>microfox</deploymentName>
+                    <deploymentName>jsysbox</deploymentName>
                     <publishingServerId>central</publishingServerId>
                 </configuration>
             </plugin>
