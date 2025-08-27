@@ -124,6 +124,21 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_rmmod
 JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_modinfo
     (JNIEnv *, jclass, jstring);
 
+/*
+ * Class:     ir_moke_jsysbox_system_JSystem
+ * Method:    setUlimit
+ * Signature: (III)V
+ */
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setUlimit
+  (JNIEnv *, jclass, jint, jint, jint);
+
+/*
+ * Class:     ir_moke_jsysbox_system_JSystem
+ * Method:    getUlimit
+ * Signature: (IZ)I;
+ */
+JNIEXPORT jint JNICALL Java_ir_moke_jsysbox_system_JSystem_getUlimit
+  (JNIEnv *, jclass, jint, jboolean);
 
 #ifdef __cplusplus
 }

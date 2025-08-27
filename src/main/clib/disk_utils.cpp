@@ -101,11 +101,13 @@ PartitionInfo getPartitionInfo(JNIEnv *env, PedPartition* part, PedDevice* dev) 
         if (!pr) {
           blkid_free_probe(pr);
           throwException(env, "Failed to open partition") ;
+          return info;
         }
 
         if (blkid_do_probe(pr) < 0) {
           blkid_free_probe(pr);
           throwException(env, "Failed to blk probe") ;
+          return info;
         }
 
         if (pr) {

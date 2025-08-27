@@ -29,6 +29,7 @@ limitations under the License.
 #include <sys/types.h>
 #include <signal.h>
 #include <libkmod.h>
+#include <sys/resource.h>
 
 extern char **environ;
 int hostname_max_size = 64 ;
@@ -86,6 +87,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setHostname (JNIEnv *
                 env->ReleaseStringUTFChars(jkey,key);
                 const char *err = "name too long, max 64 character" ;
                 throwException(env,err);
+                return;
     }
     r = sethostname(key,size);
     env->ReleaseStringUTFChars(jkey,key);
@@ -120,6 +122,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_insmod(JNIEnv *env, j
 	if (err != 0) {
 	    std::string errMsg = "Module does not exists: " + std::string(n);
 	    throwException(env, errMsg);
+	    return;
 	}
 
   // Convert the Java parameters array to a C array of strings
@@ -144,6 +147,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_insmod(JNIEnv *env, j
 	if (err != 0) {
 	    std::string errMsg = "Could not insert module: " + std::string(n);
     	throwException(env, errMsg);
+    	return;
 	}
 	kmod_unref(ctx);
   env->ReleaseStringUTFChars(moduleName, n);
@@ -164,12 +168,14 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_rmmod(JNIEnv *env, jc
 	if (err != 0) {
 	    std::string errMsg = "Module does not exists: " + std::string(n);
 	    throwException(env, errMsg);
+	    return;
 	}
 
 	err = kmod_module_remove_module(mod, 0);
 	if (err != 0) {
 	    std::string errMsg = "Could not remove module: " + std::string(n);
     	throwException(env, errMsg);
+    	return;
 	}
 	kmod_unref(ctx);
   env->ReleaseStringUTFChars(moduleName, n);
@@ -191,13 +197,15 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_modinfo(JNIEnv *en
 	if (err != 0) {
 	  std::string errMsg = "Module does not exists: " + std::string(n);
 	  throwException(env, errMsg);
+	  return NULL;
 	}
 
   err = kmod_module_get_info(mod_simple, &list); 
   if (err < 0) {
     std::string errMsg = "Could not get module information: " + std::string(n);
     throwException(env, errMsg);
-	}
+    return NULL;
+  }
 
   jclass mapClass   = env->FindClass("java/util/HashMap");
   jmethodID mapInit = env->GetMethodID(mapClass, "<init>", "()V");
@@ -215,6 +223,31 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_modinfo(JNIEnv *en
 	} 
 
   return hashMap;
+}
+
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setUlimit (JNIEnv *env, jclass clazz, jint limit_id, jint min, jint max) {
+    struct rlimit rlim;
+    rlim.rlim_cur = (rlim_t) min;
+    rlim.rlim_max = (rlim_t) max;
+
+    if (setrlimit(limit_id, &rlim) != 0) {
+        throwException(env,"setrlimit failed");
+    }
+}
+
+JNIEXPORT jint JNICALL Java_ir_moke_jsysbox_system_JSystem_getUlimit (JNIEnv *env, jclass clazz, jint limit_id, jboolean hard) {
+    struct rlimit rlim;
+    int r = getrlimit(limit_id, &rlim);
+    if (r != 0) {
+        throwException(env, "getrlimit failed");
+        return -1;
+    }
+
+    if (hard) {
+      return rlim.rlim_max;
+    } else {
+      return rlim.rlim_cur;
+    }
 }
 
 

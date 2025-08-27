@@ -25,16 +25,12 @@ limitations under the License.
 
 
 #include "jdatetime.h"
+#include "common.cpp"
 
 using namespace std;
 
 
 static char RTC_FILE[] =  "/dev/rtc0" ;
-
-void throwException(JNIEnv *env, string err) {
-	jclass jexception = env->FindClass("ir/moke/jsysbox/JSysboxException");
-	env->ThrowNew(jexception,err.data());
-}
 
 void get_system_dt(struct tm& tm) {
     time_t t = time(NULL);

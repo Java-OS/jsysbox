@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,20 +61,19 @@ public class JSystem {
     public static Map<String, String> sysctl() {
         Map<String, String> items = new HashMap<>();
         try (Stream<Path> stream = Files.walk(SYSCTL_BASE_PATH)) {
-            stream.filter(item -> !item.toFile().isDirectory())
-                    .forEach(item -> {
-                        String key = item.toString().substring("/proc/sys/".length()).replace("/", ".");
-                        try (FileReader fileReader = new FileReader(item.toFile())) {
-                            StringBuilder value = new StringBuilder();
-                            int code;
-                            while ((code = fileReader.read()) != -1) {
-                                value.append((char) code);
-                            }
-                            items.put(key, value.toString());
-                        } catch (IOException e) {
-                            items.put(key, "");
-                        }
-                    });
+            stream.filter(item -> !item.toFile().isDirectory()).forEach(item -> {
+                String key = item.toString().substring("/proc/sys/".length()).replace("/", ".");
+                try (FileReader fileReader = new FileReader(item.toFile())) {
+                    StringBuilder value = new StringBuilder();
+                    int code;
+                    while ((code = fileReader.read()) != -1) {
+                        value.append((char) code);
+                    }
+                    items.put(key, value.toString());
+                } catch (IOException e) {
+                    items.put(key, "");
+                }
+            });
         } catch (IOException e) {
             throw new JSysboxException(e);
         }
@@ -95,18 +95,9 @@ public class JSystem {
 
     public static List<ModInfo> lsmod() {
         try {
-            Function<String[], ModInfo> modInfoFunction = item -> new ModInfo(
-                    item[0],
-                    Long.parseLong(item[1]),
-                    Integer.parseInt(item[2]),
-                    item[3].replaceAll(" Live.*", "").replaceAll(",$", "")
-            );
+            Function<String[], ModInfo> modInfoFunction = item -> new ModInfo(item[0], Long.parseLong(item[1]), Integer.parseInt(item[2]), item[3].replaceAll(" Live.*", "").replaceAll(",$", ""));
 
-            return Files.readAllLines(Path.of("/proc/modules"))
-                    .stream()
-                    .map(item -> item.split("\\s+", 4))
-                    .map(modInfoFunction)
-                    .toList();
+            return Files.readAllLines(Path.of("/proc/modules")).stream().map(item -> item.split("\\s+", 4)).map(modInfoFunction).toList();
         } catch (IOException e) {
             throw new JSysboxException(e);
         }
@@ -220,5 +211,62 @@ public class JSystem {
         }
     }
 
-//    public static void setUlimit()
+    private native static void setUlimit(int limitId, int soft, int hard);
+
+    private native static int getUlimit(int limitId, boolean hard);
+
+    public static int getUlimit(RLimit limit, boolean hard) {
+        return getUlimit(limit.getCode(), hard);
+    }
+
+    public static List<Ulimit> getAllUlimits() {
+        List<Ulimit> limits = new ArrayList<>();
+        for (RLimit rLimit : RLimit.values()) {
+            Ulimit ulimit = new Ulimit(rLimit, getUlimit(rLimit, false), getUlimit(rLimit, true));
+            limits.add(ulimit);
+        }
+        return limits;
+    }
+
+    public static void setUlimit(Ulimit ulimit) {
+        setUlimit(ulimit.limit(), ulimit.soft(), ulimit.hard());
+    }
+
+    public static void setUlimit(RLimit limit, Integer soft, Integer hard) {
+        if (soft == null && hard == null) throw new JSysboxException("Both soft and hard value is null");
+        int oldSoftValue = getUlimit(limit, soft != null);
+        int oldHardValue = getUlimit(limit, hard != null);
+
+        setUlimit(limit.getCode(), soft == null ? oldSoftValue : soft, hard == null ? oldHardValue : hard);
+    }
+
+    public static List<Ulimit> getAllUlimits(int pid) {
+        List<Ulimit> limits = new ArrayList<>();
+        try {
+            Path limitsPath = Path.of("/proc/" + pid + "/limits");
+            List<String> lines = Files.readAllLines(limitsPath).stream().skip(1).toList();
+            for (String line : lines) {
+                String[] parts = line.trim().split("\\s+");
+
+                String name = line.substring(0,25).trim();
+                RLimit rLimit = RLimit.fromString(name);
+                int soft = parseLimit(parts[3]);
+                int hard = parseLimit(parts[4]);
+
+                limits.add(new Ulimit(rLimit, soft, hard));
+            }
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+        return limits;
+    }
+
+    private static int parseLimit(String value) {
+        if ("unlimited".equals(value)) return -1;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
 }

@@ -24,4 +24,30 @@ public enum RLimit {
     RLimit(int code) {
         this.code = code;
     }
+
+    public int getCode() {
+        return code;
+    }
+
+    public static RLimit fromString(String name) {
+        return switch (name.trim()) {
+            case "Max cpu time" -> RLIMIT_CPU;
+            case "Max file size" -> RLIMIT_FSIZE;
+            case "Max data size" -> RLIMIT_DATA;
+            case "Max stack size" -> RLIMIT_STACK;
+            case "Max core file size" -> RLIMIT_CORE;
+            case "Max resident set" -> RLIMIT_RSS;
+            case "Max processes" -> RLIMIT_NPROC;
+            case "Max open files" -> RLIMIT_NOFILE;
+            case "Max locked memory" -> RLIMIT_MEMLOCK;
+            case "Max address space" -> RLIMIT_AS;
+            case "Max file locks" -> RLIMIT_LOCKS;
+            case "Max pending signals" -> RLIMIT_SIGPENDING;
+            case "Max msgqueue size" -> RLIMIT_MSGQUEUE;
+            case "Max nice priority" -> RLIMIT_NICE;
+            case "Max realtime priority" -> RLIMIT_RTPRIO;
+            case "Max realtime timeout" -> RLIMIT_RTTIME;
+            default -> throw new IllegalStateException("Unexpected value: " + name.trim());
+        };
+    }
 }
