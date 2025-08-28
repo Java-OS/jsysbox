@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -213,6 +212,8 @@ public class JSystem {
 
     private native static void setUlimit(int limitId, int soft, int hard);
 
+    private native static void setUlimitOnPID(int pid, int limitId, int soft, int hard);
+
     private native static int getUlimit(int limitId, boolean hard);
 
     public static int getUlimit(RLimit limit, boolean hard) {
@@ -240,6 +241,10 @@ public class JSystem {
         setUlimit(limit.getCode(), soft == null ? oldSoftValue : soft, hard == null ? oldHardValue : hard);
     }
 
+    public static void setUlimitOnPID(int pid, RLimit rLimit, int soft, int hard) {
+        setUlimitOnPID(pid, rLimit.getCode(), soft, hard);
+    }
+
     public static List<Ulimit> getAllUlimits(int pid) {
         List<Ulimit> limits = new ArrayList<>();
         try {
@@ -248,7 +253,7 @@ public class JSystem {
             for (String line : lines) {
                 String[] parts = line.trim().split("\\s+");
 
-                String name = line.substring(0,25).trim();
+                String name = line.substring(0, 25).trim();
                 RLimit rLimit = RLimit.fromString(name);
                 int soft = parseLimit(parts[3]);
                 int hard = parseLimit(parts[4]);

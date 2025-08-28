@@ -134,6 +134,15 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setUlimit
 
 /*
  * Class:     ir_moke_jsysbox_system_JSystem
+ * Method:    setUlimit
+ * Signature: (IIII)V
+ */
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setUlimitOnPID
+  (JNIEnv *, jclass, jint, jint, jint, jint);
+
+
+/*
+ * Class:     ir_moke_jsysbox_system_JSystem
  * Method:    getUlimit
  * Signature: (IZ)I;
  */

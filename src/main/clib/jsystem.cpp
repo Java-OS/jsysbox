@@ -225,13 +225,34 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_system_JSystem_modinfo(JNIEnv *en
   return hashMap;
 }
 
-JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setUlimit (JNIEnv *env, jclass clazz, jint limit_id, jint min, jint max) {
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setUlimit (JNIEnv *env,
+                                                                     jclass clazz,
+                                                                     jint limit_id,
+                                                                     jint min,
+                                                                     jint max) {
     struct rlimit rlim;
     rlim.rlim_cur = (rlim_t) min;
     rlim.rlim_max = (rlim_t) max;
 
     if (setrlimit(limit_id, &rlim) != 0) {
         throwException(env,"setrlimit failed");
+    }
+}
+
+JNIEXPORT void JNICALL Java_ir_moke_jsysbox_system_JSystem_setUlimitOnPID (JNIEnv *env,
+                                                                          jclass clazz,
+                                                                          jint jpid,
+                                                                          jint limit_id,
+                                                                          jint min,
+                                                                          jint max) {
+    pid_t pid = static_cast<pid_t>(jpid);
+    struct rlimit rlim;
+    rlim.rlim_cur = static_cast<rlim_t>(min);
+    rlim.rlim_max = static_cast<rlim_t>(max);
+
+    if (prlimit(pid, static_cast<__rlimit_resource>(limit_id), &rlim, NULL) != 0) {
+        throwException(env, "prlimit failed");
+        return;
     }
 }
 
