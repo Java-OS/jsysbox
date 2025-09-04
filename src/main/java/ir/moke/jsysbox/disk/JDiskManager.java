@@ -294,6 +294,10 @@ public class JDiskManager {
         return null;
     }
 
+    public static boolean isLvm(String blkId) {
+        return getLvmMapperPath(blkId) == null;
+    }
+
     /**
      * Get root partition of current booted operating system
      *
@@ -406,7 +410,8 @@ public class JDiskManager {
      */
     public static Disk getDiskInformation(String blkDisk) {
         try {
-            if (isCompactDisk(blkDisk.replaceAll("/dev/",""))) return null;
+            if (isLvm(blkDisk)) return null;
+            if (isCompactDisk(blkDisk.replaceAll("/dev/", ""))) return null;
             String blkName = blkDisk.substring(blkDisk.lastIndexOf("/") + 1);
             Path vendorPath = Path.of("/sys/block/%s/device/vendor".formatted(blkName));
             Path modelPath = Path.of("/sys/block/%s/device/model".formatted(blkName));
