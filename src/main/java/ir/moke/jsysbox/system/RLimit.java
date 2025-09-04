@@ -16,8 +16,7 @@ public enum RLimit {
     RLIMIT_MSGQUEUE(12),
     RLIMIT_NICE(13),
     RLIMIT_RTPRIO(14),
-    RLIMIT_RTTIME(15),
-    RLIMIT_NLIMITS(16);
+    RLIMIT_RTTIME(15);
 
     private final int code;
 
