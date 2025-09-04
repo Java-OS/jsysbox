@@ -391,9 +391,8 @@ public class JDiskManager {
         for (String blkPath : blkDisks) {
             try {
                 Disk disk = getDiskInformation(blkPath);
-                disks.add(disk);
-            } catch (Exception e) {
-                logger.debug("Failed to get disk information {}, err: {}", blkPath, e.getMessage());
+                if (disk != null) disks.add(disk);
+            } catch (Exception ignore) {
             }
         }
         return disks;
@@ -407,6 +406,7 @@ public class JDiskManager {
      */
     public static Disk getDiskInformation(String blkDisk) {
         try {
+            if (isCompactDisk(blkDisk.replaceAll("/dev/",""))) return null;
             String blkName = blkDisk.substring(blkDisk.lastIndexOf("/") + 1);
             Path vendorPath = Path.of("/sys/block/%s/device/vendor".formatted(blkName));
             Path modelPath = Path.of("/sys/block/%s/device/model".formatted(blkName));

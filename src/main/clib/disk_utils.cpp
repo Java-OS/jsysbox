@@ -112,15 +112,9 @@ PartitionInfo getPartitionInfo(JNIEnv *env, PedPartition* part, PedDevice* dev) 
 
         if (pr) {
             const char* value;
-            if (blkid_probe_lookup_value(pr, "UUID", &value, NULL) == 0) {
-                info.uuid = value;
-            }
-            if (blkid_probe_lookup_value(pr, "LABEL", &value, NULL) == 0) {
-                info.label = value;
-            }
-            if (blkid_probe_lookup_value(pr, "TYPE", &value, NULL) == 0) {
-                info.type = value;
-            }
+            if (blkid_probe_lookup_value(pr, "UUID", &value, NULL) == 0) info.uuid = value;
+            if (blkid_probe_lookup_value(pr, "LABEL", &value, NULL) == 0) info.label = value;
+            if (blkid_probe_lookup_value(pr, "TYPE", &value, NULL) == 0) info.type = value;
             blkid_free_probe(pr);
         }
 
