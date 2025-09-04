@@ -199,7 +199,8 @@ public class JDiskManager {
                 if (disk.contains("dm-")) disk = getLvmMapperPath(disk);
                 PartitionInformation[] partitionInformation = getPartitionInformation(disk);
                 if (partitionInformation != null) list.addAll(Arrays.asList(partitionInformation));
-            } catch (JSysboxException ignore) {
+            } catch (JSysboxException e) {
+                logger.debug(e.getMessage());
             }
         }
         return list;

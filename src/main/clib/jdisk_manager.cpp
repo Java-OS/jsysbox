@@ -49,11 +49,15 @@ JNIEXPORT jboolean JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_umount (JNIEnv
     return r == 0;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartitionInformation(JNIEnv *env, jclass clazz, jstring jblkPath) { 
+JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_getPartitionInformation(JNIEnv *env, jclass clazz, jstring jblkPath) {
+    if (geteuid() != 0) {
+        throwException(env, "Partition information: Permission denied");
+        return NULL;
+    }
     PedDevice* dev = getBlockDevice(env, jblkPath);
 
     if (!dev) {
-       throwException(env, "Failed to open device");
+       throwException(env, "Partition information: Failed to open device");
        return NULL ;
     }
 
