@@ -28,10 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
@@ -314,8 +311,8 @@ public class JNetwork {
         }
     }
 
-    public static ConcurrentMap<String, String> hosts() {
-        ConcurrentMap<String, String> map = new ConcurrentHashMap<>();
+    public static Map<String, String> hosts() {
+        Map<String, String> map = new ConcurrentHashMap<>();
         try {
             List<String> lines = Files.readAllLines(Path.of("/etc/hosts")).stream().filter(item -> !item.trim().startsWith("#")).toList();
             for (String line : lines) {
