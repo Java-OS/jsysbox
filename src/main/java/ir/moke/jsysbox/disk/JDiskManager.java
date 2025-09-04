@@ -295,7 +295,7 @@ public class JDiskManager {
     }
 
     public static boolean isLvm(String blkId) {
-        return getLvmMapperPath(blkId) == null;
+        return getLvmMapperPath(blkId) != null;
     }
 
     /**
