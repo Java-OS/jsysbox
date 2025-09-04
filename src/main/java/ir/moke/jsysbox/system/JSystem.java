@@ -61,14 +61,14 @@ public class JSystem {
         Map<String, String> items = new HashMap<>();
         try (Stream<Path> stream = Files.walk(SYSCTL_BASE_PATH)) {
             stream.filter(item -> !item.toFile().isDirectory()).forEach(item -> {
-                String key = item.toString().substring("/proc/sys/".length()).replace("/", ".");
+                String key = item.toString().substring("/proc/sys/".length()).replace("/", ".").trim();
                 try (FileReader fileReader = new FileReader(item.toFile())) {
                     StringBuilder value = new StringBuilder();
                     int code;
                     while ((code = fileReader.read()) != -1) {
                         value.append((char) code);
                     }
-                    items.put(key, value.toString());
+                    items.put(key, value.toString().trim());
                 } catch (IOException e) {
                     items.put(key, "");
                 }
