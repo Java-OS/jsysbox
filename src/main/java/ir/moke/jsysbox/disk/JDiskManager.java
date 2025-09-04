@@ -16,6 +16,8 @@ package ir.moke.jsysbox.disk;
 
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +29,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class JDiskManager {
+    private static final Logger logger = LoggerFactory.getLogger(JDiskManager.class);
+
     static {
         JniNativeLoader.load("jdisk_manager");
     }
@@ -141,7 +145,7 @@ public class JDiskManager {
     /**
      * Synchronize cached writes to persistent storage
      */
-    public static native void sync() ;
+    public static native void sync();
 
     /**
      * Content of /proc/mounts
@@ -383,14 +387,14 @@ public class JDiskManager {
 
     public static List<Disk> getAllDiskInformation() {
         List<Disk> disks = new ArrayList<>();
-        try {
-            String[] blkDisks = getDisks();
-            for (String blkPath : blkDisks) {
+        String[] blkDisks = getDisks();
+        for (String blkPath : blkDisks) {
+            try {
                 Disk disk = getDiskInformation(blkPath);
                 disks.add(disk);
+            } catch (Exception e) {
+                logger.debug("Failed to get disk information {}, err: {}", blkPath, e.getMessage());
             }
-        } catch (Exception e) {
-            throw new JSysboxException(e);
         }
         return disks;
     }
