@@ -25,11 +25,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JSystem {
@@ -289,5 +287,25 @@ public class JSystem {
             throw new JSysboxException(e);
         }
         return false;
+    }
+
+    public static Set<ThreadInfo> threads(long pid) {
+        try (Stream<Path> stream = Files.list(Paths.get("/proc/%s/task/".formatted(pid)))) {
+            return stream.map(item -> {
+                try {
+                    String tid = item.toFile().getName();
+                    String tName = Files.readString(item.resolve("comm")).trim();
+                    return new ThreadInfo(pid, Long.parseLong(tid), tName);
+                } catch (IOException e) {
+                    throw new JSysboxException(e);
+                }
+            }).collect(Collectors.toSet());
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    public static long pid() {
+        return ProcessHandle.current().pid();
     }
 }
