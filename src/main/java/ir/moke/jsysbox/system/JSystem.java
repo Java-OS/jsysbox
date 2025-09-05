@@ -292,14 +292,15 @@ public class JSystem {
     public static Set<ThreadInfo> threads(long pid) {
         try (Stream<Path> stream = Files.list(Paths.get("/proc/%s/task/".formatted(pid)))) {
             return stream.map(item -> {
-                try {
-                    String tid = item.toFile().getName();
-                    String tName = Files.readString(item.resolve("comm")).trim();
-                    return new ThreadInfo(pid, Long.parseLong(tid), tName);
-                } catch (IOException e) {
-                    throw new JSysboxException(e);
-                }
-            }).collect(Collectors.toSet());
+                        try {
+                            String tid = item.toFile().getName();
+                            String tName = Files.readString(item.resolve("comm")).trim();
+                            return new ThreadInfo(pid, Long.parseLong(tid), tName);
+                        } catch (IOException ignore) {
+                            return null;
+                        }
+                    }).filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
         } catch (IOException e) {
             throw new JSysboxException(e);
         }
