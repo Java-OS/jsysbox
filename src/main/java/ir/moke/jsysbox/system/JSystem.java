@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -273,5 +274,20 @@ public class JSystem {
         } catch (NumberFormatException e) {
             return -1;
         }
+    }
+
+    public static boolean insideContainer() {
+        try {
+            boolean dockerEnvExists = Files.exists(Paths.get("/.dockerenv"));
+            boolean podmanEnvExists = Files.exists(Paths.get("/run/.containerenv"));
+            boolean containersMountPointExists = Files.readAllLines(Paths.get("/proc/1/mountinfo"))
+                    .stream()
+                    .anyMatch(item -> item.contains("containers"));
+
+            if ((dockerEnvExists || podmanEnvExists) && containersMountPointExists) return true;
+        } catch (IOException e) {
+            throw new JSysboxException(e);
+        }
+        return false;
     }
 }
