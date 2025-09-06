@@ -14,16 +14,20 @@
 
 package ir.moke.jsysbox;
 
-import java.io.FileOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class JniNativeLoader {
-    private static final long BLOCK_SIZE = 4096;
+    private static final Logger logger = LoggerFactory.getLogger(JniNativeLoader.class);
     private static final Path LIB_PATH = Paths.get("/META-INF/native");
     private static Path TEMP_DIR_PATH = Paths.get("/tmp/jni");
 
@@ -43,26 +47,53 @@ public class JniNativeLoader {
     public static synchronized void load(String name) {
         String arch = System.getProperty("os.arch");
         if (arch.equals("amd64")) {
-            extractLibrary("lib" + name + "_x86_64.so").ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+            extractLibrary("lib" + name + "_x86_64.so");
         } else {
-            extractLibrary("lib" + name + "_arm64.so").ifPresent(library -> System.load(library.toAbsolutePath().toString()));
+            extractLibrary("lib" + name + "_arm64.so");
         }
     }
 
-    private static Optional<Path> extractLibrary(String name) {
+    private static void extractLibrary(String name) {
         String libAbsolutePath = LIB_PATH.resolve(name).toAbsolutePath().toString();
         try (InputStream resource = JniNativeLoader.class.getResourceAsStream(libAbsolutePath)) {
             if (resource != null) {
-                try (FileOutputStream outputStream = new FileOutputStream(TEMP_DIR_PATH.resolve(name).toFile())) {
-                    resource.transferTo(outputStream);
-                    return Optional.of(TEMP_DIR_PATH.resolve(name));
+                byte[] bytes = resource.readAllBytes();
+                String currentHash = md5(bytes);
+                Path targetLibFilePath = TEMP_DIR_PATH.resolve("%s-%s".formatted(name, getVersion()));
+                if (Files.exists(targetLibFilePath)) {
+                    byte[] oldBytes = Files.readAllBytes(targetLibFilePath);
+                    String oldHash = md5(oldBytes);
+                    if (!currentHash.equals(oldHash)) {
+                        copySharedObject(targetLibFilePath, bytes);
+                    }
+                } else {
+                    copySharedObject(targetLibFilePath, bytes);
                 }
+                System.load(targetLibFilePath.toString());
             } else {
-                System.out.println("Resource is null");
+                logger.error("Resource is null");
             }
         } catch (IOException e) {
             throw new JSysboxException(e);
         }
-        return Optional.empty();
+    }
+
+    private static void copySharedObject(Path path, byte[] bytes) throws IOException {
+        Files.write(path, bytes);
+    }
+
+    private static String md5(byte[] bytes) {
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            byte[] digest = messageDigest.digest(bytes);
+            return new BigInteger(1, digest).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            throw new JSysboxException(e);
+        }
+    }
+
+    private static String getVersion() {
+        Package pkg = JniNativeLoader.class.getPackage();
+        return pkg.getImplementationVersion();
     }
 }
