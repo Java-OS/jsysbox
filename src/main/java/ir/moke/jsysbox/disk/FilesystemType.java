@@ -19,30 +19,26 @@ import ir.moke.jsysbox.JSysboxException;
 import java.util.List;
 
 public enum FilesystemType {
-    DEV_TMPFS("devtmpfs"),
-    SYSFS("sysfs"),
-    PROC("proc"),
-    EXT3("ext3"),
-    EXT4("ext4"),
-    BTRFS("btrfs"),
-    XFS("xfs"),
-    VFAT("vfat"),
-    NTFS("ntfs"),
-    SWAP("linux-swap"),
-    ISO9660("iso9660"),
-    EXT2("ext2"),
-    FAT16("fat16"),
-    FAT32("fat32"),
-    HFS("hfs"),
-    HFS_PLUS("hfs+"),
-    REISERFS("reiserfs"),
-    UDF("udf"),
-    XF("xfs");
+    DEV_TMPFS("devtmpfs", null),
+    SYSFS("sysfs", null),
+    PROC("proc", null),
+    EXT3("ext3", "0x83"),
+    EXT4("ext4", "0x83"),
+    BTRFS("btrfs", "0x83"),
+    XFS("xfs", "0x83"),
+    NTFS("ntfs", "0x07"),
+    SWAP("linux-swap", "0x82"),
+    ISO9660("iso9660", null),
+    EXT2("ext2", "0x83"),
+    FAT16("fat16", "0x0e"),
+    FAT32("fat32", "0x0c");
 
     private final String type;
+    private final String code;
 
-    FilesystemType(String type) {
+    FilesystemType(String type, String code) {
         this.type = type;
+        this.code = code;
     }
 
     public static List<FilesystemType> list() {
@@ -57,4 +53,7 @@ public enum FilesystemType {
         return type;
     }
 
+    public String getCode() {
+        return code;
+    }
 }

@@ -17,14 +17,12 @@ package ir.moke.jsysbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class JniNativeLoader {
     private static final Logger logger = LoggerFactory.getLogger(JniNativeLoader.class);
@@ -54,22 +52,14 @@ public class JniNativeLoader {
     }
 
     private static void extractLibrary(String name) {
-        String libAbsolutePath = LIB_PATH.resolve(name).toAbsolutePath().toString();
-        try (InputStream resource = JniNativeLoader.class.getResourceAsStream(libAbsolutePath)) {
+        Path libAbsolutePath = LIB_PATH.resolve(name).toAbsolutePath();
+        try (InputStream resource = JniNativeLoader.class.getResourceAsStream(libAbsolutePath.toString())) {
             if (resource != null) {
-                byte[] bytes = resource.readAllBytes();
-                String currentHash = md5(bytes);
-                Path targetLibFilePath = TEMP_DIR_PATH.resolve("%s-%s".formatted(name, getVersion()));
-                if (Files.exists(targetLibFilePath)) {
-                    byte[] oldBytes = Files.readAllBytes(targetLibFilePath);
-                    String oldHash = md5(oldBytes);
-                    if (!currentHash.equals(oldHash)) {
-                        copySharedObject(targetLibFilePath, bytes);
-                    }
-                } else {
-                    copySharedObject(targetLibFilePath, bytes);
+                if (libAbsolutePath.toFile().exists()) {
+                    Files.delete(libAbsolutePath);
                 }
-                System.load(targetLibFilePath.toString());
+                copySharedObject(name, resource);
+                System.load(TEMP_DIR_PATH.resolve(name).toString());
             } else {
                 logger.error("Resource is null");
             }
@@ -78,22 +68,9 @@ public class JniNativeLoader {
         }
     }
 
-    private static void copySharedObject(Path path, byte[] bytes) throws IOException {
-        Files.write(path, bytes);
-    }
-
-    private static String md5(byte[] bytes) {
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-            byte[] digest = messageDigest.digest(bytes);
-            return new BigInteger(1, digest).toString(16);
-        } catch (NoSuchAlgorithmException e) {
-            throw new JSysboxException(e);
+    private static void copySharedObject(String name, InputStream resource) throws IOException {
+        try (FileOutputStream outputStream = new FileOutputStream(TEMP_DIR_PATH.resolve(name).toFile())) {
+            resource.transferTo(outputStream);
         }
-    }
-
-    private static String getVersion() {
-        Package pkg = JniNativeLoader.class.getPackage();
-        return pkg.getImplementationVersion();
     }
 }

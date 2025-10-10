@@ -14,31 +14,17 @@
 
 package ir.moke.jsysbox.disk;
 
-public class PartitionInformation {
-    public String blk;
-    public String mountPoint;
-    public String uuid;
-    public String label;
-    public String type;
-    public long totalSize;
-    public Long freeSize;
-    public long startSector;
-    public long endSector;
-    public long sectorSize;
-
-    @Override
-    public String toString() {
-        return "PartitionInformation{" +
-                "blk='" + blk + '\'' +
-                ", mountPoint='" + mountPoint + '\'' +
-                ", uuid='" + uuid + '\'' +
-                ", label='" + label + '\'' +
-                ", type='" + type + '\'' +
-                ", totalSize=" + totalSize +
-                ", freeSize=" + freeSize +
-                ", startSector=" + startSector +
-                ", endSector=" + endSector +
-                ", sectorSize=" + sectorSize +
-                '}';
-    }
+public record PartitionInformation(String blk,
+                                   int number,
+                                   String mountPoint,
+                                   String uuid,
+                                   String label,
+                                   FilesystemType filesystemType,
+                                   PartitionType partitionType,
+                                   long blockSize,
+                                   long totalSize,
+                                   Long freeSize,
+                                   long startSector,
+                                   long endSector,
+                                   long sectorSize) {
 }
