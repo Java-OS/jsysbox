@@ -22,14 +22,11 @@ public enum FilesystemType {
     DEV_TMPFS("devtmpfs", null),
     SYSFS("sysfs", null),
     PROC("proc", null),
-    EXT3("ext3", "0x83"),
-    EXT4("ext4", "0x83"),
-    BTRFS("btrfs", "0x83"),
-    XFS("xfs", "0x83"),
+    LINUX("linux", "0x83"),
     NTFS("ntfs", "0x07"),
     SWAP("linux-swap", "0x82"),
+    LVM("lvm", "0x8e"),
     ISO9660("iso9660", null),
-    EXT2("ext2", "0x83"),
     FAT16("fat16", "0x0e"),
     FAT32("fat32", "0x0c");
 

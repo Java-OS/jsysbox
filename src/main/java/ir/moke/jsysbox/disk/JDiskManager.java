@@ -69,10 +69,14 @@ public class JDiskManager {
      */
     public native static PartitionType partitionType(String blkDisk, int partitionNumber);
 
+    public native static FilesystemType filesystemType(String blkDisk);
+
     public native static String partitionUUID(String blkPartition);
 
     public native static String partitionLabel(String blkPartition);
+
     public native static long partitionBlockSize(String mountPoint);
+
     public native static long partitionAvailableSize(String mountPoint);
 
     /**
@@ -120,10 +124,15 @@ public class JDiskManager {
      * @param start               Partition start sector
      *                            NOTE: First partition started from 2048
      * @param size                Partition size
-     * @param partitionType       Partition filesystem type
+     * @param filesystemType      Type of filesystem {@link FilesystemType}
      * @param isPrimary           set true if you want to create primary partition on MBR partition table
      */
-    private native static void createPartition(String blkDisk, int partitionNumber, long start, long size, String partitionType, boolean isPrimary);
+    private native static void createPartition(String blkDisk,
+                                               int partitionNumber,
+                                               long start,
+                                               long size,
+                                               String filesystemType,
+                                               boolean isPrimary);
 
     /**
      * delete partition
@@ -211,28 +220,49 @@ public class JDiskManager {
         return list;
     }
 
-    private static List<PartitionInformation> partitions(String blkDisk) {
-        Path diskPath = Path.of(blkDisk);
-        String diskName = diskPath.getName(0).toString();
-        try (Stream<Path> stream = Files.list(diskPath)) {
-            List<Path> partitions = stream.filter(item -> item.toString().matches(".*/%s\\d+/".formatted(diskName))).toList();
+    public static List<PartitionInformation> partitions(String blkDisk) {
+        List<PartitionInformation> list = new ArrayList<>();
+        Disk diskInformation = getDiskInformation(blkDisk);
+        if (diskInformation == null) throw new JSysboxException("disk does not exists");
+        String diskName = Path.of(diskInformation.blk()).getName(1).toString();
+        try (Stream<Path> stream = Files.list(Path.of("/sys/block/%s".formatted(diskName)))) {
+            int disk_sector_size = diskInformation.sectorSize();
+            List<Path> partitions = stream.filter(item -> item.toString().matches(".*/%s/%s.*".formatted(diskName,diskName))).sorted().toList();
             for (Path partitionPath : partitions) {
                 String devPath = "/dev/" + partitionPath.getFileName().toString();
                 String mountPoint = mountPoint(devPath);
-                long sector_start = Long.parseLong(Files.readString(partitionPath.resolve("start")));
-                long sector_size = Long.parseLong(Files.readString(partitionPath.resolve("size")));
+                long sector_start = Long.parseLong(Files.readString(partitionPath.resolve("start")).trim());
+                long sector_size = Long.parseLong(Files.readString(partitionPath.resolve("size")).trim());
                 long sector_end = sector_start + sector_size;
-                long number = Long.parseLong(Files.readString(partitionPath.resolve("partition")));
+                int number = Integer.parseInt(Files.readString(partitionPath.resolve("partition")).trim());
                 String uuid = partitionUUID(devPath);
                 String label = partitionLabel(devPath);
-                long blockSize = partitionBlockSize(mountPoint);
-                long freeSpaceSize = partitionAvailableSize(mountPoint);
-
+                long block_size = sector_size * disk_sector_size;
+                long free_space_size = partitionAvailableSize(mountPoint);
+                System.out.println(">>>> " + number);
+                PartitionType partitionType = partitionType(blkDisk, number);
+                FilesystemType filesystemType = filesystemType(devPath);
+                PartitionInformation partitionInformation = new PartitionInformation(
+                        devPath,
+                        number,
+                        mountPoint,
+                        uuid,
+                        label,
+                        filesystemType,
+                        partitionType,
+                        block_size,
+                        disk_sector_size * sector_size,
+                        disk_sector_size * free_space_size,
+                        sector_start,
+                        sector_end,
+                        sector_size
+                );
+                list.add(partitionInformation);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return List.of();
+        return list;
     }
 
     /**
@@ -410,7 +440,7 @@ public class JDiskManager {
     }
 
     /**
-     * return list of compact disks like cdrom or dvdrom
+     * return list of compact disks like cdrom
      *
      * @return List of {@link CompactDisk}
      */
@@ -478,17 +508,19 @@ public class JDiskManager {
             Path vendorPath = Path.of("/sys/block/%s/device/vendor".formatted(blkName));
             Path modelPath = Path.of("/sys/block/%s/device/model".formatted(blkName));
             Path sizePath = Path.of("/sys/block/%s/size".formatted(blkName));
+            Path sectorSizePath = Path.of("/sys/block/%s/queue/hw_sector_size".formatted(blkName));
 
             String vendor = Files.exists(vendorPath) ? Files.readString(vendorPath).trim() : null;
             String model = Files.exists(modelPath) ? Files.readString(modelPath).trim() : null;
-            Long sectorSize = Files.exists(sizePath) ? Long.parseLong(Files.readString(sizePath).trim()) : null;
+            Long sizeInSector = Files.exists(sizePath) ? Long.parseLong(Files.readString(sizePath).trim()) : null;
+            int sectorSize = Files.exists(sectorSizePath) ? Integer.parseInt(Files.readString(sectorSizePath).trim()) : 512;
 
-            List<PartitionInformation> partitionInfos = partitions(blkDisk);
+            int partitionCount = partitionCount(blkDisk);
 
-            Long sizeInBytes = sectorSize != null ? sectorSize * 512 : null;
+            Long sizeInBytes = sizeInSector != null ? sizeInSector * sectorSize : null;
 
             PartitionTable partitionTable = partitionTableType(blkDisk);
-            return new Disk(blkDisk, vendor, model, sizeInBytes, sectorSize, partitionTable, partitionInfos.size());
+            return new Disk(blkDisk, vendor, model, sizeInBytes, sizeInSector, partitionTable, partitionCount, sectorSize);
         } catch (Exception e) {
             throw new JSysboxException(e);
         }
@@ -507,12 +539,12 @@ public class JDiskManager {
     }
 
     public static void createPartition(String blkDisk, int partitionNumber, long start, long size, FilesystemType filesystemType) {
-        if (partitionNumber <= 0) throw new JSysboxException("Partition number should be >= 1");
+        if (partitionNumber < 0) throw new JSysboxException("Partition number should be >= 0");
         createPartition(blkDisk, partitionNumber, start, size, filesystemType.getCode(), true);
     }
 
     public static void createExtendedPartition(String blkDisk, int partitionNumber, long start, long size) {
-        createPartition(blkDisk, partitionNumber, start, size, null, true);
+        createPartition(blkDisk, partitionNumber, start, size, "0x05", true);
     }
 
     public static void createLogicalPartition(String blkDisk, int partitionNumber, long start, long size, FilesystemType filesystemType) {

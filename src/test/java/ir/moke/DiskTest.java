@@ -1,10 +1,7 @@
 package ir.moke;
 
 import ir.moke.jsysbox.JSysboxException;
-import ir.moke.jsysbox.disk.Disk;
-import ir.moke.jsysbox.disk.FilesystemType;
-import ir.moke.jsysbox.disk.JDiskManager;
-import ir.moke.jsysbox.disk.PartitionTable;
+import ir.moke.jsysbox.disk.*;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -62,18 +60,8 @@ public class DiskTest {
         assertTrue(disks.length != 0);
     }
 
-
     @Test
     @Order(2)
-    public void createGPTPartitionTable() {
-        logger.info("Execute <createGPTPartitionTable>");
-        JDiskManager.initializePartitionTable(DISK_FILE.getAbsolutePath(), PartitionTable.GPT);
-        PartitionTable partitionTable = JDiskManager.partitionTableType(DISK_BLK_PATH);
-        assertEquals(PartitionTable.GPT, partitionTable);
-    }
-
-    @Test
-    @Order(3)
     public void checkMBRPartitionTableType() {
         logger.info("Execute <checkMBRPartitionTableType>");
         JDiskManager.initializePartitionTable(DISK_FILE.getAbsolutePath(), PartitionTable.DOS);
@@ -82,7 +70,7 @@ public class DiskTest {
     }
 
     @Test
-    @Order(4)
+    @Order(3)
     public void checkDiskInformation() {
         logger.info("Execute <checkDiskInformation>");
         Disk diskInformation = JDiskManager.getDiskInformation(LOOP_DISK_PATH);
@@ -102,35 +90,59 @@ public class DiskTest {
      * <p>
      * partition alignment = 2048
      */
+    @Test
+    @Order(4)
+    public void checkMBRCreatePartition() {
+        logger.info("Execute <checkMBRCreatePartition>");
+        final int PARTITION_ALIGNMENT = 2048;
+
+        Disk disk = JDiskManager.getDiskInformation(LOOP_DISK_PATH);
+        Assertions.assertNotNull(disk);
+        System.out.println("Disk sector size: " + disk.sectors());
+
+        // First primary partition
+        long sector_start = PARTITION_ALIGNMENT;
+        long sector_size = JDiskManager.calculatePartitionSectorSize(50);
+        System.out.printf("Creating primary partition #1 - start:[%d] size:[%d]%n", sector_start, sector_size);
+        JDiskManager.createPartition(LOOP_DISK_PATH, 0, sector_start, sector_size, FilesystemType.LINUX);
+
+        // Second extended partition
+        sector_start = sector_size + PARTITION_ALIGNMENT ;
+        sector_size = disk.sectors() - sector_start ; // whole available free space
+        System.out.printf("Creating primary partition #2 - start:[%d] size:[%d]%n", sector_start, sector_size);
+        JDiskManager.createExtendedPartition(LOOP_DISK_PATH, 1, sector_start, sector_size);
+
+        // Third logical partition
+        sector_start = sector_start + PARTITION_ALIGNMENT;
+        sector_size = JDiskManager.calculatePartitionSectorSize(10);
+        System.out.printf("Creating logical partition #5 - start:[%d] size:[%d]%n", sector_start, sector_size);
+        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, 4, sector_start, sector_size, FilesystemType.NTFS);
+
+        // Fourth partition (logical 2)
+        sector_start = sector_start + sector_size + PARTITION_ALIGNMENT;
+        sector_size = disk.sectors() - sector_start;
+        System.out.printf("Creating logical partition #6 - start:[%d] size:[%d]%n", sector_start, sector_size);
+        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, 5, sector_start, sector_size, FilesystemType.LINUX);
+    }
+
+
+    @Test
+    @Order(5)
+    public void checkListPartitions() {
+        logger.info("Execute <checkListPartitions>");
+        List<PartitionInformation> partitions = JDiskManager.partitions(LOOP_DISK_PATH);
+        for (PartitionInformation partition : partitions) {
+            System.out.println(partition);
+        }
+    }
+
 //    @Test
-//    @Order(4)
-//    public void checkMBRCreatePartition() {
-//        logger.info("Execute <checkMBRCreatePartition>");
-//        final int PARTITION_ALIGNMENT = 2048;
-//
-//        Disk disk = JDiskManager.getDiskInformation(LOOP_DISK_PATH);
-//
-//        // First partition (primary)
-//        long startSector = JDiskManager.calculatePartitionSectorSize(1);
-//        long endSector = JDiskManager.calculatePartitionSectorSize(50) + PARTITION_ALIGNMENT;
-//        JDiskManager.createPartition(LOOP_DISK_PATH, 1, startSector, endSector, FilesystemType.EXT4);
-//
-//        // Second partition (extended)
-//        startSector = endSector + 1;
-//        endSector = disk.sectors() - 1; // whole of disk
-//        JDiskManager.createExtendedPartition(LOOP_DISK_PATH, startSector, endSector);
-//
-//        // Third partition (logical 1)
-//        PartitionInformation extendedPartition = JDiskManager.getPartitionInformation(DISK_BLK_PATH)[1];
-//        startSector = extendedPartition.startSector + PARTITION_ALIGNMENT;
-//        endSector = extendedPartition.startSector + JDiskManager.calculatePartitionSectorSize(10) + PARTITION_ALIGNMENT;
-//        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, startSector, endSector, FilesystemType.NTFS);
-//
-//        // Fourth partition (logical 2)
-//        PartitionInformation firstLogicalPartition = JDiskManager.getPartitionInformation(DISK_BLK_PATH)[2];
-//        startSector = firstLogicalPartition.endSector + PARTITION_ALIGNMENT;
-//        endSector = extendedPartition.endSector;
-//        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, startSector, endSector, FilesystemType.EXT4);
+//    @Order(5)
+//    public void createGPTPartitionTable() {
+//        logger.info("Execute <createGPTPartitionTable>");
+//        JDiskManager.initializePartitionTable(DISK_FILE.getAbsolutePath(), PartitionTable.GPT);
+//        PartitionTable partitionTable = JDiskManager.partitionTableType(DISK_BLK_PATH);
+//        assertEquals(PartitionTable.GPT, partitionTable);
 //    }
 
 //    @Test

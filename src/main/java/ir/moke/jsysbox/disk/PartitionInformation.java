@@ -24,7 +24,7 @@ public record PartitionInformation(String blk,
                                    long blockSize,
                                    long totalSize,
                                    Long freeSize,
-                                   long startSector,
-                                   long endSector,
+                                   long sectorStart,
+                                   long sectorEnd,
                                    long sectorSize) {
 }

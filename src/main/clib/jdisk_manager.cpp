@@ -13,12 +13,15 @@ limitations under the License.
 */
 
 #include "jdisk_manager.h"
+#include "common.cpp"
 
 #include <blkid/blkid.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <jni.h>
 #include <libfdisk/libfdisk.h>
 #include <libudev.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +33,85 @@ limitations under the License.
 #include <cstddef>
 #include <iostream>
 
-#include "common.cpp"
+#define EXT_SUPERBLOCK_OFFSET 1024
+#define EXT_MAGIC_OFFSET 0x38
+#define EXT_MAGIC_VALUE 0xEF53
+
+#define NTFS_OEM_OFFSET 3
+#define NTFS_OEM_STRING "NTFS    "
+
+#define BTRFS_MAGIC_OFFSET 0x10040
+#define BTRFS_MAGIC_STRING "_BHRfS_M"
+
+#define XFS_MAGIC_OFFSET 0x0
+#define XFS_MAGIC_STRING "XFSB"
+
+#define FAT16_FS_TYPE_OFFSET 0x36
+#define FAT16_FS_TYPE_STRING "FAT16"
+
+#define FAT32_FS_TYPE_OFFSET 0x52
+#define FAT32_FS_TYPE_STRING "FAT32"
+
+#define LVM_LABEL_OFFSET 0x200
+#define LVM_LABEL_STRING "LABELONE"
+#define LVM_TYPE_OFFSET 0x218
+#define LVM_TYPE_STRING "LVM2 001"
+
+#define SWAP_MAGIC_OFFSET_V1 (4096 - 10)
+#define SWAP_MAGIC_STRING_V1 "SWAPSPACE2"
+#define SWAP_MAGIC_STRING_V0 "SWAP-SPACE"
+
+static int check_ext(int fd) {
+    uint8_t buf[2];
+    if (pread(fd, buf, 2, EXT_SUPERBLOCK_OFFSET + EXT_MAGIC_OFFSET) != 2) return 0;
+    uint16_t magic = buf[0] | (buf[1] << 8);
+    return magic == EXT_MAGIC_VALUE;
+}
+
+static int check_btrfs(int fd) {
+    uint8_t buf[8];
+    if (pread(fd, buf, 8, BTRFS_MAGIC_OFFSET) != 8) return 0;
+    return memcmp(buf, BTRFS_MAGIC_STRING, 8) == 0;
+}
+
+static int check_xfs(int fd) {
+    uint8_t buf[4];
+    if (pread(fd, buf, 4, XFS_MAGIC_OFFSET) != 4) return 0;
+    return memcmp(buf, XFS_MAGIC_STRING, 4) == 0;
+}
+
+static int check_ntfs(int fd) {
+    uint8_t buf[8];
+    if (pread(fd, buf, 8, NTFS_OEM_OFFSET) != 8) return 0;
+    return memcmp(buf, NTFS_OEM_STRING, 8) == 0;
+}
+
+static int check_fat16(int fd) {
+    uint8_t buf[5];
+    if (pread(fd, buf, 5, FAT16_FS_TYPE_OFFSET) != 5) return 0;
+    return memcmp(buf, FAT16_FS_TYPE_STRING, 5) == 0;
+}
+
+static int check_fat32(int fd) {
+    uint8_t buf[5];
+    if (pread(fd, buf, 5, FAT32_FS_TYPE_OFFSET) != 5) return 0;
+    return memcmp(buf, FAT32_FS_TYPE_STRING, 5) == 0;
+}
+
+static int check_lvm(int fd) {
+    uint8_t buf1[8], buf2[8];
+    if (pread(fd, buf1, 8, LVM_LABEL_OFFSET) != 8) return 0;
+    if (memcmp(buf1, LVM_LABEL_STRING, 8) != 0) return 0;
+    if (pread(fd, buf2, 8, LVM_TYPE_OFFSET) != 8) return 0;
+    return memcmp(buf2, LVM_TYPE_STRING, 8) == 0;
+}
+
+static int check_swap(int fd) {
+    char buf[4096];
+    if (pread(fd, buf, sizeof(buf), 0) != sizeof(buf)) return 0;
+    char *tail = buf + SWAP_MAGIC_OFFSET_V1;
+    return (memcmp(tail, SWAP_MAGIC_STRING_V1, 10) == 0) || (memcmp(tail, SWAP_MAGIC_STRING_V0, 10) == 0);
+}
 
 blkid_probe get_blk_probe(JNIEnv *env, const char *path) {
     if (path && strncmp(path, "/dev/", strlen("/dev/")) == 0) {
@@ -121,22 +202,20 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionType(J
     std::string result;
 
     auto cleanup = [&]() {
-        if (table) fdisk_unref_table(table);
         if (pa) fdisk_unref_partition(pa);
+        if (table) fdisk_unref_table(table);
         if (cxt) {
             fdisk_deassign_device(cxt, 1);
             fdisk_unref_context(cxt);
         }
         env->ReleaseStringUTFChars(blkDisk, device);
     };
-
     cxt = fdisk_new_context();
     if (!cxt) {
         throwException(env, "Failed to create fdisk context");
         cleanup();
         return env->NewStringUTF("error");
     }
-
     rc = fdisk_assign_device(cxt, device, 0);
     if (rc < 0) {
         std::string errMsg = "Failed to assign device " + std::string(device) + ": " + std::string(strerror(-rc));
@@ -144,25 +223,21 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionType(J
         cleanup();
         return env->NewStringUTF("error");
     }
-
     rc = fdisk_get_partitions(cxt, &table);
     if (rc < 0 || !table) {
         throwException(env, "Failed to get partition table");
         cleanup();
         return env->NewStringUTF("error");
     }
-
-    pa = fdisk_table_get_partition(table, partition_number - 1);  // 0-based index
+    pa = fdisk_table_get_partition(table, partition_number);  // 0-based index
     if (!pa) {
         std::string errMsg = "Partition number " + std::to_string(partition_number) + " not found";
         throwException(env, errMsg);
         cleanup();
         return env->NewStringUTF("error");
     }
-
     jobject pt = NULL;
     jclass enumClass = env->FindClass("Lir/moke/jsysbox/disk/PartitionType;");
-
     if (fdisk_partition_is_container(pa)) {
         jfieldID fieldId = env->GetStaticFieldID(enumClass, "EXTENDED", "Lir/moke/jsysbox/disk/PartitionType;");
         pt = env->GetStaticObjectField(enumClass, fieldId);
@@ -173,9 +248,53 @@ JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionType(J
         jfieldID fieldId = env->GetStaticFieldID(enumClass, "PRIMARY", "Lir/moke/jsysbox/disk/PartitionType;");
         pt = env->GetStaticObjectField(enumClass, fieldId);
     }
-
     cleanup();
     return pt;
+}
+
+JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_filesystemType(JNIEnv *env, jclass, jstring jblk_partition) {
+    const char *path = env->GetStringUTFChars(jblk_partition, 0);
+
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) {
+        std::string errMsg = "Failed to assign device " + std::string(path);
+        throwException(env, errMsg);
+        return NULL;
+    }
+
+    auto cleanup = [&]() {
+        close(fd);
+        env->ReleaseStringUTFChars(jblk_partition, path);
+    };
+
+    jobject ft = NULL;
+    jclass enumClass = env->FindClass("Lir/moke/jsysbox/disk/FilesystemType;");
+
+    if (check_lvm(fd)) {
+        jfieldID fieldId = env->GetStaticFieldID(enumClass, "LVM", "Lir/moke/jsysbox/disk/FilesystemType;");
+        ft = env->GetStaticObjectField(enumClass, fieldId);
+    } else if (check_ext(fd) || check_xfs(fd) || check_btrfs(fd)) {
+        jfieldID fieldId = env->GetStaticFieldID(enumClass, "LINUX", "Lir/moke/jsysbox/disk/FilesystemType;");
+        ft = env->GetStaticObjectField(enumClass, fieldId);
+    } else if (check_ntfs(fd)) {
+        jfieldID fieldId = env->GetStaticFieldID(enumClass, "NTFS", "Lir/moke/jsysbox/disk/FilesystemType;");
+        ft = env->GetStaticObjectField(enumClass, fieldId);
+    } else if (check_fat16(fd)) {
+        jfieldID fieldId = env->GetStaticFieldID(enumClass, "FAT16", "Lir/moke/jsysbox/disk/FilesystemType;");
+        ft = env->GetStaticObjectField(enumClass, fieldId);
+    } else if (check_fat32(fd)) {
+        jfieldID fieldId = env->GetStaticFieldID(enumClass, "FAT32", "Lir/moke/jsysbox/disk/FilesystemType;");
+        ft = env->GetStaticObjectField(enumClass, fieldId);
+    } else if (check_swap(fd)) {
+        jfieldID fieldId = env->GetStaticFieldID(enumClass, "SWAP", "Lir/moke/jsysbox/disk/FilesystemType;");
+        ft = env->GetStaticObjectField(enumClass, fieldId);
+    } else {
+        std::string errMsg = "Unknown filesystem type: " + std::string(path);
+        throwException(env, errMsg);
+    }
+
+    cleanup();
+    return ft;
 }
 
 JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionUUID(JNIEnv *env, jclass clazz, jstring jblk_partition) {
@@ -213,25 +332,42 @@ JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionLabel(
 }
 
 JNIEXPORT jlong JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionBlockSize(JNIEnv *env, jclass clazz, jstring jmount_point) {
+//    if (!jmount_point) return -1;
     const char *mount_point = env->GetStringUTFChars(jmount_point, 0);
-    struct statvfs vfs;
-    if (statvfs(mount_point, &vfs) == 0) {
-        return vfs.f_bsize;
+
+    if (!mount_point) {
+        throwException(env, "Failed to get mount point string");
+        return -1;
     }
 
-    throwException(env, "Failed to get filesystem statvfs block size");
-    return -1;
+    struct statvfs vfs;
+    jlong result = -1;
+    if (statvfs(mount_point, &vfs) == 0) {
+        result = (jlong)vfs.f_bsize;
+    } else {
+        throwException(env, "Failed to get filesystem statvfs available size");
+    }
+
+    env->ReleaseStringUTFChars(jmount_point, mount_point);
+    return result;
 }
 
 JNIEXPORT jlong JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionAvailableSize(JNIEnv *env, jclass clazz, jstring jmount_point) {
+    if (!jmount_point) return -1;
     const char *mount_point = env->GetStringUTFChars(jmount_point, 0);
-    struct statvfs vfs;
-    if (statvfs(mount_point, &vfs) == 0) {
-        return vfs.f_bavail ;
+    if (!mount_point) {
+        throwException(env, "Failed to get mount point string");
+        return -1;
     }
-
-    throwException(env, "Failed to get filesystem statvfs available size");
-    return -1;
+    struct statvfs vfs;
+    jlong result = -1;
+    if (statvfs(mount_point, &vfs) == 0) {
+        result = (jlong)vfs.f_bavail;
+    } else {
+        throwException(env, "Failed to get filesystem statvfs available size");
+    }
+    env->ReleaseStringUTFChars(jmount_point, mount_point);
+    return result;
 }
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_swapOn(JNIEnv *env, jclass clazz, jstring jblkPath) {
@@ -386,6 +522,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JN
         }
 
         env->ReleaseStringUTFChars(jblkPath, device);
+        env->ReleaseStringUTFChars(jtype_code, type_code);
     };
 
     cxt = fdisk_new_context();
@@ -431,7 +568,7 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JN
     // Set partition number (1)
     fdisk_partition_set_partno(pa, partition_number);  // 0-based index for partition 1
 
-    // Set partition size to entire disk (minus first 2048 sectors for alignment)
+    // get disk sector size
     fdisk_sector_t disk_size = fdisk_get_nsectors(cxt);
     if (disk_size <= 2048) {
         std::string errMsg = "Disk too small: " + std::to_string(disk_size) + " sectors";
@@ -478,17 +615,9 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JN
         return;
     }
 
-    rc = fdisk_table_add_partition(table, pa);
+    rc = fdisk_add_partition(cxt, pa,NULL);
     if (rc < 0) {
         std::string errMsg = "Failed to add partition: " + std::string(strerror(-rc));
-        throwException(env, errMsg);
-        cleanup();
-        return;
-    }
-
-    rc = fdisk_apply_table(cxt, table);
-    if (rc < 0) {
-        std::string errMsg = "Failed to apply partition table: " + std::string(strerror(-rc));
         throwException(env, errMsg);
         cleanup();
         return;
@@ -503,8 +632,6 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_createPartition(JN
         return;
     }
 
-    // Optional: reread partition table so OS updates
-    fdisk_reread_partition_table(cxt);
     cleanup();
 }
 
