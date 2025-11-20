@@ -31,13 +31,6 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_disks(JNIE
 /*
  * Class:     ir_moke_jsysbox_disk_JDiskManager
  * Method:    partitionType
- * Signature: (Ljava/lang/String;I)Lir/moke/jsysbox/disk/PartitionType;
- */
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionType(JNIEnv *, jclass, jstring, jint);
-
-/*
- * Class:     ir_moke_jsysbox_disk_JDiskManager
- * Method:    partitionType
  * Signature: (Ljava/lang/String)Lir/moke/jsysbox/disk/FilesystemType;
  */
 JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_filesystemType(JNIEnv *, jclass, jstring);
@@ -84,13 +77,6 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_swapOn(JNIEnv *, j
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_swapOff(JNIEnv *, jclass, jstring);
-
-/*
- * Class:     ir_moke_jsysbox_disk_JDiskManager
- * Method:    partitionTableType
- * Signature: (Ljava/lang/String;)Lir/moke/jsysbox/disk/PartitionTable;
- */
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionTableType(JNIEnv *, jclass, jstring);
 
 /*
  * Class:     ir_moke_jsysbox_disk_JDiskManager

@@ -193,65 +193,6 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_disks(JNIE
     return result;
 }
 
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionType(JNIEnv *env, jclass clazz, jstring blkDisk, jint partition_number) {
-    const char *device = env->GetStringUTFChars(blkDisk, 0);
-    struct fdisk_context *cxt = NULL;
-    struct fdisk_partition *pa = NULL;
-    struct fdisk_table *table = NULL;
-    int rc = 0;
-    std::string result;
-
-    auto cleanup = [&]() {
-        if (pa) fdisk_unref_partition(pa);
-        if (table) fdisk_unref_table(table);
-        if (cxt) {
-            fdisk_deassign_device(cxt, 1);
-            fdisk_unref_context(cxt);
-        }
-        env->ReleaseStringUTFChars(blkDisk, device);
-    };
-    cxt = fdisk_new_context();
-    if (!cxt) {
-        throwException(env, "Failed to create fdisk context");
-        cleanup();
-        return env->NewStringUTF("error");
-    }
-    rc = fdisk_assign_device(cxt, device, 0);
-    if (rc < 0) {
-        std::string errMsg = "Failed to assign device " + std::string(device) + ": " + std::string(strerror(-rc));
-        throwException(env, errMsg);
-        cleanup();
-        return env->NewStringUTF("error");
-    }
-    rc = fdisk_get_partitions(cxt, &table);
-    if (rc < 0 || !table) {
-        throwException(env, "Failed to get partition table");
-        cleanup();
-        return env->NewStringUTF("error");
-    }
-    pa = fdisk_table_get_partition(table, partition_number);  // 0-based index
-    if (!pa) {
-        std::string errMsg = "Partition number " + std::to_string(partition_number) + " not found";
-        throwException(env, errMsg);
-        cleanup();
-        return env->NewStringUTF("error");
-    }
-    jobject pt = NULL;
-    jclass enumClass = env->FindClass("Lir/moke/jsysbox/disk/PartitionType;");
-    if (fdisk_partition_is_container(pa)) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "EXTENDED", "Lir/moke/jsysbox/disk/PartitionType;");
-        pt = env->GetStaticObjectField(enumClass, fieldId);
-    } else if (partition_number > 4) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "LOGICAL", "Lir/moke/jsysbox/disk/PartitionType;");
-        pt = env->GetStaticObjectField(enumClass, fieldId);
-    } else {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "PRIMARY", "Lir/moke/jsysbox/disk/PartitionType;");
-        pt = env->GetStaticObjectField(enumClass, fieldId);
-    }
-    cleanup();
-    return pt;
-}
-
 JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_filesystemType(JNIEnv *env, jclass, jstring jblk_partition) {
     const char *path = env->GetStringUTFChars(jblk_partition, 0);
 
@@ -384,67 +325,6 @@ JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_swapOff(JNIEnv *en
     if (ret != 0) {
         throwException(env, "Failed to swap on");
     }
-}
-
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionTableType(JNIEnv *env, jclass clazz, jstring jblkPath) {
-    const char *device = env->GetStringUTFChars(jblkPath, 0);
-    struct fdisk_context *cxt = NULL;
-    struct fdisk_label *label = NULL;
-    int rc;
-
-    auto cleanup = [&]() {
-        if (cxt) {
-            fdisk_deassign_device(cxt, 0);
-            fdisk_unref_context(cxt);
-        }
-        env->ReleaseStringUTFChars(jblkPath, device);
-    };
-
-    // Initialize libfdisk context
-    cxt = fdisk_new_context();
-    if (!cxt) {
-        std::string errMsg = "Failed to create fdisk context: " + std::string(strerror(-rc));
-        throwException(env, errMsg);
-        cleanup();
-        return NULL;
-    }
-
-    // Assign device in read-only mode
-    rc = fdisk_assign_device(cxt, device, 1);  // 1 = read-only mode
-    if (rc < 0) {
-        std::string errMsg = "Failed to assign device " + std::string(device) + ": " + std::string(strerror(-rc));
-        throwException(env, errMsg);
-        cleanup();
-        return NULL;
-    }
-
-    // Get the current disk label
-    label = fdisk_get_label(cxt, NULL);
-    if (!label) {
-        std::string errMsg = "No partition table found on " + std::string(device);
-        throwException(env, errMsg);
-        cleanup();
-        return NULL;
-    }
-
-    // Print the partition table type
-    const char *label_name = fdisk_label_get_name(label);
-
-    jobject ptt = NULL;
-    jclass enumClass = env->FindClass("Lir/moke/jsysbox/disk/PartitionTable;");
-
-    if (strcmp(label_name, "gpt") == 0) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "GPT", "Lir/moke/jsysbox/disk/PartitionTable;");
-        ptt = env->GetStaticObjectField(enumClass, fieldId);
-    } else if (strcmp(label_name, "dos") == 0) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "DOS", "Lir/moke/jsysbox/disk/PartitionTable;");
-        ptt = env->GetStaticObjectField(enumClass, fieldId);
-    } else {
-        throwException(env, "Unknown partition table");
-    }
-
-    cleanup();
-    return ptt;
 }
 
 JNIEXPORT void JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_initializePartitionTable(JNIEnv *env, jclass clazz, jstring jblkPath, jobject enumObj) {

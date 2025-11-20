@@ -18,6 +18,8 @@ import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,7 +69,13 @@ public class JDiskManager {
      * @param partitionNumber   number of partition
      * @return enum type of {@link PartitionType}
      */
-    public native static PartitionType partitionType(String blkDisk, int partitionNumber);
+    public static PartitionType partitionType(String blkDisk, int partitionNumber) {
+        PartitionTable partitionTable = partitionTableType(blkDisk);
+        if (partitionTable.equals(PartitionTable.GPT)) return PartitionType.PRIMARY;
+        if (partitionNumber > 4) return PartitionType.LOGICAL;
+        if (isExtended(blkDisk, partitionNumber)) return PartitionType.EXTENDED;
+        return null;
+    }
 
     public native static FilesystemType filesystemType(String blkDisk);
 
@@ -84,7 +92,6 @@ public class JDiskManager {
      *
      * @param blkPartition swap partition block device address
      *                     example: /dev/sdb2
-     * @throws JSysboxException
      */
     public native static void swapOn(String blkPartition) throws JSysboxException;
 
@@ -93,18 +100,8 @@ public class JDiskManager {
      *
      * @param blkPartition swap partition block device address
      *                     example: /dev/sdb2
-     * @throws JSysboxException
      */
     public native static void swapOff(String blkPartition) throws JSysboxException;
-
-    /**
-     * Get current partition table type of disk
-     *
-     * @param blkDisk block device address of disk
-     *                example: /dev/sda
-     * @return return Type of partition table {@link PartitionInformation}
-     */
-    public native static PartitionTable partitionTableType(String blkDisk);
 
     /**
      * Write new partition table on disk
@@ -223,11 +220,12 @@ public class JDiskManager {
     public static List<PartitionInformation> partitions(String blkDisk) {
         List<PartitionInformation> list = new ArrayList<>();
         Disk diskInformation = getDiskInformation(blkDisk);
+        System.out.println(diskInformation);
         if (diskInformation == null) throw new JSysboxException("disk does not exists");
         String diskName = Path.of(diskInformation.blk()).getName(1).toString();
         try (Stream<Path> stream = Files.list(Path.of("/sys/block/%s".formatted(diskName)))) {
             int disk_sector_size = diskInformation.sectorSize();
-            List<Path> partitions = stream.filter(item -> item.toString().matches(".*/%s/%s.*".formatted(diskName,diskName))).sorted().toList();
+            List<Path> partitions = stream.filter(item -> item.toString().matches(".*/%s/%s.*".formatted(diskName, diskName))).sorted().toList();
             for (Path partitionPath : partitions) {
                 String devPath = "/dev/" + partitionPath.getFileName().toString();
                 String mountPoint = mountPoint(devPath);
@@ -239,7 +237,6 @@ public class JDiskManager {
                 String label = partitionLabel(devPath);
                 long block_size = sector_size * disk_sector_size;
                 long free_space_size = partitionAvailableSize(mountPoint);
-                System.out.println(">>>> " + number);
                 PartitionType partitionType = partitionType(blkDisk, number);
                 FilesystemType filesystemType = filesystemType(devPath);
                 PartitionInformation partitionInformation = new PartitionInformation(
@@ -453,7 +450,7 @@ public class JDiskManager {
                     .filter(item -> !item.isEmpty())
                     .map(item -> item.split(":\\s+", 2)[1])
                     .toList();
-            int columns = lines.get(0).split("\\s+").length;
+            int columns = lines.getFirst().split("\\s+").length;
             List<String> values = new ArrayList<>();
             for (int i = 0; i < columns; i++) {
                 for (String line : lines) {
@@ -544,10 +541,177 @@ public class JDiskManager {
     }
 
     public static void createExtendedPartition(String blkDisk, int partitionNumber, long start, long size) {
-        createPartition(blkDisk, partitionNumber, start, size, "0x05", true);
+        createPartition(blkDisk, partitionNumber, start, size, "0x%02X".formatted(MbrType.W95_EXT_LBA.getCode()), true);
     }
 
     public static void createLogicalPartition(String blkDisk, int partitionNumber, long start, long size, FilesystemType filesystemType) {
         createPartition(blkDisk, partitionNumber, start, size, filesystemType.getCode(), false);
+    }
+
+    /**
+     * Get current partition table type of disk
+     *
+     * @param blkDisk block device address of disk
+     *                example: /dev/sda
+     * @return return Type of partition table {@link PartitionInformation}
+     */
+    public static PartitionTable partitionTableType(String blkDisk) {
+        try (RandomAccessFile disk = new RandomAccessFile(blkDisk, "r")) {
+            byte[] mbr = new byte[512];
+            disk.readFully(mbr);
+
+            if ((mbr[510] & 0xFF) != 0x55 || (mbr[511] & 0xFF) != 0xAA) {
+                throw new JSysboxException("invalid partition table signature");
+            }
+
+            int type = mbr[446 + 4] & 0xFF;
+
+            if (type == 0xEE) {
+                return PartitionTable.GPT;
+            } else {
+                return PartitionTable.MBR;
+            }
+        } catch (Exception e) {
+            throw new JSysboxException(e.getMessage());
+        }
+    }
+
+    private static long u32(byte[] buf, int pos) {
+        return ((long) (buf[pos] & 0xFF)) |
+               ((long) (buf[pos + 1] & 0xFF) << 8) |
+               ((long) (buf[pos + 2] & 0xFF) << 16) |
+               ((long) (buf[pos + 3] & 0xFF) << 24);
+    }
+
+    private static long u64(byte[] buf, int pos) {
+        return ((long) (buf[pos] & 0xFF)) |
+               ((long) (buf[pos + 1] & 0xFF) << 8) |
+               ((long) (buf[pos + 2] & 0xFF) << 16) |
+               ((long) (buf[pos + 3] & 0xFF) << 24) |
+               ((long) (buf[pos + 4] & 0xFF) << 32) |
+               ((long) (buf[pos + 5] & 0xFF) << 40) |
+               ((long) (buf[pos + 6] & 0xFF) << 48) |
+               ((long) (buf[pos + 7] & 0xFF) << 56);
+    }
+
+    private static MbrType readMBR(RandomAccessFile disk, int partitionNumber) throws Exception {
+        byte[] mbr = new byte[512];
+        disk.seek(0);
+        disk.readFully(mbr);
+
+        List<MbrType> list = new ArrayList<>();
+
+        int partNum = 1;
+        for (int i = 0; i < 4; i++) {
+            int offset = 446 + i * 16;
+            int type = mbr[offset + 4] & 0xFF;
+            long startLBA = u32(mbr, offset + 8);
+
+            if (type == 0) continue;
+
+            boolean isExtended = (type == 0x05 || type == 0x0F);
+
+            if (isExtended) {
+                int logicalNumber = partNum + 1;
+                List<MbrType> extList = parseExtended(disk, startLBA, logicalNumber);
+                list.addAll(extList);
+            }
+
+            list.add(MbrType.fromValue(type));
+            partNum++;
+        }
+
+        return list.get(partitionNumber - 1);
+    }
+
+    private static List<MbrType> parseExtended(RandomAccessFile disk, long ebrStart, int logicalNumber) throws Exception {
+        long extendedBase = ebrStart;
+
+        List<MbrType> list = new ArrayList<>();
+        while (true) {
+            disk.seek(ebrStart * 512);
+            byte[] ebr = new byte[512];
+            disk.readFully(ebr);
+
+            if ((ebr[510] & 0xFF) != 0x55 || (ebr[511] & 0xFF) != 0xAA)
+                break;
+
+            int type = ebr[446 + 4] & 0xFF;
+
+            if (type != 0) {
+                MbrType mbrType = MbrType.fromValue(type);
+                list.add(mbrType);
+                logicalNumber++;
+            }
+
+            int nextType = ebr[462 + 4] & 0xFF;
+            long nextStart = u32(ebr, 462 + 8);
+
+            if (nextType == 0 || nextStart == 0)
+                break;
+
+            ebrStart = extendedBase + nextStart;
+        }
+        return list;
+    }
+
+    private static GptType readGPT(RandomAccessFile disk, int partitionNumber) throws Exception {
+        byte[] header = new byte[512];
+        disk.seek(512);   // LBA1
+        disk.readFully(header);
+
+        String signature = new String(header, 0, 8, StandardCharsets.US_ASCII);
+        if (!"EFI PART".equals(signature)) {
+            throw new RuntimeException("Invalid GPT header");
+        }
+
+        long numEntries = u32(header, 0x50);
+        long entrySize = u32(header, 0x54);
+        long firstLBA = u64(header, 0x48);
+
+        long total = numEntries * entrySize;
+        byte[] entries = new byte[(int) total];
+
+        disk.seek(firstLBA * 512);
+        disk.readFully(entries);
+
+        List<GptType> list = new ArrayList<>();
+        for (int i = 0; i < numEntries; i++) {
+            int offset = (int) (i * entrySize);
+
+            byte[] typeGUID = Arrays.copyOfRange(entries, offset, offset + 16);
+
+            boolean empty = true;
+            for (byte b : typeGUID)
+                if (b != 0) {
+                    empty = false;
+                    break;
+                }
+
+            if (empty) continue;
+            GptType gptType = GptType.fromGUID(typeGUID);
+            list.add(gptType);
+        }
+
+        return list.get(partitionNumber - 1);
+    }
+
+    private static boolean isExtended(String blkDisk, int partitionNumber) {
+        try (RandomAccessFile disk = new RandomAccessFile(blkDisk, "r")) {
+            byte[] mbr = new byte[512];
+            disk.seek(0);
+            disk.readFully(mbr);
+
+            for (int i = 0; i < 4; i++) {
+                if (i != partitionNumber - 1) continue;
+                int offset = 446 + i * 16;
+                int type = mbr[offset + 4] & 0xFF;
+                if (type == 0) continue;
+                return (type == 0x05 || type == 0x0F);
+            }
+            return false;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

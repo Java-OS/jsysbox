@@ -64,9 +64,9 @@ public class DiskTest {
     @Order(2)
     public void checkMBRPartitionTableType() {
         logger.info("Execute <checkMBRPartitionTableType>");
-        JDiskManager.initializePartitionTable(DISK_FILE.getAbsolutePath(), PartitionTable.DOS);
+        JDiskManager.initializePartitionTable(DISK_FILE.getAbsolutePath(), PartitionTable.MBR);
         PartitionTable partitionTable = JDiskManager.partitionTableType(DISK_BLK_PATH);
-        assertEquals(PartitionTable.DOS, partitionTable);
+        assertEquals(PartitionTable.MBR, partitionTable);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class DiskTest {
         assertEquals(LOOP_DISK_PATH, diskInformation.blk());
         assertEquals(0, diskInformation.partitions());
         assertEquals(DISK_SIZE, diskInformation.size());
-        assertEquals(PartitionTable.DOS, diskInformation.partitionTable());
+        assertEquals(PartitionTable.MBR, diskInformation.partitionTable());
     }
 
     /**
@@ -107,8 +107,8 @@ public class DiskTest {
         JDiskManager.createPartition(LOOP_DISK_PATH, 0, sector_start, sector_size, FilesystemType.LINUX);
 
         // Second extended partition
-        sector_start = sector_size + PARTITION_ALIGNMENT ;
-        sector_size = disk.sectors() - sector_start ; // whole available free space
+        sector_start = sector_size + PARTITION_ALIGNMENT;
+        sector_size = disk.sectors() - sector_start; // whole available free space
         System.out.printf("Creating primary partition #2 - start:[%d] size:[%d]%n", sector_start, sector_size);
         JDiskManager.createExtendedPartition(LOOP_DISK_PATH, 1, sector_start, sector_size);
 
