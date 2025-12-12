@@ -74,10 +74,8 @@ public class JDiskManager {
         if (partitionTable.equals(PartitionTable.GPT)) return PartitionType.PRIMARY;
         if (partitionNumber > 4) return PartitionType.LOGICAL;
         if (isExtended(blkDisk, partitionNumber)) return PartitionType.EXTENDED;
-        return null;
+        return PartitionType.PRIMARY;
     }
-
-    public native static FilesystemType filesystemType(String blkDisk);
 
     public native static String partitionUUID(String blkPartition);
 
@@ -121,7 +119,7 @@ public class JDiskManager {
      * @param start               Partition start sector
      *                            NOTE: First partition started from 2048
      * @param size                Partition size
-     * @param filesystemType      Type of filesystem {@link FilesystemType}
+     * @param filesystemType      Type of partition {@link GptType}
      * @param isPrimary           set true if you want to create primary partition on MBR partition table
      */
     private native static void createPartition(String blkDisk,
@@ -220,25 +218,28 @@ public class JDiskManager {
     public static List<PartitionInformation> partitions(String blkDisk) {
         List<PartitionInformation> list = new ArrayList<>();
         Disk diskInformation = getDiskInformation(blkDisk);
-        System.out.println(diskInformation);
         if (diskInformation == null) throw new JSysboxException("disk does not exists");
         String diskName = Path.of(diskInformation.blk()).getName(1).toString();
+        List<MbrType> mbrTypes = readMBR(blkDisk);
         try (Stream<Path> stream = Files.list(Path.of("/sys/block/%s".formatted(diskName)))) {
             int disk_sector_size = diskInformation.sectorSize();
             List<Path> partitions = stream.filter(item -> item.toString().matches(".*/%s/%s.*".formatted(diskName, diskName))).sorted().toList();
-            for (Path partitionPath : partitions) {
+            for (int i = 0; i < partitions.size(); i++) {
+                Path partitionPath = partitions.get(i);
                 String devPath = "/dev/" + partitionPath.getFileName().toString();
                 String mountPoint = mountPoint(devPath);
-                long sector_start = Long.parseLong(Files.readString(partitionPath.resolve("start")).trim());
-                long sector_size = Long.parseLong(Files.readString(partitionPath.resolve("size")).trim());
-                long sector_end = sector_start + sector_size;
                 int number = Integer.parseInt(Files.readString(partitionPath.resolve("partition")).trim());
+                PartitionType partitionType = partitionType(blkDisk, number);
+
+                long sector_start = Long.parseLong(Files.readString(partitionPath.resolve("start")).trim());
+                long sector_size = partitionType.equals(PartitionType.EXTENDED) ? getExtendedPartitionSize(blkDisk, diskInformation.sectorSize()) : Long.parseLong(Files.readString(partitionPath.resolve("size")).trim());
+                long sector_end = sector_start + sector_size;
                 String uuid = partitionUUID(devPath);
                 String label = partitionLabel(devPath);
                 long block_size = sector_size * disk_sector_size;
-                long free_space_size = partitionAvailableSize(mountPoint);
-                PartitionType partitionType = partitionType(blkDisk, number);
-                FilesystemType filesystemType = filesystemType(devPath);
+                long free_space_size = mountPoint != null ? partitionAvailableSize(mountPoint) : 0;
+                FilesystemType filesystemType = mbrTypes.get(i);
+
                 PartitionInformation partitionInformation = new PartitionInformation(
                         devPath,
                         number,
@@ -535,17 +536,17 @@ public class JDiskManager {
         return (size * 1024 * 1024) / 512;
     }
 
-    public static void createPartition(String blkDisk, int partitionNumber, long start, long size, FilesystemType filesystemType) {
+    public static void createPartition(String blkDisk, int partitionNumber, long start, long size, MbrType type) {
         if (partitionNumber < 0) throw new JSysboxException("Partition number should be >= 0");
-        createPartition(blkDisk, partitionNumber, start, size, filesystemType.getCode(), true);
+        createPartition(blkDisk, partitionNumber, start, size, "0x%02X".formatted(type.getCode()), true);
     }
 
     public static void createExtendedPartition(String blkDisk, int partitionNumber, long start, long size) {
         createPartition(blkDisk, partitionNumber, start, size, "0x%02X".formatted(MbrType.W95_EXT_LBA.getCode()), true);
     }
 
-    public static void createLogicalPartition(String blkDisk, int partitionNumber, long start, long size, FilesystemType filesystemType) {
-        createPartition(blkDisk, partitionNumber, start, size, filesystemType.getCode(), false);
+    public static void createLogicalPartition(String blkDisk, int partitionNumber, long start, long size, MbrType type) {
+        createPartition(blkDisk, partitionNumber, start, size, "0x%02X".formatted(type.getCode()), false);
     }
 
     /**
@@ -594,34 +595,38 @@ public class JDiskManager {
                ((long) (buf[pos + 7] & 0xFF) << 56);
     }
 
-    private static MbrType readMBR(RandomAccessFile disk, int partitionNumber) throws Exception {
-        byte[] mbr = new byte[512];
-        disk.seek(0);
-        disk.readFully(mbr);
+    private static List<MbrType> readMBR(String blkDisk) {
+        try (RandomAccessFile disk = new RandomAccessFile(blkDisk, "r")) {
+            byte[] mbr = new byte[512];
+            disk.seek(0);
+            disk.readFully(mbr);
 
-        List<MbrType> list = new ArrayList<>();
+            List<MbrType> list = new ArrayList<>();
 
-        int partNum = 1;
-        for (int i = 0; i < 4; i++) {
-            int offset = 446 + i * 16;
-            int type = mbr[offset + 4] & 0xFF;
-            long startLBA = u32(mbr, offset + 8);
+            int partNum = 1;
+            for (int i = 0; i < 4; i++) {
+                int offset = 446 + i * 16;
+                int type = mbr[offset + 4] & 0xFF;
+                long startLBA = u32(mbr, offset + 8);
 
-            if (type == 0) continue;
+                if (type == 0) continue;
 
-            boolean isExtended = (type == 0x05 || type == 0x0F);
 
-            if (isExtended) {
-                int logicalNumber = partNum + 1;
-                List<MbrType> extList = parseExtended(disk, startLBA, logicalNumber);
-                list.addAll(extList);
+                list.add(MbrType.fromValue(type));
+
+                boolean isExtended = (type == 0x05 || type == 0x0F);
+                if (isExtended) {
+                    int logicalNumber = partNum + 1;
+                    List<MbrType> extList = parseExtended(disk, startLBA, logicalNumber);
+                    list.addAll(extList);
+                }
+
+                partNum++;
             }
-
-            list.add(MbrType.fromValue(type));
-            partNum++;
+            return list;
+        } catch (Exception e) {
+            throw new JSysboxException(e);
         }
-
-        return list.get(partitionNumber - 1);
     }
 
     private static List<MbrType> parseExtended(RandomAccessFile disk, long ebrStart, int logicalNumber) throws Exception {
@@ -712,6 +717,28 @@ public class JDiskManager {
             return false;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static long getExtendedPartitionSize(String blkDisk, long sectorSize) {
+        try (RandomAccessFile disk = new RandomAccessFile(blkDisk, "r")) {
+            byte[] mbr = new byte[512];
+            disk.seek(0);
+            disk.readFully(mbr);
+
+            for (int i = 0; i < 4; i++) {
+                int offset = 446 + i * 16;
+                int type = mbr[offset + 4] & 0xFF;
+                if (type == 0) continue;
+                long size = u32(mbr, offset + 12);
+                boolean isExtended = (type == 0x05 || type == 0x0F);
+                if (isExtended) {
+                    return size * sectorSize;
+                }
+            }
+            return 0;
+        } catch (Exception e) {
+            throw new JSysboxException(e);
         }
     }
 }

@@ -32,6 +32,7 @@ public class DiskTest {
         // now create disk and connect
         TestUtils.createVirtualDisk(DISK_FILE, DISK_SIZE);
         TestUtils.connectDisk(DISK_FILE);
+        TestUtils.sleep(2000);
     }
 
     @AfterAll
@@ -104,7 +105,7 @@ public class DiskTest {
         long sector_start = PARTITION_ALIGNMENT;
         long sector_size = JDiskManager.calculatePartitionSectorSize(50);
         System.out.printf("Creating primary partition #1 - start:[%d] size:[%d]%n", sector_start, sector_size);
-        JDiskManager.createPartition(LOOP_DISK_PATH, 0, sector_start, sector_size, FilesystemType.LINUX);
+        JDiskManager.createPartition(LOOP_DISK_PATH, 0, sector_start, sector_size, MbrType.LINUX);
 
         // Second extended partition
         sector_start = sector_size + PARTITION_ALIGNMENT;
@@ -116,15 +117,14 @@ public class DiskTest {
         sector_start = sector_start + PARTITION_ALIGNMENT;
         sector_size = JDiskManager.calculatePartitionSectorSize(10);
         System.out.printf("Creating logical partition #5 - start:[%d] size:[%d]%n", sector_start, sector_size);
-        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, 4, sector_start, sector_size, FilesystemType.NTFS);
+        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, 4, sector_start, sector_size, MbrType.HPFS_NTFS_EXFAT);
 
         // Fourth partition (logical 2)
         sector_start = sector_start + sector_size + PARTITION_ALIGNMENT;
         sector_size = disk.sectors() - sector_start;
         System.out.printf("Creating logical partition #6 - start:[%d] size:[%d]%n", sector_start, sector_size);
-        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, 5, sector_start, sector_size, FilesystemType.LINUX);
+        JDiskManager.createLogicalPartition(LOOP_DISK_PATH, 5, sector_start, sector_size, MbrType.LINUX);
     }
-
 
     @Test
     @Order(5)

@@ -2,7 +2,7 @@ package ir.moke.jsysbox.disk;
 
 import java.util.Arrays;
 
-public enum GptType {
+public enum GptType implements FilesystemType {
     APPLE_APFS("7C3457EF-0000-11AA-AA11-00306543ECAC"),
     APPLE_CORE_STORAGE("53746F72-6167-11AA-AA11-00306543ECAC"),
     APPLE_HFSHFS_PLUS("48465300-0000-11AA-AA11-00306543ECAC"),

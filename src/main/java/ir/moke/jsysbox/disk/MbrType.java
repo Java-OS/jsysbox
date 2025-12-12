@@ -2,7 +2,7 @@ package ir.moke.jsysbox.disk;
 
 import java.util.Arrays;
 
-public enum MbrType {
+public enum MbrType implements FilesystemType {
     EMPTY(0x00),
     FAT12(0x01),
     XENIX_ROOT(0x02),

@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import ir.moke.jsysbox.JsonUtils;
-import ir.moke.jsysbox.firewall.JFirewall;
 import ir.moke.jsysbox.firewall.model.*;
+import ir.moke.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;

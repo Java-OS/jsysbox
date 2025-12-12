@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
-import ir.moke.jsysbox.JsonUtils;
 import ir.moke.jsysbox.firewall.expression.Expression;
 import ir.moke.jsysbox.firewall.model.Set;
 import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.statement.Statement;
 import ir.moke.jsysbox.firewall.statement.VerdictStatement;
+import ir.moke.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

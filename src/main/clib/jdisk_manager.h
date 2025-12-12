@@ -30,13 +30,6 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_disks(JNIE
 
 /*
  * Class:     ir_moke_jsysbox_disk_JDiskManager
- * Method:    partitionType
- * Signature: (Ljava/lang/String)Lir/moke/jsysbox/disk/FilesystemType;
- */
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_filesystemType(JNIEnv *, jclass, jstring);
-
-/*
- * Class:     ir_moke_jsysbox_disk_JDiskManager
  * Method:    partitionUUID
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */

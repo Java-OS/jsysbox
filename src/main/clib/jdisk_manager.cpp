@@ -193,51 +193,6 @@ JNIEXPORT jobjectArray JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_disks(JNIE
     return result;
 }
 
-JNIEXPORT jobject JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_filesystemType(JNIEnv *env, jclass, jstring jblk_partition) {
-    const char *path = env->GetStringUTFChars(jblk_partition, 0);
-
-    int fd = open(path, O_RDONLY);
-    if (fd < 0) {
-        std::string errMsg = "Failed to assign device " + std::string(path);
-        throwException(env, errMsg);
-        return NULL;
-    }
-
-    auto cleanup = [&]() {
-        close(fd);
-        env->ReleaseStringUTFChars(jblk_partition, path);
-    };
-
-    jobject ft = NULL;
-    jclass enumClass = env->FindClass("Lir/moke/jsysbox/disk/FilesystemType;");
-
-    if (check_lvm(fd)) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "LVM", "Lir/moke/jsysbox/disk/FilesystemType;");
-        ft = env->GetStaticObjectField(enumClass, fieldId);
-    } else if (check_ext(fd) || check_xfs(fd) || check_btrfs(fd)) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "LINUX", "Lir/moke/jsysbox/disk/FilesystemType;");
-        ft = env->GetStaticObjectField(enumClass, fieldId);
-    } else if (check_ntfs(fd)) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "NTFS", "Lir/moke/jsysbox/disk/FilesystemType;");
-        ft = env->GetStaticObjectField(enumClass, fieldId);
-    } else if (check_fat16(fd)) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "FAT16", "Lir/moke/jsysbox/disk/FilesystemType;");
-        ft = env->GetStaticObjectField(enumClass, fieldId);
-    } else if (check_fat32(fd)) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "FAT32", "Lir/moke/jsysbox/disk/FilesystemType;");
-        ft = env->GetStaticObjectField(enumClass, fieldId);
-    } else if (check_swap(fd)) {
-        jfieldID fieldId = env->GetStaticFieldID(enumClass, "SWAP", "Lir/moke/jsysbox/disk/FilesystemType;");
-        ft = env->GetStaticObjectField(enumClass, fieldId);
-    } else {
-        std::string errMsg = "Unknown filesystem type: " + std::string(path);
-        throwException(env, errMsg);
-    }
-
-    cleanup();
-    return ft;
-}
-
 JNIEXPORT jstring JNICALL Java_ir_moke_jsysbox_disk_JDiskManager_partitionUUID(JNIEnv *env, jclass clazz, jstring jblk_partition) {
     const char *path = env->GetStringUTFChars(jblk_partition, 0);
     blkid_probe pr = get_blk_probe(env, path);

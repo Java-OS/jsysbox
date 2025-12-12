@@ -14,43 +14,6 @@
 
 package ir.moke.jsysbox.disk;
 
-import ir.moke.jsysbox.JSysboxException;
+public interface FilesystemType {
 
-import java.util.List;
-
-public enum FilesystemType {
-    DEV_TMPFS("devtmpfs", null),
-    SYSFS("sysfs", null),
-    PROC("proc", null),
-    LINUX("linux", "0x83"),
-    NTFS("ntfs", "0x07"),
-    SWAP("linux-swap", "0x82"),
-    LVM("lvm", "0x8e"),
-    ISO9660("iso9660", null),
-    FAT16("fat16", "0x0e"),
-    FAT32("fat32", "0x0c");
-
-    private final String type;
-    private final String code;
-
-    FilesystemType(String type, String code) {
-        this.type = type;
-        this.code = code;
-    }
-
-    public static List<FilesystemType> list() {
-        return List.of(FilesystemType.values());
-    }
-
-    public static FilesystemType find(String type) throws JSysboxException {
-        return list().stream().filter(item -> item.type.equals(type)).findFirst().orElseThrow(() -> new JSysboxException("Filesystem does not supported"));
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getCode() {
-        return code;
-    }
 }
