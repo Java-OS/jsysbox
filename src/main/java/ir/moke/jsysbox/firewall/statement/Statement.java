@@ -3,7 +3,7 @@ package ir.moke.jsysbox.firewall.statement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
-import ir.moke.jsysbox.JsonUtils;
+import ir.moke.utils.JsonUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
