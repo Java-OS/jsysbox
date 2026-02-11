@@ -23,7 +23,7 @@ Please install dependencies :
 git clone git@github.com:Java-OS/jsysbox.git 
 
 # For build c/c++ source codes
-sudo apt install gcc g++ make automake cmake libparted-dev libkmod-dev libnftables-dev
+sudo apt install gcc g++ make automake cmake libparted-dev libkmod-dev libnftables-dev libfdisk-dev libmagic-dev
 
 # Install this packages for production or test
 sudo apt install libgmp10 libparted2t64 libkmod2 libzstd1 libblkid1 libcap2 libssl3t64 libdevmapper1.02.1 libgcc-s1 libgmp10 libjansson4 liblzma5 libc6 libmnl0 libnftables1 libnftnl11 libpcre2-8-0 libselinux1 libstdc++6 libudev1 libxtables12 libzstd1
