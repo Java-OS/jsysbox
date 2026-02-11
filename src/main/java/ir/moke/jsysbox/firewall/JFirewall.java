@@ -9,7 +9,7 @@ import ir.moke.jsysbox.firewall.model.Set;
 import ir.moke.jsysbox.firewall.model.*;
 import ir.moke.jsysbox.firewall.statement.Statement;
 import ir.moke.jsysbox.firewall.statement.VerdictStatement;
-import ir.moke.utils.JsonUtils;
+import ir.moke.utils.json.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
