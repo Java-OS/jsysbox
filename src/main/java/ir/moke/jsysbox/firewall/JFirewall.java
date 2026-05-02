@@ -1,12 +1,13 @@
 package ir.moke.jsysbox.firewall;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import ir.moke.jsysbox.JSysboxException;
 import ir.moke.jsysbox.JniNativeLoader;
 import ir.moke.jsysbox.firewall.expression.Expression;
-import ir.moke.jsysbox.firewall.model.Set;
 import ir.moke.jsysbox.firewall.model.*;
+import ir.moke.jsysbox.firewall.model.Set;
 import ir.moke.jsysbox.firewall.statement.Statement;
 import ir.moke.jsysbox.firewall.statement.VerdictStatement;
 import ir.moke.utils.json.JsonUtils;
@@ -46,7 +47,7 @@ public class JFirewall {
         return exec("list ruleset");
     }
 
-    public static NFTables exportToNFTables() {
+    public static NFTables exportToNFTables() throws JsonProcessingException {
         String json = export();
         return JsonUtils.toObject(json, NFTables.class);
     }
@@ -68,11 +69,11 @@ public class JFirewall {
         }
     }
 
-    public static String serializeJson(NFTables nfTables) {
+    public static String serializeJson(NFTables nfTables) throws JsonProcessingException {
         return JsonUtils.toJson(nfTables);
     }
 
-    public static NFTables deserializeJson(String json) {
+    public static NFTables deserializeJson(String json) throws JsonProcessingException {
         return JsonUtils.toObject(json, NFTables.class);
     }
 
@@ -110,12 +111,12 @@ public class JFirewall {
         exec("flush ruleset %s".formatted(type != null ? type.getValue() : ""));
     }
 
-    public static NFTables nfTables() {
+    public static NFTables nfTables() throws JsonProcessingException {
         String json = export();
         return JsonUtils.toObject(json, NFTables.class);
     }
 
-    public static MetaInfo metaInfo() {
+    public static MetaInfo metaInfo() throws JsonProcessingException {
         String json = export();
         JsonNode root = JsonUtils.toObject(json, JsonNode.class);
         ArrayNode nftablesArray = (ArrayNode) root.get("nftables");
@@ -140,9 +141,13 @@ public class JFirewall {
     }
 
     public static Table tableAdd(Table table) {
-        checkCharacters(table.getName());
-        exec("add table %s %s".formatted(table.getType().getValue(), table.getName()));
-        return table(table.getName(), table.getType());
+        try {
+            checkCharacters(table.getName());
+            exec("add table %s %s".formatted(table.getType().getValue(), table.getName()));
+            return table(table.getName(), table.getType());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -151,17 +156,21 @@ public class JFirewall {
      * @return List of tables {@link Table}
      */
     public static List<Table> tableList() {
-        String result = exec("list tables");
-        List<Table> tables = new ArrayList<>();
-        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
-        JsonNode nftablesNode = jsonNode.get("nftables");
-        for (JsonNode node : nftablesNode) {
-            if (node.has("table")) {
-                Table table = JsonUtils.toObject(node.get("table").toString(), Table.class);
-                tables.add(table);
+        try {
+            String result = exec("list tables");
+            List<Table> tables = new ArrayList<>();
+            JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+            JsonNode nftablesNode = jsonNode.get("nftables");
+            for (JsonNode node : nftablesNode) {
+                if (node.has("table")) {
+                    Table table = JsonUtils.toObject(node.get("table").toString(), Table.class);
+                    tables.add(table);
+                }
             }
+            return tables;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return tables;
     }
 
     /**
@@ -255,18 +264,22 @@ public class JFirewall {
      * @param priority chain priority
      * @return {@link Chain}
      */
-    public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) throws JSysboxException {
-        priority = calculatePriority(table, priority);
-        String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
+    public static Chain chainAdd(Table table, String name, ChainType type, ChainHook hook, ChainPolicy policy, Integer priority) {
+        try {
+            priority = calculatePriority(table, priority);
+            String cmd = "add chain %s %s %s {type %s hook %s priority %s ; policy %s ; }";
 
-        String tableType = table.getType().getValue();
-        String tableName = table.getName();
-        String chainType = type.getValue();
-        String chainHook = hook.getValue();
-        String chainPolicy = type.equals(ChainType.NAT) ? ChainPolicy.ACCEPT.getValue() : policy.getValue();
-        exec(cmd.formatted(tableType, tableName, name, chainType, chainHook, priority, chainPolicy));
+            String tableType = table.getType().getValue();
+            String tableName = table.getName();
+            String chainType = type.getValue();
+            String chainHook = hook.getValue();
+            String chainPolicy = type.equals(ChainType.NAT) ? ChainPolicy.ACCEPT.getValue() : policy.getValue();
+            exec(cmd.formatted(tableType, tableName, name, chainType, chainHook, priority, chainPolicy));
 
-        return chain(table, name);
+            return chain(table, name);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -276,14 +289,14 @@ public class JFirewall {
      * @param name  chain name
      * @return {@link Chain}
      */
-    public static Chain chainAdd(Table table, String name) throws JSysboxException {
+    public static Chain chainAdd(Table table, String name) {
         checkCharacters(name);
         String cmd = "add chain %s %s %s";
         exec(cmd.formatted(table.getType().getValue(), table.getName(), name));
         return chain(table, name);
     }
 
-    public static Chain chainAdd(int tableHandle, String name) throws JSysboxException {
+    public static Chain chainAdd(int tableHandle, String name) {
         Table table = table(tableHandle);
         if (table == null) throw new JSysboxException("Table with handle %s does not exists".formatted(tableHandle));
 
@@ -293,7 +306,7 @@ public class JFirewall {
         return chain(table, name);
     }
 
-    public static Chain chainAdd(Chain chain) throws JSysboxException {
+    public static Chain chainAdd(Chain chain) {
         if (chain.getType() != null) {
             return chainAdd(chain.getTable(), chain.getName(), chain.getType(), chain.getHook(), chain.getPolicy(), chain.getPriority());
         } else {
@@ -307,17 +320,21 @@ public class JFirewall {
      * @return list of chains {@link Chain}
      */
     public static List<Chain> chainList() {
-        String result = exec("list chains");
-        List<Chain> chains = new ArrayList<>();
-        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
-        JsonNode nftablesNode = jsonNode.get("nftables");
-        for (JsonNode node : nftablesNode) {
-            if (node.has("chain")) {
-                Chain chain = JsonUtils.toObject(node.get("chain").toString(), Chain.class);
-                chains.add(chain);
+        try {
+            String result = exec("list chains");
+            List<Chain> chains = new ArrayList<>();
+            JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+            JsonNode nftablesNode = jsonNode.get("nftables");
+            for (JsonNode node : nftablesNode) {
+                if (node.has("chain")) {
+                    Chain chain = JsonUtils.toObject(node.get("chain").toString(), Chain.class);
+                    chains.add(chain);
+                }
             }
+            return chains;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return chains;
     }
 
     public static List<Chain> chainList(Table table) {
@@ -524,17 +541,21 @@ public class JFirewall {
      * @return list of {@link Set}
      */
     public static List<Set> setList() {
-        String result = exec("list sets");
-        List<Set> sets = new ArrayList<>();
-        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
-        JsonNode nftablesNode = jsonNode.get("nftables");
-        for (JsonNode node : nftablesNode) {
-            if (node.has("set")) {
-                Set set = JsonUtils.toObject(node.get("set").toString(), Set.class);
-                sets.add(set);
+        try {
+            String result = exec("list sets");
+            List<Set> sets = new ArrayList<>();
+            JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+            JsonNode nftablesNode = jsonNode.get("nftables");
+            for (JsonNode node : nftablesNode) {
+                if (node.has("set")) {
+                    Set set = JsonUtils.toObject(node.get("set").toString(), Set.class);
+                    sets.add(set);
+                }
             }
+            return sets;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return sets;
     }
 
     public static synchronized void setRename(int tableHandle, int setHandle, String newName) {
@@ -626,7 +647,7 @@ public class JFirewall {
      *
      * @param json json structure
      */
-    public static void ruleAdd(String json) {
+    public static void ruleAdd(String json) throws JsonProcessingException {
         Rule rule = JsonUtils.toObject(json, Rule.class);
         ruleAdd(rule.getChain(), rule.getExpressions(), rule.getStatements(), rule.getComment());
     }
@@ -659,18 +680,23 @@ public class JFirewall {
      * @return List of {@link Rule}
      */
     public static List<Rule> ruleList(Chain chain) {
-        String result = exec(chain != null ? "list chain %s %s %s".formatted(chain.getTable().getType().getValue(), chain.getTable().getName(), chain.getName()) : "list ruleset");
-        List<Rule> rules = new ArrayList<>();
-        JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
-        JsonNode nftablesNode = jsonNode.get("nftables");
-        for (JsonNode node : nftablesNode) {
-            if (node.has("rule")) {
-                JsonNode ruleNode = node.get("rule");
-                Rule rule = JsonUtils.toObject(ruleNode.toString(), Rule.class);
-                rules.add(rule);
+        try {
+            String result = exec(chain != null ? "list chain %s %s %s".formatted(chain.getTable().getType().getValue(), chain.getTable().getName(), chain.getName()) : "list ruleset");
+            List<Rule> rules = new ArrayList<>();
+            JsonNode jsonNode = JsonUtils.toObject(result, JsonNode.class);
+            JsonNode nftablesNode = jsonNode.get("nftables");
+            for (JsonNode node : nftablesNode) {
+                if (node.has("rule")) {
+                    JsonNode ruleNode = node.get("rule");
+                    Rule rule = JsonUtils.toObject(ruleNode.toString(), Rule.class);
+                    rules.add(rule);
+                }
             }
+            return rules;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return rules;
+
     }
 
     /**
@@ -738,12 +764,16 @@ public class JFirewall {
      * @param handleId rule handle handleId
      */
     public static void ruleRemove(Chain chain, long handleId) {
-        ruleCheckExists(chain, handleId);
-        String tableName = chain.getTable().getName();
-        TableType tableType = chain.getTable().getType();
-        String chainName = chain.getName();
-        String cmd = "delete rule %s %s %s handle %s".formatted(tableType.getValue(), tableName, chainName, handleId);
-        exec(cmd);
+        try {
+            ruleCheckExists(chain, handleId);
+            String tableName = chain.getTable().getName();
+            TableType tableType = chain.getTable().getType();
+            String chainName = chain.getName();
+            String cmd = "delete rule %s %s %s handle %s".formatted(tableType.getValue(), tableName, chainName, handleId);
+            exec(cmd);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void ruleRemove(Rule rule) {

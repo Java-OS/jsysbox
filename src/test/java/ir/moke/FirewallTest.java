@@ -388,9 +388,13 @@ public class FirewallTest {
     @Test
     @Order(302)
     public void checkSerializeJson() {
-        logger.info("Execute <checkSerializeJson>");
-        NFTables nfTables = JFirewall.exportToNFTables();
-        Assertions.assertDoesNotThrow(() -> JFirewall.serializeJson(nfTables));
+        try {
+            logger.info("Execute <checkSerializeJson>");
+            NFTables nfTables = JFirewall.exportToNFTables();
+            Assertions.assertDoesNotThrow(() -> JFirewall.serializeJson(nfTables));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -410,10 +414,14 @@ public class FirewallTest {
     @Test
     @Order(400)
     public void checkNFTablesObject() {
-        logger.info("Execute <checkNFTablesObject>");
-        NFTables nfTables = JFirewall.nfTables();
-        Assertions.assertNotNull(nfTables);
-        Assertions.assertFalse(nfTables.getTables().isEmpty());
+        try {
+            logger.info("Execute <checkNFTablesObject>");
+            NFTables nfTables = JFirewall.nfTables();
+            Assertions.assertNotNull(nfTables);
+            Assertions.assertFalse(nfTables.getTables().isEmpty());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
