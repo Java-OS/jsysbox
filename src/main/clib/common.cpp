@@ -12,61 +12,57 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <cstddef>
-#include <jni.h>
-#include <parted/parted.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <blkid/blkid.h>
+#include <jni.h>
 #include <mntent.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include <cstddef>
 #include <cstring>
 #include <experimental/filesystem>
-#include <cstring>
 
-namespace fs = std::experimental::filesystem; 
+namespace fs = std::experimental::filesystem;
 
 void throwException(JNIEnv *env, std::string err) {
     jclass jexception = env->FindClass("ir/moke/jsysbox/JSysboxException");
     env->ThrowNew(jexception, err.data());
 }
 
-char *ltrim(char *s)
-{
-    while(isspace(*s)) s++;
+char *ltrim(char *s) {
+    while (isspace(*s)) s++;
     return s;
 }
 
-char *rtrim(char *s)
-{
-    char* back = s + strlen(s);
-    while(isspace(*--back));
-    *(back+1) = '\0';
+char *rtrim(char *s) {
+    char *back = s + strlen(s);
+    while (isspace(*--back));
+    *(back + 1) = '\0';
     return s;
 }
 
-char *trim(char *s)
-{
-    return rtrim(ltrim(s)); 
+char *trim(char *s) {
+    return rtrim(ltrim(s));
 }
 
-bool isSymbolicLink(const std::string& filePath) {
+bool isSymbolicLink(const std::string &filePath) {
     return fs::is_symlink(fs::path(filePath));
 }
 
-bool isRegularFile(const std::string& filePath) {
+bool isRegularFile(const std::string &filePath) {
     return fs::is_regular_file(fs::path(filePath));
 }
 
-std::string getRealPath(const std::string& filePath) {
+std::string getRealPath(const std::string &filePath) {
     fs::path path(filePath);
     try {
         return fs::canonical(path).string();
-    } catch (const fs::filesystem_error& e) {
+    } catch (const fs::filesystem_error &e) {
         return "";
     }
 }
 
-std::string extractLastSegment(const std::string& str) {
+std::string extractLastSegment(const std::string &str) {
     size_t lastSlashPos = str.rfind('/');
     if (lastSlashPos != std::string::npos) {
         return str.substr(lastSlashPos + 1);
@@ -76,16 +72,16 @@ std::string extractLastSegment(const std::string& str) {
     }
 }
 
-char* getEnumName(JNIEnv *env, jobject enumObj) {
-    jclass enumClass     = env->GetObjectClass(enumObj);
+char *getEnumName(JNIEnv *env, jobject enumObj) {
+    jclass enumClass = env->GetObjectClass(enumObj);
     jmethodID nameMethod = env->GetMethodID(enumClass, "name", "()Ljava/lang/String;");
-    jstring nameString   = (jstring)(env)->CallObjectMethod(enumObj, nameMethod);
-    const char* name = env->GetStringUTFChars(nameString,0);
+    jstring nameString = (jstring)(env)->CallObjectMethod(enumObj, nameMethod);
+    const char *name = env->GetStringUTFChars(nameString, 0);
 
     char *mutableName = strdup(name);
     env->ReleaseStringUTFChars(nameString, name);
 
-    return mutableName ;
+    return mutableName;
 }
 
 void toLowerCase(char *str) {
